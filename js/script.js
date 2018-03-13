@@ -1,117 +1,109 @@
-var rivescript = null;
-var artyom = null;
-var dictation = null;
-var timeout = null;
+jQuery.fn.random = function () {
+    var randomIndex = Math.floor(Math.random() * this.length);
+    return jQuery(this[randomIndex]);
+};
 
-function initRivescript() {
-    rivescript = new RiveScript();
-    rivescript.loadFile("./brain/brain.rive", loadingDone, loadingError);
-    initArtyom();
-}
-
-function loadingDone(batch_num) {
-    console.log("Rivescript #" + batch_num + " has finished loading!");
-    rivescript.sortReplies();
-    getMessage("hello bot");
-}
-
-function loadingError(error) {
-    console.log("Error when loading files: " + error);
+function initBuddy() {
+    getMessage("hello");
 }
 
 function getMessage(userMessage) {
-    var botMessage = rivescript.reply("local-user", userMessage);
-    var botParams = null;
-    var botResult = null;
+    var botMessage = "Error! No pattern matched.";
+    var botResult = false;
+    var botRegex = null;
     var botCode = 100;
 
-    if (botMessage.search("/") != -1) {
-        botParams = botMessage.substring(botMessage.search("<#") + 2, botMessage.search(">")).split(",")
-        botMessage = botMessage.split("/")[0].trim();
-        botCode = parseInt(botParams[0]);
-    }
-
-    switch (botCode) {
-        case 100:
-            break;
-        case 101:
-            botResult = new Date().toString().slice(4, 15);
-            botMessage += " " + botResult;
-            break;
-        case 102:
-            botResult = getTime();
-            botMessage += " " + botResult;
-            break;
-        case 103:
-            botResult = window.open('https://www.google.co.in/search?q=' + botParams[1], '_blank');
-            break;
-        case 104:
-            $.getJSON("https://newsapi.org/v1/articles?source=the-times-of-india&sortBy=top&apiKey=15a4cab718bf42f78eab7b55b2a564f4", function (data) {
-                if (data.status == "ok") {
-                    botResult = '<ul class="list-unstyled">';
-                    $.each(data.articles, function (index, object) {
-                        botResult += '<li class="media"><a href="' + object.url + '"><img class="d-flex mr-3" width="150" src="' + object.urlToImage + '" alt="article-img" ></a><div class="media-body"><a href="' + object.url + '"><h5 class="mt-0 mb-1">' + object.title + '</h5></a>' + object.description + '</div></li>';
-                    });
-                    botResult += '</ul>';
-                    $("#chatInfo").html(botResult);
+    $.get("./brain/brain.xml", function (data) {
+        $(data).find('category').each(function () {
+            botRegex = new RegExp($(this).find("pattern").text(), "i");
+            if (botRegex.test(userMessage)) {
+                if ($(this).find("random").length > 0) {
+                    botMessage = $(this).find("random").children().random().text();
                 } else {
-                    showAlert(data.message);
+                    botMessage = $(this).find("template").text();
                 }
-            });
-            break;
-        case 105:
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(successFunction, errorFunction);
-            } else {
-                showAlert('It seems like Geolocation, which is required for this page, is not enabled in your browser. Please use a browser which supports it.');
+                if ($(this).find("action").length > 0) {
+                    botCode = parseInt($(this).find("action").text(), 10);
+                }
+                return false;
             }
-            break;
-        case 106:
-            botResult = window.open(botParams[1], '_blank');
-            break;
-        case 107:
-            $.ajax({
-                url: 'https://icanhazdadjoke.com',
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    if (data.status == 200) {
-                        $("#chatInfo").html("<h2>" + data.joke + "</h2>");
+        });
+    }, "xml").done(function () {
+        switch (botCode) {
+            case 100:
+                break;
+            case 101:
+                botResult = new Date().toString().slice(4, 15);
+                botMessage += " " + botResult;
+                break;
+            case 102:
+                botResult = getTime();
+                botMessage += " " + botResult;
+                break;
+            case 103:
+                botResult = window.open('https://www.google.co.in', '_blank');
+                break;
+            case 104:
+                $.getJSON("https://newsapi.org/v1/articles?source=the-times-of-india&sortBy=top&apiKey=15a4cab718bf42f78eab7b55b2a564f4", function (data) {
+                    if (data.status == "ok") {
+                        botResult = '<ul class="list-unstyled">';
+                        $.each(data.articles, function (index, object) {
+                            botResult += '<li class="media"><a href="' + object.url + '"><img class="d-flex mr-3" width="150" src="' + object.urlToImage + '" alt="article-img" ></a><div class="media-body"><a href="' + object.url + '"><h5 class="mt-0 mb-1">' + object.title + '</h5></a>' + object.description + '</div></li>';
+                        });
+                        botResult += '</ul>';
+                        $("#chatInfo").html(botResult);
                     } else {
+                        showAlert(data.message);
+                    }
+                });
+                break;
+            case 105:
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(successFunction, errorFunction);
+                } else {
+                    showAlert('It seems like Geolocation, which is required for this page, is not enabled in your browser. Please use a browser which supports it.');
+                }
+                break;
+            case 106:
+                $.ajax({
+                    url: 'https://icanhazdadjoke.com',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.status == 200) {
+                            $("#chatInfo").html("<h2>" + data.joke + "</h2>");
+                        } else {
+                            showAlert("Error ocuured while fetching joke.");
+                        }
+                    },
+                    error: function () {
+                        showAlert("Error ocuured while fetching joke.");
+                    },
+                    beforeSend: function (request) {
+                        request.setRequestHeader("Accept", 'application/json');
+                    }
+                });
+                break;
+            case 107:
+                $.ajax({
+                    url: 'http://numbersapi.com/random/trivia',
+                    type: 'GET',
+                    success: function (data) {
+                        $("#chatInfo").html("<h2>" + data + "</h2>");
+                    },
+                    error: function () {
                         showAlert("Error ocuured while fetching joke.");
                     }
-                },
-                error: function () {
-                    showAlert("Error ocuured while fetching joke.");
-                },
-                beforeSend: function (request) {
-                    request.setRequestHeader("Accept", 'application/json');
-                }
-            });
-            break;
+                });
+                break;
+        }
 
-        case 108:
-            $.ajax({
-                url: 'http://numbersapi.com/random/trivia',
-                type: 'GET',
-                success: function (data) {
-                    $("#chatInfo").html("<h2>" + data + "</h2>");
-                },
-                error: function () {
-                    showAlert("Error ocuured while fetching joke.");
-                }
-            });
-            break;
-    }
-
-    $("#chatOutput").html(botMessage);
-    $("#chatLoader").remove();
-
-    if ($("#volumeCheckbox").is(':checked')) {
-        artyomSpeak(botMessage);
-    } else {
+        $("#chatOutput").html(botMessage);
         $("#chatInput").prop("disabled", false);
-    }
+        $("#chatLoader").remove();
+    }).fail(function () {
+        showAlert("Error occured while fetching brain file.");
+    });
 }
 
 function successFunction(position) {
@@ -143,59 +135,6 @@ function checkKeypress(event) {
     if (event.keyCode == 13) {
         sendMessage();
     }
-}
-
-function startRecognition() {
-    if ($("#microphoneIcon").hasClass("fa fa-microphone")) {
-        dictation.stop();
-    } else {
-        dictation.start();
-    }
-}
-
-function initArtyom() {
-    artyom = new Artyom();
-    artyom.initialize({
-        lang: "en-GB",
-        debug: false,
-        speed: 1
-    });
-    initDictation();
-}
-
-function initDictation() {
-    dictation = artyom.newDictation({
-        continuous: true,
-        onResult: function (text) {
-            if (text) {
-                $("#chatInput").val(text);
-                if (timeout) {
-                    clearTimeout(timeout);
-                }
-                timeout = setTimeout(function () {
-                    getMessage(text);
-                    timeout = null;
-                }, 2000);
-            }
-        },
-        onStart: function () {
-            $("#microphoneIcon").removeClass("fa fa-microphone-slash");
-            $("#microphoneIcon").addClass("fa fa-microphone");
-        },
-        onEnd: function () {
-            $("#microphoneIcon").removeClass("fa fa-microphone");
-            $("#microphoneIcon").addClass("fa fa-microphone-slash");
-        }
-    });
-}
-
-function artyomSpeak(text) {
-    artyom.say(text, {
-        onEnd: function () {
-            $("#chatInput").prop("disabled", false);
-            $("#chatInput").val("");
-        }
-    });
 }
 
 function showAlert(text) {

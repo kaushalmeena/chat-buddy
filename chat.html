@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>chatbuddy : chat</title>
+  <title>ChatBuddy : Chat</title>
 
   <!-- FAVICON -->
   <link rel="shortcut icon" href="icon/favicon.ico">
@@ -60,14 +60,6 @@
       <h4>[
         <span class="fa fa-comments-o"></span> ]</h4>
       <hr class="my-6">
-      <div class="input-group">
-        <span class="input-group-addon">
-          <i class="fa fa-volume-up" aria-hidden="true"></i>
-        </span>
-        <span class="input-group-addon">
-          <input id="volumeCheckbox" type="checkbox">
-        </span>
-      </div>
       <div class="row">
         <div class="col-md-3 text-center">
           <img src="img/avtaar.png" class="img-thumbnail" alt="avtaar">
@@ -80,8 +72,8 @@
       <div class="input-group input-group-lg">
         <input id="chatInput" onkeypress="checkKeypress(event)" class="form-control" type="text" autocomplete="off">
         <span class="input-group-btn">
-          <button id="chatButton" onclick="startRecognition()" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off">
-            <span id="microphoneIcon" class="fa fa-microphone-slash"></span>
+          <button id="chatButton" onclick="sendMessage()" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off">
+            <span class="fa fa-chevron-right"></span>
           </button>
         </span>
       </div>
@@ -95,15 +87,13 @@
   <script src="js/jquery-3.2.1.min.js"></script>
   <script src="js/popper.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
-  <script src="js/rivescript.min.js"></script>
-  <script src="js/artyom.window.min.js"></script>
   <script src="js/script.js"></script>
   <script>
     $(window).on('load', function () {
       $(".preloader").fadeOut("fast");;
     });
     $(document).ready(function () {
-      initRivescript();
+      initBuddy();
     });
   </script>
 </body>
