@@ -1,9 +1,20 @@
-# [ Project : ChatBuddy ]
+# [Project : ChatBuddy]
 
-### [ Synopsis ]
+## [ Synopsis ]
 ChatBuddy is like a virtual friend whom you can talk. It can tell date, time, weather, news and even can tell a joke or fact.
 
 - For live version visit page: http://myapp-chatbuddy.bitballoon.com/
 
-### [Usage]
-- Open index.html in any modern browser .
+## [ Prerequisities ]
+
+- NodeJS
+    - https://nodejs.org/en/download/
+- NodeJS Package
+    - http-server 
+        - https://www.npmjs.com/package/http-server
+
+## [ Usage ]
+To start the app simply run run.bat.
+~~~~
+run.bat
+~~~~
