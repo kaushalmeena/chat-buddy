@@ -57,11 +57,11 @@ function getMessage(userMessage) {
   switch (botCode) {
     case "101":
       temp = new Date();
-      botMessage += " " + temp.toString().slice(4, 15);;
+      $("#chatContent").html("<span class='lead'>" + temp.toString().slice(4, 15) + "</span>");
       break;
     case "102":
       temp = new Date();
-      botMessage += " " + temp.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+      $("#chatContent").html("<span class='lead'>" + temp.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }) + "</span>");
       break;
     case "103":
       window.open('https://www.google.co.in', '_blank');
@@ -143,14 +143,12 @@ function getMessage(userMessage) {
 
   $("#chatOutput").text(botMessage);
   $("#chatInput").prop("disabled", false);
-  $("#chatLoader").remove();
 }
 
 function sendMessage() {
   var userMessage = $("#chatInput").val();
   $("#chatContent").html("");
   $("#chatInput").prop("disabled", true);
-  $("#chatOutput").html("<div id='chatLoader' class='text-secondary text-center'><i class='fa fa-cog fa-spin fa-3x fa-fw' aria-hidden='true'></i></div>");
   getMessage(userMessage);
 }
 
