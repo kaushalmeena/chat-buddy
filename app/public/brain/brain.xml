@@ -49,7 +49,7 @@
     </template>
   </category>
   <category>
-    <pattern>current date</pattern>
+    <pattern>date</pattern>
     <template>
       <random>
         <li>Today's date is</li>
@@ -59,7 +59,7 @@
     <action>101</action>
   </category>
   <category>
-    <pattern>current time</pattern>
+    <pattern>time</pattern>
     <template>
       <random>
         <li>Current time is</li>
