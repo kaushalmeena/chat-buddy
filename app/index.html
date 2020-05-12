@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBuddy</title>
+  <!-- FAVICON -->
+  <link rel="shortcut icon" href="public/icon/favicon.ico">
+  <!-- STYLESHEETS -->
+  <link rel="stylesheet" href="public/css/bootstrap.min.css">
+  <link rel="stylesheet" href="public/css/font-awesome.min.css">
+  <link rel="stylesheet" href="public/css/styles.css">
+</head>
+
+<body>
+  <div class="preloader"></div>
+  <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary justify-content-between">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <img class="logo" src="public/img/logo.png" alt="logo">
+      </a>
+      <ul class="nav navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/kaushalmeena1996/myapp-chatbuddy">
+            <i class="fa fa-github fa-2x" aria-hidden="true"></i>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="jumbotron">
+      <nav>
+        <div class="nav nav-tabs" id="navTab" role="tablist">
+          <a class="nav-item nav-link active" id="navHomeTab" data-toggle="tab" href="#navHome" role="tab"
+            aria-controls="navHome" aria-selected="true">
+            <i class="fa fa-home fa-2x" aria-hidden="true"></i>
+          </a>
+          <a class="nav-item nav-link" id="navChatTab" data-toggle="tab" href="#navChat" role="tab"
+            aria-controls="navChat" aria-selected="false">
+            <i class="fa fa-comments-o fa-2x" aria-hidden="true"></i>
+          </a>
+        </div>
+      </nav>
+      <div class="tab-content mt-5" id="navTabContent">
+        <div class="tab-pane fade show active" id="navHome" role="tabpanel" aria-labelledby="navHomeTab">
+          <div class="row no-gutters">
+            <div class="col-md-3 text-center mx-2">
+              <img class="bot" src="public/img/chat_buddy.png" alt="Chatty">
+            </div>
+            <div class="col">
+              <h1 class="display-5">Welcome!</h1>
+              <p class="lead">
+                ChatBuddy is like a virtual friend whom you can talk.
+              </p>
+              <hr class="my-4">
+              <div class="text-center">
+                <button type="button" class="btn btn-outline-secondary btn-lg btn-min-width" onclick="showChatTab()">
+                  Chat!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="navChat" role="tabpanel" aria-labelledby="navChatTab">
+          <div class="row no-gutters">
+            <div class="col-md-2 text-center">
+              <img class="img-thumbnail" src="public/img/avtaar.png" alt="Avtaar">
+            </div>
+            <div class="col mx-2">
+              <div class="card">
+                <div class="card-body">
+                  <div class="text-center">
+                    <span id="chatOutput" class="lead"></span>
+                  </div>
+                  <div id="chatContent" class="content"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="input-group input-group-lg mt-2">
+            <input id="chatInput" class="form-control" type="text" onkeypress="checkKeypress(event)">
+            <div class="input-group-append">
+              <button id="chatButton" class="btn btn-primary" onclick="sendMessage()">
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- SCRIPTS -->
+  <script src="public/js/jquery-3.4.1.min.js"></script>
+  <script src="public/js/popper.min.js"></script>
+  <script src="public/js/bootstrap.min.js"></script>
+  <script src="public/js/scripts.js"></script>
+</body>
+
+</html>
