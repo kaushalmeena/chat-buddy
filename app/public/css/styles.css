@@ -1,0 +1,52 @@
+body {
+  background-image: url("../img/bgdesign.png");
+  margin-top: 90px;
+}
+
+.preloader {
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  background: url("../img/preloader.gif") center no-repeat #f1f1f1;
+}
+
+.logo {
+  max-width: 40px;
+  width: 100%;
+}
+
+.bot {
+  max-width: 170px;
+  width: 100%;
+}
+
+.avtaar {
+  max-width: 150px;
+  width: 100%;
+}
+
+.content {
+  text-align: center;
+  max-height: 400px;
+  overflow: auto;
+}
+
+.btn-min-width {
+  min-width: 200px;
+}
+
+.img-max-height {
+  max-height: 300px;
+}
+
+.navbar-brand {
+  transition: all 0.3s;
+}
+
+.navbar-brand:hover {
+  opacity: 0.5;
+  filter: alpha(opacity=50);
+}

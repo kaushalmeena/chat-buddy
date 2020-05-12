@@ -1,0 +1,17 @@
+{
+  "name": "chatbuddy",
+  "version": "1.0.0",
+  "description": "A xml chatbot application which can tell date, time, show images of cat and dogs and even can tell a joke or fact.",
+  "repository": "git@github.com:kaushalmeena1996/chatbuddy.git",
+  "author": "Kaushal Meena <kaushal.meena1996@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "serve app"
+  },
+  "dependencies": {
+    "serve": "^11.3.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.0.5"
+  }
+}
