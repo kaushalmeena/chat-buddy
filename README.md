@@ -16,7 +16,7 @@ To set up everything in your local machine, you need to follow these steps:
 1. Clone this repo and then change directory to the `chatbuddy` folder:
 
 ```bash
-$ git clone https://github.com/kaushalmeena1996/chatbuddy.git
+$ git clone https://github.com/kaushalmeena/chatbuddy.git
 $ cd chatbuddy
 ```
 

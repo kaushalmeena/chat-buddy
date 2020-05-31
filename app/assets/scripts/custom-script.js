@@ -16,7 +16,7 @@ $("#navChatTab").on('shown.bs.tab', function () {
 
 function initBuddy() {
   $.ajax({
-    url: "./public/brain/brain.xml",
+    url: "./assets/brain/brain.xml",
     dataType: "xml",
     success: function (data) {
       BOT_BRAIN = data;
