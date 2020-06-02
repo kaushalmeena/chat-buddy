@@ -1,41 +1,72 @@
 const CACHE_NAME = "version-1";
-const urlsToCache = ['index.html'];
+const RUNTIME = 'runtime';
+const PRECACHE_URLS = ['index.html'];
 
 const self = this;
 
-// Install SW
-self.addEventListener('install', (event) => {
+// The install handler takes care of precaching the resources we always need.
+self.addEventListener('install', function (event) {
+  console.log('[ServiceWorker] Install');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+    caches
+      .open(CACHE_NAME)
+      .then(function (cache) {
+        console.log('[ServiceWorker] Caching app shell');
+        return cache.addAll(PRECACHE_URLS);
       })
-  )
+      .then(self.skipWaiting())
+  );
 });
 
-// Listen for requests
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(() =>
-        fetch(event.request)
-      )
-  )
+// The fetch handler serves responses for same-origin resources from a cache.
+// If no response is found, it populates the runtime cache with the response
+// from the network before returning it to the page.
+self.addEventListener('fetch', event => {
+  // Skip cross-origin requests, like those for Google Analytics.
+  if (event.request.url.startsWith(self.location.origin)) {
+    event.respondWith(
+      caches
+        .match(event.request)
+        .then(function (cachedResponse) {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return caches
+            .open(RUNTIME)
+            .then(function (cache) {
+              return fetch(event.request).then(response => {
+                // Put a copy of the response in the runtime cache.
+                return cache
+                  .put(event.request, response.clone())
+                  .then(function () {
+                    return response;
+                  });
+              });
+            });
+        })
+    );
+  }
 });
 
-// Activate the SW
-self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [];
-  cacheWhitelist.push(CACHE_NAME);
-
+// The activate handler takes care of cleaning up old caches.
+self.addEventListener('activate', event => {
+  console.log('[ServiceWorker] Activate');
+  const currentCaches = [PRECACHE, RUNTIME];
   event.waitUntil(
-    caches.keys().then((cacheNames) => Promise.all(
-      cacheNames.map((cacheName) => {
-        if (!cacheWhitelist.includes(cacheName)) {
-          return caches.delete(cacheName);
-        }
+    caches
+      .keys()
+      .then(function (cacheNames) {
+        return cacheNames.filter(function (cacheName) {
+          return !currentCaches.includes(cacheName);
+        });
       })
-    ))
-  )
+      .then(function (cachesToDelete) {
+        return Promise.all(cachesToDelete.map(function (cacheToDelete) {
+          return caches.delete(cacheToDelete);
+        }));
+      })
+      .then(function () {
+        self.clients.claim();
+      })
+  );
 });

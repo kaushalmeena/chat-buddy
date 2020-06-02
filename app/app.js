@@ -5,6 +5,18 @@ jQuery.fn.random = function () {
   return jQuery(this[randomIndex]);
 };
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js')
+      .then(function (reg) {
+        console.log('[ServiceWorker] Registered :', reg.scope);
+      })
+      .catch(function (err) {
+        console.log('[ServiceWorker] Failed :', err);
+      });
+  })
+}
+
 $(document).ready(function () {
   $(".preloader").fadeOut("fast");
   initBuddy();
