@@ -34,7 +34,7 @@ self.addEventListener('fetch', function (event) {
           return caches
             .open(RUNTIME)
             .then(function (cache) {
-              return (fetch(event.request).then(function (response) {
+              return fetch(event.request).then(function (response) {
                 // Put a copy of the response in the runtime cache.
                 return cache
                   .put(event.request, response.clone())
