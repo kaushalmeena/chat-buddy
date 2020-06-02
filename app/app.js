@@ -111,7 +111,7 @@ function getMessage(userMessage) {
         dataType: 'json',
         success: function (data) {
           temp = "<ul class='list-unstyled'>";
-          data.top.forEach(item => {
+          data.top.forEach(function (item) {
             temp += "<li class='media'>";
             temp += "<img class='img-thumbnail' src='" + item.image_url + "' alt='Poster'>";
             temp += "<div class='media-body my-auto'>" + item.title + "</div>";
