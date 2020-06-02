@@ -14,9 +14,9 @@
   <!-- FAVICON -->
   <link rel="shortcut icon" href="./favicon.ico">
   <!-- STYLESHEETS -->
-  <link rel="stylesheet" href="./assets/styles/bootstrap.min.css">
-  <link rel="stylesheet" href="./assets/styles/font-awesome.min.css">
-  <link rel="stylesheet" href="./assets/styles/custom-style.css">
+  <link rel="stylesheet" href="./assets/vendor/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./assets/vendor/css/font-awesome.min.css">
+  <link rel="stylesheet" href="./app.css">
 </head>
 
 <body>
@@ -72,7 +72,7 @@
         <div class="tab-pane fade" id="navChat" role="tabpanel" aria-labelledby="navChatTab">
           <div class="row no-gutters">
             <div class="col-md-2 text-center">
-              <img class="img-thumbnail" src="./assets/images/avtaar.png" alt="Avtaar">
+              <img class="img-thumbnail avtaar" src="./assets/images/avtaar.png" alt="Avtaar">
             </div>
             <div class="col mx-2">
               <div class="card">
@@ -98,19 +98,10 @@
     </div>
   </div>
   <!-- SCRIPTS -->
-  <script src="./assets/scripts/jquery-3.4.1.min.js"></script>
-  <script src="./assets/scripts/popper.min.js"></script>
-  <script src="./assets/scripts/bootstrap.min.js"></script>
-  <script src="./assets/scripts/custom-script.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('Success: ', reg.scope))
-          .catch((err) => console.log('Failure: ', err));
-      })
-    }
-  </script>
+  <script src="./assets/vendor/js/jquery-3.4.1.min.js"></script>
+  <script src="./assets/vendor/js/popper.min.js"></script>
+  <script src="./assets/vendor/js/bootstrap.min.js"></script>
+  <script src="./app.js"></script>
 </body>
 
 </html>
