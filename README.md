@@ -1,4 +1,4 @@
-# chat-buddy
+# Chat-Buddy
 
 A xml chatbot application which can tell date, time, show images of cat and dogs and even can tell a joke or fact.
 
