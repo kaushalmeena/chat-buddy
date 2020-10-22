@@ -1,4 +1,4 @@
-# ChatBuddy
+# chat-buddy
 
 A xml chatbot application which can tell date, time, show images of cat and dogs and even can tell a joke or fact.
 
@@ -13,11 +13,11 @@ To install and run this project you need:
 
 To set up everything in your local machine, you need to follow these steps:
 
-1. Clone this repo and then change directory to the `chatbuddy` folder:
+1. Clone this repo and then change directory to the `chat-buddy` folder:
 
 ```bash
-$ git clone https://github.com/kaushalmeena/chatbuddy.git
-$ cd chatbuddy
+$ git clone https://github.com/kaushalmeena/chat-buddy.git
+$ cd chat-buddy
 ```
 
 2. Install project dependencies using npm:
