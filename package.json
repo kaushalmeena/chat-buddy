@@ -8,10 +8,7 @@
   "scripts": {
     "start": "live-server src"
   },
-  "dependencies": {
-    "live-server": "^1.2.1"
-  },
   "devDependencies": {
-    "prettier": "^2.0.5"
+    "live-server": "^1.2.1"
   }
 }
