@@ -2,6 +2,8 @@
 
 A xml chatbot application which can tell date, time, show images of cat and dogs and even can tell a joke or fact.
 
+Live version is deployed at [https://kaushalmeena.github.io/chat-buddy/](https://kaushalmeena.github.io/chat-buddy/)
+
 ## Requirements
 
 To install and run this project you need:
