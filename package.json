@@ -7,7 +7,7 @@
   "author": "Kaushal Meena <kaushal.meena1996@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "live-server src",
+    "start": "live-server src --port=5000",
     "deploy": "gh-pages -d src"
   },
   "devDependencies": {
