@@ -13,32 +13,13 @@ body {
   background: url("./assets/images/preloader.gif") center no-repeat #f1f1f1;
 }
 
-.logo {
-  max-width: 40px;
-  width: 100%;
-}
-
-.bot {
-  max-width: 140px;
-  width: 100%;
-}
-
-.avtaar {
-  max-width: 120px;
-  width: 100%;
-}
-
 .content {
   text-align: center;
   max-height: 400px;
   overflow: auto;
 }
 
-.btn-min-width {
-  min-width: 200px;
-}
-
-.img-max-height {
+.content-image {
   max-height: 300px;
 }
 
@@ -49,4 +30,8 @@ body {
 .navbar-brand:hover {
   opacity: 0.5;
   filter: alpha(opacity=50);
+}
+
+.bi-2x {
+  font-size: 28px;
 }

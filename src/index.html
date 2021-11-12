@@ -14,8 +14,8 @@
   <!-- FAVICON -->
   <link rel="shortcut icon" href="./favicon.ico" />
   <!-- STYLESHEETS -->
-  <link rel="stylesheet" href="./assets/vendor/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="./assets/vendor/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="./assets/library/bootstrap/bootstrap.min.css" />
+  <link rel="stylesheet" href="./assets/library/boostrap-icons/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="./index.css" />
 </head>
 
@@ -24,12 +24,12 @@
   <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary justify-content-between">
     <div class="container">
       <a class="navbar-brand" href="index.html">
-        <img class="logo" src="./assets/images/icons/icon-128x128.png" alt="logo" />
+        <i class="bi bi-chat-left-dots-fill bi-2x"></i>
       </a>
       <ul class="nav navbar-nav ml-auto">
         <li class="nav-item">
           <a class="nav-link" href="https://github.com/kaushalmeena/chat-buddy">
-            <i class="fa fa-github fa-2x" aria-hidden="true"></i>
+            <i class="bi bi-github bi-2x"></i>
           </a>
         </li>
       </ul>
@@ -41,40 +41,38 @@
         <div class="nav nav-tabs" id="navTab" role="tablist">
           <a class="nav-item nav-link active" id="navHomeTab" data-toggle="tab" href="#navHome" role="tab"
             aria-controls="navHome" aria-selected="true">
-            <i class="fa fa-home fa-2x" aria-hidden="true"></i>
+            <i class="bi bi-house bi-2x"></i>
           </a>
           <a class="nav-item nav-link" id="navChatTab" data-toggle="tab" href="#navChat" role="tab"
             aria-controls="navChat" aria-selected="false">
-            <i class="fa fa-comments-o fa-2x" aria-hidden="true"></i>
+            <i class="bi bi-chat bi-2x"></i>
           </a>
         </div>
       </nav>
       <div class="tab-content mt-5" id="navTabContent">
         <div class="tab-pane fade show active" id="navHome" role="tabpanel" aria-labelledby="navHomeTab">
-          <div class="row no-gutters">
-            <div class="col-md-3 text-center mx-2">
-              <img class="bot" src="./assets/images/bot.png" alt="Chatty" />
+          <div class="row align-items-center">
+            <div class="col-md-3 my-2 text-center">
+              <img width="200" src="./assets/images/bot.png" alt="Chatty" />
             </div>
             <div class="col">
               <h1 class="display-5">Welcome!</h1>
               <p class="lead">
-                Chat-Buddy is like a virtual friend whom you can talk.
+                Chat-Buddy is like a virtual friend whom you can talk.<br />
+                It can tell date, time, show images of cat and dogs and even can tell a joke or fact.
               </p>
-              <hr class="my-4" />
-              <div class="text-center">
-                <button type="button" class="btn btn-outline-secondary btn-lg btn-min-width" onclick="showChatTab()">
-                  Chat!
-                </button>
-              </div>
+              <button type="button" class="btn btn-outline-secondary btn-lg" onclick="showChatTab()">
+                Start chatting!
+              </button>
             </div>
           </div>
         </div>
         <div class="tab-pane fade" id="navChat" role="tabpanel" aria-labelledby="navChatTab">
-          <div class="row no-gutters">
+          <div class="row">
             <div class="col-md-2 text-center">
-              <img class="img-thumbnail avtaar" src="./assets/images/avtaar.png" alt="Avtaar" />
+              <img class="img-thumbnail" width="200" src="./assets/images/avtaar.png" alt="Avtaar" />
             </div>
-            <div class="col mx-2">
+            <div class="col">
               <div class="card">
                 <div class="card-body">
                   <div class="text-center">
@@ -89,7 +87,7 @@
             <input id="chatInput" class="form-control" type="text" onkeypress="checkKeypress(event)" />
             <div class="input-group-append">
               <button id="chatButton" class="btn btn-primary" onclick="sendMessage()">
-                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                <i class="bi bi-chevron-right"></i>
               </button>
             </div>
           </div>
@@ -98,9 +96,9 @@
     </div>
   </div>
   <!-- SCRIPTS -->
-  <script src="./assets/vendor/js/jquery-3.4.1.min.js"></script>
-  <script src="./assets/vendor/js/popper.min.js"></script>
-  <script src="./assets/vendor/js/bootstrap.min.js"></script>
+  <script src="./assets/library/jquery/jquery-3.6.0.min.js"></script>
+  <script src="./assets/library/popper/popper.min.js"></script>
+  <script src="./assets/library/bootstrap/bootstrap.min.js"></script>
   <script src="./index.js"></script>
 </body>
 

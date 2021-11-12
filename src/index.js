@@ -97,7 +97,7 @@ function getMessage(userMessage) {
         type: 'GET',
         dataType: 'json',
         success: function (data) {
-          $("#chatContent").html("<img class='img-thumbnail img-max-height' src='" + data.url + "' alt='Dog'>");
+          $("#chatContent").html("<img class='img-thumbnail content-image' src='" + data.url + "' alt='Dog'>");
         },
         error: function () {
           $("#chatContent").text("Error ocuured while fetching dog.");

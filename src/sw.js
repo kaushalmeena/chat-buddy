@@ -1,4 +1,4 @@
-const CACHE_NAME = "version-1";
+const CACHE_NAME = "version-2";
 const RUNTIME = 'runtime';
 const PRECACHE_URLS = ['index.html'];
 
@@ -51,7 +51,7 @@ self.addEventListener('fetch', function (event) {
 // The activate handler takes care of cleaning up old caches.
 self.addEventListener('activate', function (event) {
   console.log('[ServiceWorker] Activate');
-  const currentCaches = [PRECACHE, RUNTIME];
+  const currentCaches = [RUNTIME];
   event.waitUntil(
     caches
       .keys()
