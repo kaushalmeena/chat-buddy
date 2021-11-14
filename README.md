@@ -2,16 +2,18 @@
 
 A xml chatbot application which can tell date, time, show images of cat and dogs and even can tell a joke or fact.
 
-Live version is deployed at [https://kaushalmeena.github.io/chat-buddy/](https://kaushalmeena.github.io/chat-buddy/)
+## Local Development
 
-## Requirements
+These instructions will get you a copy of the project up and running on your local machine for development purposes.
+
+### Requirements
 
 To install and run this project you need:
 
 - [NodeJS](https://nodejs.org/ "NodeJS")
 - [git](https://git-scm.com/downloads "git") (only to clone this repository)
 
-## Installation
+### Installation
 
 To set up everything in your local machine, you need to follow these steps:
 
@@ -28,7 +30,7 @@ $ cd chat-buddy
 $ npm install
 ```
 
-## Usage
+### Running
 
 To run the project simply run:
 

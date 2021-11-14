@@ -3,15 +3,12 @@
   "version": "1.0.0",
   "description": "A xml chatbot application which can tell date, time, show images of cat and dogs and even can tell a joke or fact.",
   "repository": "git@github.com:kaushalmeena/chat-buddy.git",
-  "homepage": "https://kaushalmeena.github.io/chat-buddy/",
   "author": "Kaushal Meena <kaushal.meena1996@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "live-server src --port=5000",
-    "deploy": "gh-pages -d src"
+    "start": "live-server src --port=5000"
   },
   "devDependencies": {
-    "gh-pages": "^3.2.0",
     "live-server": "^1.2.1"
   }
 }
