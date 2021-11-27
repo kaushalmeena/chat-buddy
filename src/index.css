@@ -19,10 +19,6 @@ body {
   overflow: auto;
 }
 
-.content-image {
-  max-height: 300px;
-}
-
 .navbar-brand {
   transition: all 0.3s;
 }
