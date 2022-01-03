@@ -2,7 +2,7 @@
 
 A xml chatbot application which can tell date, time, show images of cat and dogs and even can tell a joke or fact.
 
-## Local Development
+## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development purposes.
 
