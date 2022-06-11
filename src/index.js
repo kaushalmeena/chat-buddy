@@ -119,11 +119,11 @@ function getMessage(userMessage) {
         type: "GET",
         dataType: "json",
         success: function (data) {
-          temp = `<ul class="list - unstyled">`;
+          temp = `<ul>`;
           data.top.forEach(function (item) {
             temp += `<li class="media">
-                      <img class="img-thumbnail" src="${item.image_url}" alt="Poster">"
-                      <div class="media-body my-auto">${item.title}</div>"
+                      <img class="img-thumbnail" src="${item.image_url}" alt="Poster">
+                      <div class="media-body my-auto">${item.title}</div>
                     </li>`;
           });
           temp += "</ul";
