@@ -1,105 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="./assets/images/icons/icon-192x192.png"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#007bff" />
+    <meta
+      name="description"
+      content="A xml chatbot application which can tell date, time, show images of cat and dogs and even can tell a joke or fact."
+    />
+    <link
+      rel="apple-touch-icon"
+      href="./assets/images/icons/icon-192x192.png"
+    />
+    <link rel="manifest" href="./manifest.json" />
+    <title>Chat-Buddy</title>
+    <!-- FAVICON -->
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <!-- STYLESHEETS -->
+    <link
+      rel="stylesheet"
+      href="./assets/library/bootstrap/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="./assets/library/boostrap-icons/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="./index.css" />
+  </head>
 
-<head>
-  <meta charset="utf-8" />
-  <link rel="icon" type="image/png" href="./assets/images/icons/icon-192x192.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#007bff" />
-  <meta name="description"
-    content="A xml chatbot application which can tell date, time, show images of cat and dogs and even can tell a joke or fact." />
-  <link rel="apple-touch-icon" href="./assets/images/icons/icon-192x192.png" />
-  <link rel="manifest" href="./manifest.json" />
-  <title>Chat-Buddy</title>
-  <!-- FAVICON -->
-  <link rel="shortcut icon" href="./favicon.ico" />
-  <!-- STYLESHEETS -->
-  <link rel="stylesheet" href="./assets/library/bootstrap/bootstrap.min.css" />
-  <link rel="stylesheet" href="./assets/library/boostrap-icons/bootstrap-icons.min.css" />
-  <link rel="stylesheet" href="./index.css" />
-</head>
-
-<body>
-  <div class="preloader"></div>
-  <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary justify-content-between">
+  <body>
+    <div class="preloader"></div>
+    <nav
+      class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary justify-content-between"
+    >
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <i class="bi bi-chat-left-dots-fill bi-2x"></i>
+        </a>
+        <ul class="nav navbar-nav ml-auto">
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              href="https://github.com/kaushalmeena/chat-buddy"
+            >
+              <i class="bi bi-github bi-2x"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
     <div class="container">
-      <a class="navbar-brand" href="index.html">
-        <i class="bi bi-chat-left-dots-fill bi-2x"></i>
-      </a>
-      <ul class="nav navbar-nav ml-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="https://github.com/kaushalmeena/chat-buddy">
-            <i class="bi bi-github bi-2x"></i>
-          </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
-  <div class="container">
-    <div class="jumbotron">
-      <nav>
-        <div class="nav nav-tabs" id="navTab" role="tablist">
-          <a class="nav-item nav-link active" id="navHomeTab" data-toggle="tab" href="#navHome" role="tab"
-            aria-controls="navHome" aria-selected="true">
-            <i class="bi bi-house bi-2x"></i>
-          </a>
-          <a class="nav-item nav-link" id="navChatTab" data-toggle="tab" href="#navChat" role="tab"
-            aria-controls="navChat" aria-selected="false">
-            <i class="bi bi-chat bi-2x"></i>
-          </a>
-        </div>
-      </nav>
-      <div class="tab-content mt-5" id="navTabContent">
-        <div class="tab-pane fade show active" id="navHome" role="tabpanel" aria-labelledby="navHomeTab">
-          <div class="row align-items-center">
-            <div class="col-lg-3 my-2 text-center">
-              <img width="200" src="./assets/images/bot.png" alt="Chatty" />
-            </div>
-            <div class="col">
-              <h1 class="display-5">Welcome!</h1>
-              <p class="lead">
-                Chat-Buddy is like a virtual friend whom you can talk.<br />
-                It can tell date, time, show images of cat and dogs and even can tell a joke or fact.
-              </p>
-              <button type="button" class="btn btn-outline-secondary btn-lg" onclick="showChatTab()">
-                Start chatting!
-              </button>
-            </div>
+      <div class="jumbotron">
+        <nav>
+          <div id="navTab" class="nav nav-tabs" role="tablist">
+            <a
+              id="navHomeTab"
+              class="nav-item nav-link active"
+              data-toggle="tab"
+              href="#navHome"
+              role="tab"
+              aria-controls="navHome"
+              aria-selected="true"
+            >
+              <i class="bi bi-house bi-2x"></i>
+            </a>
+            <a
+              id="navChatTab"
+              class="nav-item nav-link"
+              data-toggle="tab"
+              href="#navChat"
+              role="tab"
+              aria-controls="navChat"
+              aria-selected="false"
+            >
+              <i class="bi bi-chat bi-2x"></i>
+            </a>
           </div>
-        </div>
-        <div class="tab-pane fade" id="navChat" role="tabpanel" aria-labelledby="navChatTab">
-          <div class="row">
-            <div class="col-md-2 text-center">
-              <img class="img-thumbnail" width="200" src="./assets/images/avtaar.png" alt="Avtaar" />
-            </div>
-            <div class="col">
-              <div class="card">
-                <div class="card-body">
-                  <div class="text-center">
-                    <span id="chatOutput" class="lead"></span>
-                  </div>
-                  <div id="chatContent" class="content"></div>
-                </div>
+        </nav>
+        <div class="tab-content mt-5" id="navTabContent">
+          <div
+            id="navHome"
+            class="tab-pane fade show active"
+            role="tabpanel"
+            aria-labelledby="navHomeTab"
+          >
+            <div class="row align-items-center">
+              <div class="col-lg-3 my-2 text-center">
+                <img width="200" src="./assets/images/bot.png" alt="Chatty" />
+              </div>
+              <div class="col">
+                <h1 class="display-5">Welcome!</h1>
+                <p class="lead">
+                  Chat-Buddy is like a virtual friend whom you can talk.<br />
+                  It can tell date, time, show images of cat and dogs and even
+                  can tell a joke or fact.
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-lg"
+                  onclick="showChatTab()"
+                >
+                  Start chatting!
+                </button>
               </div>
             </div>
           </div>
-          <div class="input-group input-group-lg mt-2">
-            <input id="chatInput" class="form-control" type="text" onkeypress="checkKeypress(event)" />
-            <div class="input-group-append">
-              <button id="chatButton" class="btn btn-primary" onclick="sendMessage()">
-                <i class="bi bi-chevron-right"></i>
-              </button>
+          <div
+            id="navChat"
+            class="tab-pane fade"
+            role="tabpanel"
+            aria-labelledby="navChatTab"
+          >
+            <div class="row">
+              <div class="col-md-2 text-center">
+                <img
+                  class="img-thumbnail"
+                  width="200"
+                  src="./assets/images/avtaar.png"
+                  alt="Avtaar"
+                />
+              </div>
+              <div class="col">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="text-center">
+                      <span id="chatOutput" class="lead"></span>
+                    </div>
+                    <div id="chatContent" class="content"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="input-group input-group-lg mt-2">
+              <input
+                id="chatInput"
+                class="form-control"
+                type="text"
+                onkeypress="checkKeypress(event)"
+              />
+              <div class="input-group-append">
+                <button
+                  id="chatButton"
+                  class="btn btn-primary"
+                  onclick="sendMessage()"
+                >
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <!-- SCRIPTS -->
-  <script src="./assets/library/jquery/jquery-3.6.0.min.js"></script>
-  <script src="./assets/library/popper/popper.min.js"></script>
-  <script src="./assets/library/bootstrap/bootstrap.min.js"></script>
-  <script src="./index.js"></script>
-</body>
-
+    <!-- SCRIPTS -->
+    <script src="./assets/library/jquery/jquery-3.6.0.min.js"></script>
+    <script src="./assets/library/popper/popper.min.js"></script>
+    <script src="./assets/library/bootstrap/bootstrap.min.js"></script>
+    <script src="./index.js"></script>
+  </body>
 </html>
