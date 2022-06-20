@@ -5,37 +5,38 @@ jQuery.fn.random = function () {
   return jQuery(this[randomIndex]);
 };
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js")
+$(window).on("load", function () {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register("./sw.js")
       .then(function (reg) {
         console.log("[ServiceWorker] Registered :", reg.scope);
       })
       .catch(function (err) {
         console.log("[ServiceWorker] Failed :", err);
       });
-  })
-}
-
-$(function () {
-  $(".preloader").fadeOut("fast");
-  initBuddy();
+  }
 });
 
 $("#navChatTab").on("shown.bs.tab", function () {
   getMessage("Hello");
 });
 
+$(function () {
+  $(".preloader").fadeOut("fast");
+  initBuddy();
+});
+
 function initBuddy() {
   $.ajax({
     url: "./assets/brain/brain.xml",
     dataType: "xml",
-    success: function (data) {
+    success(data) {
       BOT_BRAIN = data;
     },
-    error: function () {
+    error() {
       alert("Error occured while fetching brain file.");
-    }
+    },
   });
 }
 
@@ -68,7 +69,7 @@ function getMessage(userMessage) {
     });
 
   switch (botCode) {
-    case "101":
+    case "101": // Tell current date
       temp = new Date();
       $("#chatContent").html(`
         <span class="lead">
@@ -76,49 +77,57 @@ function getMessage(userMessage) {
         </span>
       `);
       break;
-    case "102":
+    case "102": // Tell current time
       temp = new Date();
       $("#chatContent").html(`
         <span class="lead">
-          ${temp.toLocaleString("en-US", { hour: "numeric", minute: "numeric", hour12: true })}
+          ${temp.toLocaleString("en-US", {
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true,
+          })}
         </span>
       `);
       break;
-    case "103":
+    case "103": // Open google website
       window.open("https://www.google.co.in", "_blank");
       break;
-    case "104":
+    case "104": // Show random cat image
       $.ajax({
         url: "https://aws.random.cat/meow",
         type: "GET",
         dataType: "json",
-        success: function (data) {
-          $("#chatContent").html(`<img class="img-thumbnail" src="${data.file}" alt="Cat">`);
+        success(data) {
+          $("#chatContent").html(
+            `<img class="img-thumbnail" src="${data.file}" alt="Cat">`
+          );
         },
-        error: function () {
+        error() {
           $("#chatContent").text("Error ocuured while fetching cat.");
-        }
+        },
       });
       break;
-    case "105":
+    case "105": // Show random dog image
       $.ajax({
         url: "https://random.dog/woof.json",
         type: "GET",
         dataType: "json",
-        success: function (data) {
-          $("#chatContent").html(`<img class="img-thumbnail" src="${data.url}" alt="Dog">`);
+        success(data) {
+          $("#chatContent").html(
+            `<img class="img-thumbnail" src="${data.url}" alt="Dog">`
+          );
         },
-        error: function () {
+        error() {
           $("#chatContent").text("Error ocuured while fetching dog.");
-        }
+        },
       });
       break;
-    case "106":
+    case "106": // Show top anime list
       $.ajax({
         url: "https://api.jikan.moe/v3/top/anime",
         type: "GET",
         dataType: "json",
-        success: function (data) {
+        success(data) {
           temp = `<ul>`;
           data.top.forEach(function (item) {
             temp += `<li class="media">
@@ -129,37 +138,38 @@ function getMessage(userMessage) {
           temp += "</ul";
           $("#chatContent").html(temp);
         },
-        error: function (e) {
-          console.log(e)
+        error(e) {
+          console.log(e);
           $("#chatContent").text("Error ocuured while fetching anime.");
-        }
+        },
       });
       break;
-    case "107":
+    case "107": // Tell random joke
       $.ajax({
         url: "https://sv443.net/jokeapi/v2/joke/Any?type=single",
         type: "GET",
         dataType: "json",
-        success: function (data) {
+        success(data) {
           $("#chatContent").html(`<span class="lead">${data.joke}</span>`);
         },
-        error: function () {
+        error() {
           $("#chatContent").text("Error ocuured while fetching joke.");
-        }
+        },
       });
       break;
-    case "108":
+    case "108": // Tell random number trivia
       $.ajax({
         url: "http://numbersapi.com/random/trivia",
         type: "GET",
-        success: function (data) {
+        success(data) {
           $("#chatContent").html(`<span class="lead">${data}</span>`);
         },
-        error: function () {
+        error() {
           $("#chatContent").text("Error ocuured while fetching fact.");
-        }
+        },
       });
       break;
+    default:
   }
 
   $("#chatOutput").text(botMessage);
@@ -174,7 +184,7 @@ function sendMessage() {
 }
 
 function checkKeypress(event) {
-  if (event.keyCode == 13) {
+  if (event.key === 'Enter') {
     sendMessage();
   }
 }
