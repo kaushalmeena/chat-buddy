@@ -1,10 +1,10 @@
-const CACHE_NAME = "version-2";
+const CACHE_NAME = "version-1";
 const RUNTIME = 'runtime';
-const PRECACHE_URLS = ['index.html'];
+const PRE_CACHE_URLS = ['index.html'];
 
 const self = this;
 
-// The install handler takes care of precaching the resources we always need.
+// The install handler takes care of pre-caching the resources we always need.
 self.addEventListener('install', function (event) {
   console.log('[ServiceWorker] Install');
   event.waitUntil(
@@ -12,7 +12,7 @@ self.addEventListener('install', function (event) {
       .open(CACHE_NAME)
       .then(function (cache) {
         console.log('[ServiceWorker] Caching app shell');
-        return cache.addAll(PRECACHE_URLS);
+        return cache.addAll(PRE_CACHE_URLS);
       })
       .then(self.skipWaiting())
   );
