@@ -8,7 +8,7 @@ jQuery.fn.random = function () {
 $(window).on("load", function () {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
-      .register("./sw.js")
+      .register("/sw.js")
       .then(function (reg) {
         console.log("[ServiceWorker] Registered :", reg.scope);
       })
