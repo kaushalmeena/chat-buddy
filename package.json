@@ -6,9 +6,11 @@
   "author": "Kaushal Meena <kaushal.meena1996@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "live-server src --port=5000"
+    "dev": "live-server src --port=3000",
+    "start": "serve src"
   },
   "devDependencies": {
-    "live-server": "^1.2.2"
+    "live-server": "^1.2.2",
+    "serve": "^14.2.1"
   }
 }

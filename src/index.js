@@ -18,7 +18,7 @@ $(window).on("load", function () {
   }
 });
 
-$("#navChatTab").on("shown.bs.tab", function () {
+$("#chat-tab").on("shown.bs.tab", function () {
   getMessage("Hello");
 });
 
@@ -29,13 +29,13 @@ $(function () {
 
 function initBuddy() {
   $.ajax({
-    url: "./assets/brain/brain.xml",
+    url: "/assets/brain/brain.xml",
     dataType: "xml",
     success(data) {
       BOT_BRAIN = data;
     },
     error() {
-      alert("Error occured while fetching brain file.");
+      alert("Error occurred while fetching brain file.");
     },
   });
 }
@@ -94,16 +94,16 @@ function getMessage(userMessage) {
       break;
     case "104": // Show random cat image
       $.ajax({
-        url: "https://aws.random.cat/meow",
+        url: "https://api.thecatapi.com/v1/images/search",
         type: "GET",
         dataType: "json",
         success(data) {
           $("#chatContent").html(
-            `<img class="img-thumbnail" src="${data.file}" alt="Cat">`
+            `<img class="img-thumbnail" src="${data[0].url}" alt="Cat">`
           );
         },
         error() {
-          $("#chatContent").text("Error ocuured while fetching cat.");
+          $("#chatContent").text("Error ocurred while fetching cat.");
         },
       });
       break;
@@ -118,29 +118,34 @@ function getMessage(userMessage) {
           );
         },
         error() {
-          $("#chatContent").text("Error ocuured while fetching dog.");
+          $("#chatContent").text("Error ocurred while fetching dog.");
         },
       });
       break;
     case "106": // Show top anime list
       $.ajax({
-        url: "https://api.jikan.moe/v3/top/anime",
+        url: "https://api.jikan.moe/v4/top/anime",
         type: "GET",
         dataType: "json",
         success(data) {
-          temp = `<ul>`;
-          data.top.forEach(function (item) {
-            temp += `<li class="media">
-                      <img class="img-thumbnail" src="${item.image_url}" alt="Poster">
-                      <div class="media-body my-auto">${item.title}</div>
-                    </li>`;
+          temp = "";
+          data.data.forEach(function (item) {
+            temp += `
+              <div class="d-flex flex-column flex-md-row align-items-center my-5">
+                <div class="flex-shrink-0">
+                  <img class="img-thumbnail" src="${item.images.webp.image_url}" alt="Poster">
+                </div>
+                <div class="flex-grow-1 text-left ms-3">
+                  <h3>${item.title}</h3>
+                  <p>${item.synopsis}</p>
+                </div>
+              </div>
+            `
           });
-          temp += "</ul";
           $("#chatContent").html(temp);
         },
-        error(e) {
-          console.log(e);
-          $("#chatContent").text("Error ocuured while fetching anime.");
+        error() {
+          $("#chatContent").text("Error ocurred while fetching anime.");
         },
       });
       break;
@@ -153,11 +158,11 @@ function getMessage(userMessage) {
           $("#chatContent").html(`<span class="lead">${data.joke}</span>`);
         },
         error() {
-          $("#chatContent").text("Error ocuured while fetching joke.");
+          $("#chatContent").text("Error ocurred while fetching joke.");
         },
       });
       break;
-    case "108": // Tell random number trivia
+    case "108": // Tell random number fact
       $.ajax({
         url: "http://numbersapi.com/random/trivia",
         type: "GET",
@@ -165,7 +170,7 @@ function getMessage(userMessage) {
           $("#chatContent").html(`<span class="lead">${data}</span>`);
         },
         error() {
-          $("#chatContent").text("Error ocuured while fetching fact.");
+          $("#chatContent").text("Error ocurred while fetching fact.");
         },
       });
       break;
@@ -190,5 +195,7 @@ function checkKeypress(event) {
 }
 
 function showChatTab() {
-  $("#navChatTab").tab("show");
+  const triggerEl = $('#chat-tab');
+  const tabTrigger = bootstrap.Tab.getOrCreateInstance(triggerEl);
+  tabTrigger.show();
 }

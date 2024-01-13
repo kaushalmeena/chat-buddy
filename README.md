@@ -10,7 +10,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 To install and run this project you need:
 
-- [NodeJS](https://nodejs.org/ "NodeJS")
+- [Node.js](https://nodejs.org/ "Node.js")
 - [git](https://git-scm.com/downloads "git") (only to clone this repository)
 
 ### Installation
@@ -38,7 +38,7 @@ To run the project simply run:
 $ npm start
 ```
 
-Your app should now be running on [localhost:5000](http://localhost:5000/).
+Your app should now be running on [localhost:3000](http://localhost:3000/).
 
 ## License
 
