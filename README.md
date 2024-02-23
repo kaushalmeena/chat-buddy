@@ -20,14 +20,14 @@ To set up everything in your local machine, you need to follow these steps:
 1. Clone this repo and then change directory to the `chat-buddy` folder:
 
 ```bash
-$ git clone https://github.com/kaushalmeena/chat-buddy.git
-$ cd chat-buddy
+git clone https://github.com/kaushalmeena/chat-buddy.git
+cd chat-buddy
 ```
 
 2. Install project dependencies using npm:
 
 ```bash
-$ npm install
+npm install
 ```
 
 ### Running
@@ -35,7 +35,7 @@ $ npm install
 To run the project simply run:
 
 ```bash
-$ npm start
+npm start
 ```
 
 Your app should now be running on [localhost:3000](http://localhost:3000/).
