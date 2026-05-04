@@ -11,6 +11,6 @@
   },
   "devDependencies": {
     "live-server": "^1.2.2",
-    "serve": "^14.2.1"
+    "serve": "^14.2.6"
   }
 }
