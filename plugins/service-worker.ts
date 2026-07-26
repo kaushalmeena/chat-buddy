@@ -5,7 +5,7 @@ import type { Plugin } from "vite";
 import { transformWithOxc } from "vite";
 
 /**
- * Builds `src/service-worker.ts` into `dist/sw.js` with a real precache manifest.
+ * Builds `worker/service-worker.ts` into `dist/sw.js` with a real precache manifest.
  *
  * This is what `vite-plugin-pwa` was doing. Doing it here instead removed
  * `workbox-build` — source of every high-severity advisory in the project, and of the

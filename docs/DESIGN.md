@@ -209,9 +209,11 @@ Conventions:
 - **20px** default, **13–17px** in dense contexts, **12px** in message footers.
 - Icons beside a text label get `aria-hidden`. Icon-only buttons carry `aria-label`
   *and* `title`.
-- Icons passed as props are typed as `IconComponent` in
-  [`components/types.ts`](../src/components/types.ts) rather than lucide's own type, so component
-  signatures are not coupled to the icon library.
+- Icons passed as props are typed as `LucideIcon`, imported from `lucide-react`. There
+  was briefly a local alias for this, on the theory that it decoupled component
+  signatures from the icon library. It did not buy anything: the alias was structurally
+  identical to the real type, so a different icon set would have broken every call site
+  regardless — and one more indirection is a real cost against a hypothetical saving.
 
 Lucide 1.x removed brand icons, so there is no GitHub glyph — the repo link uses
 `ExternalLink`.

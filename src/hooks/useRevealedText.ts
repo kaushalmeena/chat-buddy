@@ -107,6 +107,13 @@ export function useRevealedText(text: string, isStreaming: boolean): string {
     setRevealed(text.length);
   }
 
+  /*
+   * `isStreaming` is the loop's restart trigger, not a value the body reads — the body
+   * reads `streamingRef` so that arriving text does not tear the loop down and rebuild
+   * it. Restarting when streaming *stops* is what lets the tail drain and the effect
+   * settle, instead of polling every frame forever.
+   */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: restart trigger, read via ref.
   useEffect(() => {
     // Frames do not run in a background tab. Revealing progressively there would
     // stall until the tab is looked at again, so show everything instead.

@@ -1,12 +1,11 @@
-import { Monitor, Moon, Sun } from "lucide-react";
+import { type LucideIcon, Monitor, Moon, Sun } from "lucide-react";
 import { motion } from "motion/react";
 import { type ThemePreference, useConfig } from "@/stores/config.ts";
-import type { IconComponent } from "./types.ts";
 
 const OPTIONS: readonly {
   readonly value: ThemePreference;
   readonly label: string;
-  readonly icon: IconComponent;
+  readonly icon: LucideIcon;
 }[] = [
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },

@@ -10,7 +10,7 @@ something else, and the reason we did not.
 - [Layers](#layers)
 - [The provider seam](#the-provider-seam)
 - [Provider tiering](#provider-tiering)
-- [Streaming is two separate jobs](#streaming-is-two-separate-jobs)
+- [Streaming is three separate jobs](#streaming-is-three-separate-jobs)
 - [State](#state)
 - [Persistence](#persistence)
 - [The rule engine](#the-rule-engine)
@@ -18,7 +18,8 @@ something else, and the reason we did not.
 - [Speech](#speech)
 - [Build and bundle](#build-and-bundle)
 - [Conventions](#conventions)
-- [Dependency pins](#dependency-pins)
+- [The service worker](#the-service-worker)
+- [Dependencies](#dependencies)
 - [Known gaps](#known-gaps)
 
 ## The shape of the app
@@ -77,6 +78,17 @@ types stop being a shared vocabulary and become a dependency knot.
 [`speech-text.ts`](../src/lib/speech-text.ts) and
 [`speech-voices.ts`](../src/lib/speech-voices.ts) would work unchanged in any other
 project. Anything that knows what a `Conversation` is belongs elsewhere.
+
+Three folders sit outside `src`, all typechecked with everything else:
+
+- **`worker/`** — the service worker. Outside `src` because `src` is what gets bundled
+  and this is not: it runs in a worker global scope with no DOM, nothing in `src`
+  imports it, and it is transpiled to `dist/sw.js` by its own pipeline. Verifiable
+  rather than asserted — every identifier in it appears only in `dist/sw.js`, never in
+  an `assets/*.js` chunk. That separation is also why the file opens by aliasing `self`
+  instead of relying on the ambient DOM globals the rest of the app has.
+- **`plugins/`** — Vite plugins. Currently just the service worker builder.
+- **`scripts/`** — standalone CLI tools. Currently just the icon generator.
 
 ## The provider seam
 
@@ -150,10 +162,10 @@ bailing out, and falls back to the rule provider if probing failed. This was a r
 bug: sending a message before probing finished appended the message and then
 silently answered nothing.
 
-## Streaming is two separate jobs
+## Streaming is three separate jobs
 
 This is the least obvious part of the codebase and the most worth understanding.
-Smooth streaming is two problems that look like one, and conflating them means
+Smooth streaming is three problems that look like one, and conflating them means
 neither gets solved properly.
 
 **Job one: not melting React.** A model emitting 60 tokens a second would drive 60
@@ -166,20 +178,29 @@ frame regardless of token rate. It never withholds text — it only batches writ
 in clumps as batches finish; Chrome's Prompt API can hand over a whole sentence at
 once after a pause. Committing each chunk the moment it lands makes text lurch — a
 paragraph appears, nothing happens, three words appear.
-[`StreamingMarkdown.tsx`](../src/components/StreamingMarkdown.tsx) solves this with
-[llm-ui](https://llm-ui.com/)'s `useLLMOutput`, which keeps its own buffer and
-reveals from it at display frame rate, speeding up or slowing down to hold the
-buffer near a target size.
+[`useRevealedText`](../src/hooks/useRevealedText.ts) solves this by keeping a buffer
+and releasing a slice of it per animation frame, sized from how much is waiting. A
+small read-ahead reserve is held back so a pause between batches does not stall the
+reveal, and a very large burst is shown at once rather than paced for seconds.
 
 Keeping them apart means neither compromises: the batcher never delays text to make
 it look smoother, and the renderer never has to reason about network timing.
 
-`markdownLookBack` is the piece that makes the second job safe for markdown.
-Revealing a raw prefix would flash half-parsed syntax — a lone `**` before its
-closing pair, a table with one cell. The look-back function walks back to the
-nearest boundary that renders cleanly.
+**Job three: not rendering broken markdown.** Revealing a raw prefix flashes
+half-written syntax — a lone `**` before its closing pair, a stray `[`, an open code
+fence swallowing the rest of the message.
+[`toRenderableMarkdown`](../src/lib/markdown-stream.ts) fixes each construct one of
+two ways: an open fence gets a synthetic closing fence, so code streams line by line;
+short constructs like emphasis and links are truncated at their opening marker and
+reappear a frame later, already formatted.
 
-Settled messages bypass llm-ui entirely and render through
+Both replaced [llm-ui](https://llm-ui.com/), which did this job until it stopped being
+maintained in early 2025 — and which peer-depended on React 18, forcing an npm
+override to install beside React 19. The replacement is about 200 lines with 37 tests,
+including one that walks every prefix length of a realistic reply and asserts no
+unpaired marker ever escapes.
+
+Settled messages bypass all of it and render through
 [`Markdown.tsx`](../src/components/Markdown.tsx) directly. There is nothing left to
 pace, and routing history through the hook would re-animate old replies on mount.
 
@@ -304,10 +325,19 @@ and the UI says so rather than implying otherwise.
 
 ## Build and bundle
 
-**Vendor chunks are split by package boundary.** `manualChunks` in
-[`vite.config.ts`](../vite.config.ts) matches full package names, not prefixes —
-`react` as a prefix also matches `react-markdown`, which quietly pulled the whole
-micromark/mdast parser stack into the chunk labelled "react".
+**Vendor chunks name what comes out, not what goes in.** `manualChunks` in
+[`vite.config.ts`](../vite.config.ts) assigns `react` and `motion` from two small
+explicit sets, and everything else in `node_modules` to one `vendor` chunk.
+
+The previous approach listed the markdown pipeline's packages by name, and it had
+already drifted: `style-to-js`, `dequal`, `is-alphabetical` and several others were
+missing, so roughly 100 kB of third-party code was landing in the entry chunk. An
+allow-list of ~80 transitive packages cannot survive a dependency update. Inverting
+the rule fixed the leak and removed the maintenance — the entry chunk went from
+154 kB to 51 kB.
+
+Matching is on the full package boundary, not a prefix: `react` as a prefix also
+matches `react-markdown`.
 
 **The WebLLM engine is excluded from the service worker precache.** It is a ~6 MB
 chunk most visitors never load, and the weights it fetches are hundreds of megabytes
@@ -317,9 +347,42 @@ for a feature nobody opted into.
 **`chunkSizeWarningLimit` is set above the WebLLM chunk.** A warning that fires on
 every build is one everyone learns to scroll past.
 
-Approximate gzipped initial load: React ~57 kB, markdown pipeline ~54 kB, motion
-~41 kB, app code ~50 kB. The WebLLM chunk (~2.1 MB gzipped) is lazy and loads only
-on opt-in.
+Approximate gzipped initial load: vendor ~80 kB, React ~57 kB, motion ~41 kB, app code
+~17 kB. The WebLLM chunk (~2.1 MB gzipped) is lazy and loads only on opt-in.
+
+## The service worker
+
+Hand-written, in [`worker/service-worker.ts`](../worker/service-worker.ts), and built by
+[`plugins/service-worker.ts`](../plugins/service-worker.ts) — a ~130-line Vite plugin
+that injects the precache manifest and transpiles with `transformWithOxc`, which Vite
+already exports, so it costs no dependency.
+
+It replaced `vite-plugin-pwa`. That plugin pulled in `workbox-build`, whose tree
+carried every high-severity advisory in the project and pinned Babel 7, which forced
+an npm override to install `@vitejs/plugin-react`. Removing it took the project to
+**zero vulnerabilities and zero overrides**.
+
+The caching is deliberately simple: precache a content-hashed shell, serve navigations
+network-first with the cached shell as fallback, serve precached assets cache-first,
+and leave everything else to the HTTP cache. Updates install but wait — a new worker
+never takes over until [`register-sw.ts`](../src/register-sw.ts) asks, so an update
+cannot replace the app mid-reply.
+
+Three traps found by actually testing with the server stopped, all of which produce
+the same symptom — the shell loads, every asset reports a cache hit, and nothing runs:
+
+- **`cache.addAll` fetches with `mode: "no-cors"`**, giving opaque responses. Vite marks
+  its scripts and stylesheet `crossorigin`, and an opaque response cannot satisfy a
+  CORS-mode load. `cssRules` threw `SecurityError` and no module executed.
+- **`mode: "cors"` fixes that but sends an `Origin` header**, and the server answers
+  `Vary: Origin`. Cache matching honours `Vary`, so nothing ever matched the page's
+  requests, which send no `Origin`. Same symptom, opposite cause.
+- **`mode: "same-origin"` is the accurate choice** — `basic` response, no `Origin`
+  header — plus `ignoreVary: true` on lookups, since nothing about a content-hashed
+  file genuinely varies by header.
+
+And the original v1 bug this file exists to not repeat: an `activate` handler that
+deleted the cache `install` had just filled.
 
 ## Conventions
 
@@ -336,23 +399,6 @@ on opt-in.
   some shipping Chrome builds, so it is deliberately not declared — declaring an API
   that may not exist invites a call that type-checks and then crashes.
 - **`npm run verify`** runs lint, typecheck and tests. It is what CI runs.
-
-## Dependency pins
-
-Two `overrides` in `package.json` exist for reasons worth recording.
-
-**`@babel/plugin-transform-runtime` is pinned to `^7.29.0`.** This is what lets
-`@vitejs/plugin-react` — the Babel plugin, which Vite 8 recommends over SWC under
-Rolldown — coexist with `vite-plugin-pwa`. Left alone, npm resolves that package to
-8.x, which requires `@babel/core@8`, while `workbox-build` pins `@babel/core@7`; the
-install fails outright with `ERESOLVE`. `@rolldown/plugin-babel` accepts either major,
-so pinning it to 7 puts the whole tree on one Babel and needs no `--legacy-peer-deps`.
-
-Worth revisiting once `workbox-build` supports Babel 8, at which point the pin can go.
-
-**`@llm-ui/react` peer-depends on React 18**, not 19, so `react` is overridden to
-match the installed version. It works, but it is an unsupported combination and worth
-re-checking when llm-ui updates.
 
 ## Known gaps
 

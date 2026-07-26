@@ -46,7 +46,7 @@ opt-in and lives in its own lazily-imported chunk.
   aloud, with a voice picker and preview.
 - **Light and dark themes** — with `system` as a first-class choice that tracks your
   OS live.
-- **Installable and offline** — a Workbox service worker precaches the app shell, so
+- **Installable and offline** — a hand-written service worker precaches the app shell, so
   the rule engine works with no network at all.
 - **Accessible** — a `role="log"` transcript, native form controls, visible focus
   rings, and full `prefers-reduced-motion` support.

@@ -51,7 +51,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     serviceWorker({
-      source: "src/service-worker.ts",
+      source: "worker/service-worker.ts",
       /*
        * The WebLLM engine is a ~6 MB chunk most visitors never load, and the model
        * weights it fetches are hundreds of megabytes more, cached by the engine

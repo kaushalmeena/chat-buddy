@@ -66,9 +66,42 @@ worker.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      // `reload` bypasses the HTTP cache, so a precache never stores a stale copy.
-      await cache.addAll(
-        __SW_PRECACHE__.map((url) => new Request(url, { cache: "reload" })),
+
+      /*
+       * Fetched individually rather than via `cache.addAll`, and with `mode` pinned
+       * to `same-origin`. Both details matter, and getting either wrong breaks
+       * offline in a way that still reports cache hits.
+       *
+       * `addAll` fetches with `mode: "no-cors"`, whose responses the browser treats
+       * as opaque. Vite marks its module scripts and stylesheet `crossorigin`, and an
+       * opaque response cannot satisfy those loads: the shell was served, every asset
+       * looked cached, yet nothing executed and `cssRules` threw `SecurityError`.
+       *
+       * `mode: "cors"` fixes the opacity but introduces a worse problem — it sends an
+       * `Origin` header, and this server answers with `Vary: Origin`. Cache matching
+       * honours `Vary`, so entries stored from a request carrying `Origin` never match
+       * the page's requests, which carry none. Same symptom, different cause.
+       *
+       * `same-origin` is the accurate mode for these URLs: it yields a `basic`
+       * response and sends no `Origin` header, so neither trap applies.
+       */
+      await Promise.all(
+        __SW_PRECACHE__.map(async (url) => {
+          const response = await fetch(
+            new Request(url, {
+              // Bypass the HTTP cache, so a precache never stores a stale copy.
+              cache: "reload",
+              mode: "same-origin",
+              credentials: "same-origin",
+            }),
+          );
+
+          if (!response.ok) {
+            throw new Error(`Precache failed for ${url}: ${response.status}`);
+          }
+
+          await cache.put(url, response);
+        }),
       );
     })(),
   );
@@ -117,7 +150,7 @@ worker.addEventListener("fetch", (event) => {
           return await fetch(request);
         } catch {
           const cache = await caches.open(CACHE_NAME);
-          const shell = await cache.match(APP_SHELL);
+          const shell = await cache.match(APP_SHELL, { ignoreVary: true });
           return shell ?? Response.error();
         }
       })(),
@@ -129,7 +162,16 @@ worker.addEventListener("fetch", (event) => {
   // copy can never be the wrong version.
   event.respondWith(
     (async () => {
-      const cached = await caches.match(request, { cacheName: CACHE_NAME });
+      /*
+       * `ignoreVary` because these are static, content-hashed files: nothing about
+       * them genuinely varies by request header. Without it, a server that sends
+       * `Vary: Origin` — as Vite's preview does — makes every lookup miss, and the
+       * app silently stops working offline while still reporting cache hits.
+       */
+      const cached = await caches.match(request, {
+        cacheName: CACHE_NAME,
+        ignoreVary: true,
+      });
       if (cached) return cached;
 
       // Anything else — a lazily-loaded chunk, an image — is fetched normally and
