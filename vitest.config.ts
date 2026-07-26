@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import preact from "@preact/preset-vite";
+import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vitest/config";
 
 /**
@@ -8,7 +8,7 @@ import { defineConfig } from "vitest/config";
  * unit tests need — stay out of the test pipeline.
  */
 export default defineConfig({
-  plugins: [preact()],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -17,7 +17,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    // Tests live in a `__tests__` folder beside the code they cover.
+    include: ["src/**/__tests__/**/*.test.{ts,tsx}"],
     setupFiles: ["./src/test/setup.ts"],
     restoreMocks: true,
   },

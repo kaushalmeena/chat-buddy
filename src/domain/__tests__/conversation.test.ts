@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { deriveTitle, NEW_CONVERSATION_TITLE } from "./conversation.ts";
-import type { AssistantMessage, Message, UserMessage } from "./message.ts";
-import { toProviderTurns } from "./message.ts";
+import { deriveTitle, NEW_CONVERSATION_TITLE } from "../conversation.ts";
+import type { AssistantMessage, Message, UserMessage } from "../message.ts";
+import { toProviderTurns } from "../message.ts";
 
 function user(text: string): UserMessage {
   return { id: `u-${text}`, role: "user", text, createdAt: 0 };

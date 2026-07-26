@@ -1,10 +1,10 @@
-import { ExternalLink, PanelLeft, X } from "lucide";
-import type { JSX } from "preact";
-import { useEffect, useState } from "preact/hooks";
-import { activeProvider, initialiseProviders } from "@/state/chat-store.ts";
+import { ExternalLink, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { initialiseProviders, useChat } from "@/state/chat-store.ts";
+import { useSettings } from "@/state/settings-store.ts";
 import { BrandMark } from "./components/brand-mark.tsx";
 import { Composer } from "./components/composer.tsx";
-import { Icon } from "./components/icon.tsx";
 import { ProviderPicker } from "./components/provider-picker.tsx";
 import { ThemeToggle } from "./components/theme-toggle.tsx";
 import { ThreadList } from "./components/thread-list.tsx";
@@ -12,15 +12,19 @@ import { Transcript } from "./components/transcript.tsx";
 
 const REPO_URL = "https://github.com/kaushalmeena/chat-buddy";
 
-export function App(): JSX.Element {
+const SIDEBAR_WIDTH_PX = 288;
+
+function App() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const isCollapsed = useSettings((state) => state.isSidebarCollapsed);
+  const toggleSidebar = useSettings((state) => state.toggleSidebar);
 
   useEffect(() => {
     void initialiseProviders();
   }, []);
 
-  // Escape closes the mobile drawer, which is the expected gesture for an
-  // overlay and the only way out for keyboard users.
+  // Escape closes the mobile drawer — the expected gesture for an overlay, and
+  // the only way out for keyboard users.
   useEffect(() => {
     if (!isDrawerOpen) return;
 
@@ -33,54 +37,118 @@ export function App(): JSX.Element {
   }, [isDrawerOpen]);
 
   return (
-    <div class="flex h-dvh overflow-hidden bg-canvas">
-      {/* Persistent sidebar from `lg` up. */}
-      <aside class="hidden w-72 shrink-0 flex-col gap-5 border-r border-border-subtle bg-surface-raised/40 p-3 lg:flex">
-        <SidebarContents />
-      </aside>
+    <div className="flex h-dvh overflow-hidden bg-canvas">
+      {/*
+       * Desktop sidebar.
+       *
+       * Collapsing animates `width` to zero rather than unmounting, so the
+       * transcript reflows in step with it and the thread list keeps its scroll
+       * position across a collapse and expand. `inert` keeps the hidden contents
+       * out of the tab order and the accessibility tree while it is closed.
+       */}
+      <motion.aside
+        initial={false}
+        animate={{ width: isCollapsed ? 0 : SIDEBAR_WIDTH_PX }}
+        transition={{ type: "spring", stiffness: 380, damping: 34 }}
+        inert={isCollapsed}
+        className="hidden shrink-0 overflow-hidden border-r border-border-subtle bg-surface-raised/40 lg:block"
+      >
+        <div
+          className="flex h-full flex-col gap-5 p-3"
+          style={{ width: SIDEBAR_WIDTH_PX }}
+        >
+          <SidebarContents />
+        </div>
+      </motion.aside>
 
       {/* The same contents as an overlay drawer below `lg`. */}
-      {isDrawerOpen && (
-        <div class="fixed inset-0 z-40 flex lg:hidden">
-          <button
-            type="button"
-            aria-label="Close menu"
-            onClick={() => setIsDrawerOpen(false)}
-            class="absolute inset-0 bg-black/40"
-          />
-          <aside class="relative flex w-72 max-w-[85vw] flex-col gap-5 border-r border-border-subtle bg-canvas p-3 shadow-xl">
-            <SidebarContents onNavigate={() => setIsDrawerOpen(false)} />
-          </aside>
-        </div>
-      )}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <div className="fixed inset-0 z-40 flex lg:hidden">
+            <motion.button
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setIsDrawerOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-black/40"
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 420, damping: 38 }}
+              className="relative flex w-72 max-w-[85vw] flex-col gap-5 border-r border-border-subtle bg-canvas p-3 shadow-xl"
+            >
+              <SidebarContents onNavigate={() => setIsDrawerOpen(false)} />
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
 
-      <div class="flex min-w-0 flex-1 flex-col">
-        <header class="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle px-3">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle px-3">
+          {/* Below `lg` this opens the drawer; above it, it collapses the sidebar. */}
           <button
             type="button"
             onClick={() => setIsDrawerOpen(true)}
             aria-label="Open menu"
             aria-expanded={isDrawerOpen}
-            class="grid size-9 place-items-center rounded-lg text-content-muted transition-colors hover:bg-surface-raised hover:text-content lg:hidden"
+            className="grid size-9 place-items-center rounded-lg text-content-muted transition-colors hover:bg-surface-raised hover:text-content lg:hidden"
           >
-            <Icon icon={PanelLeft} size={18} />
+            <PanelLeftOpen size={18} aria-hidden />
           </button>
 
-          <h1 class="flex min-w-0 items-center gap-2 lg:hidden">
-            <BrandMark size={22} class="rounded-md" />
-            <span class="truncate font-semibold tracking-tight">Chat Buddy</span>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!isCollapsed}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="hidden size-9 place-items-center rounded-lg text-content-muted transition-colors hover:bg-surface-raised hover:text-content lg:grid"
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen size={18} aria-hidden />
+            ) : (
+              <PanelLeftClose size={18} aria-hidden />
+            )}
+          </button>
+
+          {/* The wordmark moves into the header whenever the sidebar is not showing it. */}
+          <AnimatePresence initial={false}>
+            {isCollapsed && (
+              <motion.span
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.18 }}
+                className="hidden min-w-0 items-center gap-2 lg:flex"
+              >
+                <BrandMark size={22} className="rounded-md" />
+                <span className="truncate font-semibold tracking-tight">
+                  Chat Buddy
+                </span>
+              </motion.span>
+            )}
+          </AnimatePresence>
+
+          <h1 className="flex min-w-0 items-center gap-2 lg:hidden">
+            <BrandMark size={22} className="rounded-md" />
+            <span className="truncate font-semibold tracking-tight">Chat Buddy</span>
           </h1>
 
-          <div class="flex-1" />
+          <div className="flex-1" />
 
           <ActiveEngineBadge />
         </header>
 
-        <main class="flex min-h-0 flex-1 flex-col">
+        <main className="flex min-h-0 flex-1 flex-col">
           <Transcript />
 
-          <div class="shrink-0 px-3 pb-4 pt-2">
-            <div class="mx-auto max-w-3xl">
+          <div className="shrink-0 px-3 pb-4 pt-2">
+            <div className="mx-auto max-w-3xl">
               <Composer />
             </div>
           </div>
@@ -94,13 +162,13 @@ function SidebarContents({
   onNavigate,
 }: {
   readonly onNavigate?: (() => void) | undefined;
-}): JSX.Element {
+}) {
   return (
     <>
-      <div class="flex items-center justify-between gap-2 px-1">
-        <span class="flex items-center gap-2">
-          <BrandMark size={26} class="rounded-lg" />
-          <span class="font-semibold tracking-tight">Chat Buddy</span>
+      <div className="flex items-center justify-between gap-2 px-1">
+        <span className="flex items-center gap-2">
+          <BrandMark size={26} className="rounded-lg" />
+          <span className="font-semibold tracking-tight">Chat Buddy</span>
         </span>
 
         {onNavigate && (
@@ -108,18 +176,18 @@ function SidebarContents({
             type="button"
             onClick={onNavigate}
             aria-label="Close menu"
-            class="grid size-8 place-items-center rounded-lg text-content-muted hover:text-content lg:hidden"
+            className="grid size-8 place-items-center rounded-lg text-content-muted hover:text-content lg:hidden"
           >
-            <Icon icon={X} size={17} />
+            <X size={17} aria-hidden />
           </button>
         )}
       </div>
 
-      <div class="min-h-0 flex-1">
+      <div className="min-h-0 flex-1">
         <ThreadList onNavigate={onNavigate} />
       </div>
 
-      <div class="flex flex-col gap-4 border-t border-border-subtle pt-4">
+      <div className="flex flex-col gap-4 border-t border-border-subtle pt-4">
         <ProviderPicker />
         <ThemeToggle />
 
@@ -127,9 +195,9 @@ function SidebarContents({
           href={REPO_URL}
           target="_blank"
           rel="noreferrer"
-          class="flex items-center gap-2 px-1 text-xs text-content-faint transition-colors hover:text-content-muted"
+          className="flex items-center gap-2 px-1 text-xs text-content-faint transition-colors hover:text-content-muted"
         >
-          <Icon icon={ExternalLink} size={14} />
+          <ExternalLink size={14} aria-hidden />
           Source on GitHub
         </a>
       </div>
@@ -137,15 +205,22 @@ function SidebarContents({
   );
 }
 
-/** Compact reminder of which engine is answering, for the mobile header. */
-function ActiveEngineBadge(): JSX.Element | null {
-  const provider = activeProvider.value;
+/** Compact reminder of which engine is answering. */
+function ActiveEngineBadge() {
+  const provider = useChat((state) => state.activeProvider);
   if (!provider) return null;
 
   return (
-    <span class="flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-content-muted">
-      <span class="size-1.5 rounded-full bg-success" aria-hidden="true" />
-      <span class="max-w-40 truncate">{provider.label}</span>
-    </span>
+    <motion.span
+      initial={{ opacity: 0, scale: 0.94 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.22 }}
+      className="flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-content-muted"
+    >
+      <span className="size-1.5 rounded-full bg-success" aria-hidden />
+      <span className="max-w-40 truncate">{provider.label}</span>
+    </motion.span>
   );
 }
+
+export { App };

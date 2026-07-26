@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { useCallback, useEffect, useState } from "react";
 
 /**
  * Reads assistant replies aloud.
@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "preact/hooks";
  * Unlike recognition, synthesis genuinely runs on-device in every current
  * browser, so it costs nothing in privacy terms.
  */
-export function useSpeechSynthesis() {
+function useSpeechSynthesis() {
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const isSupported = typeof window !== "undefined" && "speechSynthesis" in window;
@@ -46,3 +46,5 @@ export function useSpeechSynthesis() {
 
   return { isSupported, isSpeaking, speak, cancel };
 }
+
+export { useSpeechSynthesis };

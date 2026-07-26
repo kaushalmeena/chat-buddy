@@ -1,9 +1,8 @@
-import type { JSX } from "preact";
-import { useId } from "preact/hooks";
+import { useId } from "react";
 
 type BrandMarkProps = {
   readonly size?: number;
-  readonly class?: string;
+  readonly className?: string;
 };
 
 /**
@@ -13,17 +12,14 @@ type BrandMarkProps = {
  * alongside the theme. The same artwork lives in `src/assets/brand-icon.svg`,
  * which is the source `scripts/generate-icons.mjs` renders the PWA icons from.
  */
-export function BrandMark({
-  size = 32,
-  class: className,
-}: BrandMarkProps): JSX.Element {
+function BrandMark({ size = 32, className }: BrandMarkProps) {
   /*
    * The gradient id must be unique per instance.
    *
    * SVG paint references are document-scoped, not element-scoped: with a
    * hard-coded id, every mark on the page would resolve `url(#...)` to whichever
    * definition came first in document order. When that first one happened to sit
-   * inside the `display:none` sidebar, the gradient failed to paint and the mark
+   * inside the collapsed sidebar, the gradient failed to paint and the mark
    * rendered as a bare white bubble.
    */
   const gradientId = `brand-field-${useId()}`;
@@ -33,15 +29,15 @@ export function BrandMark({
       width={size}
       height={size}
       viewBox="0 0 512 512"
-      class={className}
+      className={className}
       role="img"
       aria-label="Chat Buddy"
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#818cf8" />
-          <stop offset="0.55" stop-color="#6366f1" />
-          <stop offset="1" stop-color="#7c3aed" />
+          <stop offset="0" stopColor="#818cf8" />
+          <stop offset="0.55" stopColor="#6366f1" />
+          <stop offset="1" stopColor="#7c3aed" />
         </linearGradient>
       </defs>
 
@@ -62,3 +58,5 @@ export function BrandMark({
     </svg>
   );
 }
+
+export { BrandMark };

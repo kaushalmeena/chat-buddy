@@ -58,15 +58,17 @@ type LanguageModelSession = {
   readonly contextWindow: number;
 };
 
+/*
+ * Only the members this app calls are declared.
+ *
+ * `params()` is documented but absent from some shipping Chrome builds — it threw
+ * `is not a function` on the Chrome this was developed against. Declaring an API
+ * that may not exist invites a call that type-checks and then crashes, so it is
+ * left out until something here actually needs it.
+ */
 declare const LanguageModel:
   | {
       availability(): Promise<LanguageModelAvailability>;
-      params(): Promise<{
-        defaultTemperature: number;
-        maxTemperature: number;
-        defaultTopK: number;
-        maxTopK: number;
-      } | null>;
       create(options?: LanguageModelCreateOptions): Promise<LanguageModelSession>;
     }
   | undefined;

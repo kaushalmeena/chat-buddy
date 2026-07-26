@@ -3,7 +3,7 @@ import {
   newConversation,
   retryLastReply,
 } from "@/state/chat-store.ts";
-import { setThemePreference, toggleSpeakReplies } from "@/state/settings-store.ts";
+import { useSettings } from "@/state/settings-store.ts";
 
 /**
  * Slash commands.
@@ -39,17 +39,27 @@ export const COMMANDS: readonly Command[] = [
   {
     name: "speak",
     description: "Toggle reading replies aloud",
-    run: toggleSpeakReplies,
+    run: () => useSettings.getState().toggleSpeakReplies(),
+  },
+  {
+    name: "collapse",
+    description: "Toggle the sidebar",
+    run: () => useSettings.getState().toggleSidebar(),
   },
   {
     name: "light",
     description: "Switch to the light theme",
-    run: () => setThemePreference("light"),
+    run: () => useSettings.getState().setTheme("light"),
   },
   {
     name: "dark",
     description: "Switch to the dark theme",
-    run: () => setThemePreference("dark"),
+    run: () => useSettings.getState().setTheme("dark"),
+  },
+  {
+    name: "system",
+    description: "Follow the system theme",
+    run: () => useSettings.getState().setTheme("system"),
   },
 ];
 

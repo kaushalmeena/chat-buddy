@@ -1,105 +1,114 @@
-import { computed, effect, signal } from "@preact/signals";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { ReplySource } from "@/domain/message.ts";
 
 export type ThemePreference = "light" | "dark" | "system";
 
-const THEME_KEY = "chat-buddy:theme";
-const PROVIDER_KEY = "chat-buddy:provider";
-const SPEAK_KEY = "chat-buddy:speak-replies";
+type SettingsState = {
+  /** What the person chose. `system` defers to the OS. */
+  readonly theme: ThemePreference;
+  /** Provider they last selected, or undefined to let tiering decide. */
+  readonly preferredProviderId: ReplySource | undefined;
+  /** Whether assistant replies are read aloud. */
+  readonly speakReplies: boolean;
+  /** Whether the desktop sidebar is collapsed to its rail. */
+  readonly isSidebarCollapsed: boolean;
 
-function read(key: string): string | undefined {
-  try {
-    return globalThis.localStorage?.getItem(key) ?? undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function write(key: string, value: string): void {
-  try {
-    globalThis.localStorage?.setItem(key, value);
-  } catch {
-    // Storage unavailable; the preference simply will not survive a reload.
-  }
-}
-
-function readTheme(): ThemePreference {
-  const stored = read(THEME_KEY);
-  return stored === "light" || stored === "dark" ? stored : "system";
-}
-
-function readProvider(): ReplySource | undefined {
-  const stored = read(PROVIDER_KEY);
-  return stored === "prompt-api" || stored === "web-llm" || stored === "rules"
-    ? stored
-    : undefined;
-}
+  setTheme(theme: ThemePreference): void;
+  setPreferredProvider(id: ReplySource): void;
+  toggleSpeakReplies(): void;
+  toggleSidebar(): void;
+};
 
 /**
- * The theme the person chose. `system` defers to the OS, which the media query
- * below tracks live so a mid-session OS switch is picked up without a reload.
+ * Persisted UI preferences.
+ *
+ * `localStorage` here, deliberately, even though threads live in IndexedDB:
+ * these are a handful of scalars that must be readable synchronously before
+ * first paint, which is exactly what an async store cannot offer.
  */
-export const themePreference = signal<ThemePreference>(readTheme());
+export const useSettings = create<SettingsState>()(
+  persist(
+    (set) => ({
+      theme: "system",
+      preferredProviderId: undefined,
+      speakReplies: false,
+      isSidebarCollapsed: false,
 
-const systemPrefersDark = signal(
-  globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false,
+      setTheme: (theme) => set({ theme }),
+      setPreferredProvider: (preferredProviderId) => set({ preferredProviderId }),
+      toggleSpeakReplies: () => set((state) => ({ speakReplies: !state.speakReplies })),
+      toggleSidebar: () =>
+        set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+    }),
+    {
+      name: "chat-buddy:settings",
+      version: 1,
+    },
+  ),
 );
 
-globalThis
-  .matchMedia?.("(prefers-color-scheme: dark)")
-  .addEventListener("change", (event) => {
-    systemPrefersDark.value = event.matches;
-  });
-
-/** The theme actually in force, with `system` resolved. */
-export const resolvedTheme = computed<"light" | "dark">(() => {
-  const preference = themePreference.value;
-  if (preference !== "system") return preference;
-  return systemPrefersDark.value ? "dark" : "light";
-});
-
-/**
- * The provider the person selected, or `undefined` to let tiering decide. Read
- * once at startup by the chat store.
+/*
+ * Theme resolution.
+ *
+ * Tracked outside the store because it is not a preference — it is an
+ * observation of the OS, and the store should not persist it.
  */
-export const preferredProviderId = signal<ReplySource | undefined>(readProvider());
 
-/** Whether assistant replies are read aloud as they arrive. */
-export const speakReplies = signal(read(SPEAK_KEY) === "true");
+const darkQuery = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
 
-export function setThemePreference(preference: ThemePreference): void {
-  themePreference.value = preference;
+/**
+ * Suppresses colour transitions for one frame while the theme swaps.
+ *
+ * Without this, every element carrying `transition-colors` animates from its old
+ * colour to its new one. Because the two themes sit at opposite ends of the
+ * lightness range, those interpolations pass through dark intermediate values and
+ * read as a black flash across the UI. The swap should be instant; only
+ * deliberate hover and focus transitions should animate.
+ */
+function applyTheme(resolved: "light" | "dark"): void {
+  const root = document.documentElement;
+  if (root.dataset.theme === resolved) return;
+
+  root.dataset.themeSwitching = "";
+  root.dataset.theme = resolved;
+
+  // Two frames: one for the new variables to take effect, one to be sure the
+  // suppressing rule was in force while they did.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      delete root.dataset.themeSwitching;
+    });
+  });
 }
 
-export function setPreferredProvider(id: ReplySource): void {
-  preferredProviderId.value = id;
-}
-
-export function toggleSpeakReplies(): void {
-  speakReplies.value = !speakReplies.value;
+export function resolveTheme(theme: ThemePreference): "light" | "dark" {
+  if (theme !== "system") return theme;
+  return darkQuery?.matches ? "dark" : "light";
 }
 
 /**
- * Wires the settings signals to the DOM and to storage.
+ * Wires the theme preference to the document element.
  *
  * Called once from `main.tsx`. Kept out of module scope so importing this file
- * — from a test, say — has no side effects.
+ * from a test has no side effects.
  */
-export function startSettingsSync(): void {
-  effect(() => {
-    document.documentElement.dataset.theme = resolvedTheme.value;
+export function startThemeSync(): () => void {
+  applyTheme(resolveTheme(useSettings.getState().theme));
+
+  const unsubscribe = useSettings.subscribe((state) => {
+    applyTheme(resolveTheme(state.theme));
   });
 
-  effect(() => {
-    write(THEME_KEY, themePreference.value);
-  });
+  const onSystemChange = () => {
+    // Only matters while following the system; re-resolving is harmless anyway.
+    applyTheme(resolveTheme(useSettings.getState().theme));
+  };
 
-  effect(() => {
-    const id = preferredProviderId.value;
-    if (id) write(PROVIDER_KEY, id);
-  });
+  darkQuery?.addEventListener("change", onSystemChange);
 
-  effect(() => {
-    write(SPEAK_KEY, String(speakReplies.value));
-  });
+  return () => {
+    unsubscribe();
+    darkQuery?.removeEventListener("change", onSystemChange);
+  };
 }

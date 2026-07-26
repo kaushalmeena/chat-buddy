@@ -1,14 +1,48 @@
 import { fileURLToPath } from "node:url";
-import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 const BRAND_COLOR = "#6366f1";
 
+const REACT_PACKAGES = new Set(["react", "react-dom", "scheduler"]);
+const MOTION_PACKAGES = new Set([
+  "motion",
+  "framer-motion",
+  "motion-dom",
+  "motion-utils",
+]);
+
+/**
+ * The markdown pipeline: react-markdown plus the unified/remark/micromark tree it
+ * pulls in. Matched by pattern because that tree is dozens of small packages.
+ */
+const MARKDOWN_PACKAGE_PATTERN =
+  /^(react-markdown|remark-.*|rehype-.*|unified|unist-.*|micromark.*|mdast-.*|hast-.*|vfile.*|@llm-ui\/.*|property-information|space-separated-tokens|comma-separated-tokens|html-url-attributes|character-entities.*|decode-named-character-reference|devlop|trim-lines|zwitch|longest-streak|ccount|escape-string-regexp|markdown-table|estree-.*|is-plain-obj|bail|extend|trough)$/;
+
+/**
+ * Extracts the installed package name from a module id, handling scopes.
+ * Returns undefined for first-party source.
+ */
+function matchPackage(id: string): string | undefined {
+  const marker = "/node_modules/";
+  const index = id.lastIndexOf(marker);
+  if (index === -1) return undefined;
+
+  const rest = id.slice(index + marker.length);
+  const segments = rest.split("/");
+
+  return segments[0]?.startsWith("@")
+    ? `${segments[0]}/${segments[1] ?? ""}`
+    : segments[0];
+}
+
 export default defineConfig({
   plugins: [
-    preact(),
+    // SWC rather than the Babel plugin: nothing here needs a Babel transform,
+    // and SWC keeps cold start and HMR noticeably faster.
+    react(),
     tailwindcss(),
     VitePWA({
       registerType: "prompt",
@@ -56,15 +90,37 @@ export default defineConfig({
   build: {
     target: "es2022",
     sourcemap: true,
-    // The WebLLM chunk is legitimately multi-megabyte and legitimately lazy;
-    // warning about it on every build would train us to ignore the warning.
-    chunkSizeWarningLimit: 1024,
+    /*
+     * Set above the WebLLM chunk, which is legitimately multi-megabyte and
+     * legitimately lazy. A warning that fires on every single build is one
+     * everybody learns to scroll past, which is worse than no warning — and the
+     * number that actually matters, the entry chunk, is two orders of magnitude
+     * below this.
+     */
+    chunkSizeWarningLimit: 7 * 1024,
     rollupOptions: {
       output: {
-        // Keep the heavy, optional inference engine out of the entry chunk so
-        // first paint never waits on code most visitors will not run.
         manualChunks(id) {
+          // Keep the heavy, optional inference engine out of the entry chunk so
+          // first paint never waits on code most visitors will not run.
           if (id.includes("@mlc-ai/web-llm")) return "web-llm";
+
+          /*
+           * Vendor splits, so dependencies that change far less often than app
+           * code stay cached across deploys.
+           *
+           * Matched on the full package boundary, not a prefix: `react` as a
+           * prefix also matches `react-markdown`, which quietly pulled the whole
+           * micromark/mdast parser stack into the chunk labelled "react".
+           */
+          const vendor = matchPackage(id);
+          if (!vendor) return undefined;
+
+          if (REACT_PACKAGES.has(vendor)) return "react";
+          if (MOTION_PACKAGES.has(vendor)) return "motion";
+          // The markdown pipeline is a large, self-contained dependency tree.
+          if (MARKDOWN_PACKAGE_PATTERN.test(vendor)) return "markdown";
+
           return undefined;
         },
       },

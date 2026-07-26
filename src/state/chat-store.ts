@@ -1,4 +1,4 @@
-import { batch, computed, effect, signal } from "@preact/signals";
+import { create } from "zustand";
 import {
   type Conversation,
   deriveTitle,
@@ -8,23 +8,21 @@ import type { AssistantMessage, Message, ReplySource } from "@/domain/message.ts
 import type { ChatProvider, DownloadProgress } from "@/domain/provider.ts";
 import { ChatEngine } from "@/engine/chat-engine.ts";
 import {
+  FALLBACK_PROVIDER,
   getProvider,
   type ProviderStatus,
   probeProviders,
   selectDefaultProvider,
 } from "@/engine/providers/provider-registry.ts";
+import { createChunkBatcher } from "@/lib/chunk-batcher.ts";
 import { createId } from "@/lib/id.ts";
-import { loadConversations, saveConversations } from "./persistence.ts";
-import { preferredProviderId, setPreferredProvider } from "./settings-store.ts";
-
-/*
- * Application state.
- *
- * Signals rather than a reducer: the hot path here is appending a token to one
- * message many times a second, and a signal lets only the bubble that changed
- * re-render. The transcript is otherwise treated as immutable, so history,
- * retry and persistence stay straightforward.
- */
+import {
+  deleteConversationRow,
+  loadConversations,
+  pruneConversations,
+  saveConversation,
+} from "./database.ts";
+import { useSettings } from "./settings-store.ts";
 
 function createConversation(): Conversation {
   const now = Date.now();
@@ -37,40 +35,56 @@ function createConversation(): Conversation {
   };
 }
 
-const restored = loadConversations();
-const initial = restored.length > 0 ? restored : [createConversation()];
+type ChatState = {
+  readonly conversations: readonly Conversation[];
+  readonly activeId: string;
+  /** False until IndexedDB has been read, so the UI can avoid a flash of empty. */
+  readonly isHydrated: boolean;
 
-export const conversations = signal<readonly Conversation[]>(initial);
-export const activeConversationId = signal<string>(initial[0]?.id ?? createId());
+  readonly providerStatuses: readonly ProviderStatus[];
+  readonly activeProvider: ChatProvider | undefined;
+  readonly downloadProgress: DownloadProgress | undefined;
+  readonly providerError: string | undefined;
+  readonly isGenerating: boolean;
+};
 
-/** Provider availability, populated by `initialiseProviders`. */
-export const providerStatuses = signal<readonly ProviderStatus[]>([]);
-export const activeProvider = signal<ChatProvider | undefined>(undefined);
+const initialConversation = createConversation();
 
-/** Non-undefined while a provider is downloading or initialising weights. */
-export const downloadProgress = signal<DownloadProgress | undefined>(undefined);
+/**
+ * Application state.
+ *
+ * Zustand with selector-based reads: the hot path is appending text to one
+ * message many times a second, and a selector means only the components that
+ * actually read the changed slice re-render. The transcript is treated as
+ * immutable, which keeps retry, history and persistence straightforward.
+ */
+export const useChat = create<ChatState>(() => ({
+  conversations: [initialConversation],
+  activeId: initialConversation.id,
+  isHydrated: false,
 
-/** Set when preparing a provider fails, so the UI can offer a way back. */
-export const providerError = signal<string | undefined>(undefined);
+  providerStatuses: [],
+  activeProvider: undefined,
+  downloadProgress: undefined,
+  providerError: undefined,
+  isGenerating: false,
+}));
 
-export const isGenerating = signal(false);
-
-export const activeConversation = computed<Conversation>(() => {
-  const id = activeConversationId.value;
-  const found = conversations.value.find((conversation) => conversation.id === id);
-  return found ?? conversations.value[0] ?? createConversation();
-});
-
-export const messages = computed<readonly Message[]>(
-  () => activeConversation.value.messages,
-);
-
-/** Threads for the sidebar, most recently used first. */
-export const orderedConversations = computed<readonly Conversation[]>(() =>
-  [...conversations.value].sort((a, b) => b.updatedAt - a.updatedAt),
-);
-
+const { setState, getState } = useChat;
 const engine = new ChatEngine();
+
+/*
+ * Selectors. Exported so components never inline a slice expression and
+ * accidentally return a fresh object on every render.
+ */
+
+export const selectActiveConversation = (state: ChatState): Conversation =>
+  state.conversations.find((conversation) => conversation.id === state.activeId) ??
+  state.conversations[0] ??
+  initialConversation;
+
+export const selectMessages = (state: ChatState): readonly Message[] =>
+  selectActiveConversation(state).messages;
 
 /*
  * Thread mutation.
@@ -79,103 +93,110 @@ const engine = new ChatEngine();
 function updateConversation(
   id: string,
   update: (conversation: Conversation) => Conversation,
+  options: { readonly persist?: boolean } = {},
 ): void {
-  conversations.value = conversations.value.map((conversation) =>
-    conversation.id === id ? update(conversation) : conversation,
-  );
-}
+  let updated: Conversation | undefined;
 
-function withMessages(
-  conversation: Conversation,
-  messagesNext: readonly Message[],
-): Conversation {
-  return {
-    ...conversation,
-    messages: messagesNext,
-    // Re-derive the title until the thread has been named by its first turn.
-    title:
-      conversation.title === NEW_CONVERSATION_TITLE
-        ? deriveTitle(messagesNext)
-        : conversation.title,
-    updatedAt: Date.now(),
-  };
+  setState((state) => ({
+    conversations: state.conversations.map((conversation) => {
+      if (conversation.id !== id) return conversation;
+      updated = update(conversation);
+      return updated;
+    }),
+  }));
+
+  // Streaming writes skip persistence: saving on every frame would mean hundreds
+  // of IndexedDB transactions per reply. The turn is saved once when it settles.
+  if (options.persist !== false && updated) {
+    void saveConversation(updated);
+  }
 }
 
 function appendMessage(conversationId: string, message: Message): void {
-  updateConversation(conversationId, (conversation) =>
-    withMessages(conversation, [...conversation.messages, message]),
-  );
+  updateConversation(conversationId, (conversation) => {
+    const messages = [...conversation.messages, message];
+    return {
+      ...conversation,
+      messages,
+      title:
+        conversation.title === NEW_CONVERSATION_TITLE
+          ? deriveTitle(messages)
+          : conversation.title,
+      updatedAt: Date.now(),
+    };
+  });
 }
 
 function patchMessage(
   conversationId: string,
   messageId: string,
   patch: (message: AssistantMessage) => AssistantMessage,
+  options: { readonly persist?: boolean } = {},
 ): void {
-  updateConversation(conversationId, (conversation) => ({
-    ...conversation,
-    messages: conversation.messages.map((message) =>
-      message.id === messageId && message.role === "assistant"
-        ? patch(message)
-        : message,
-    ),
-    updatedAt: Date.now(),
-  }));
+  updateConversation(
+    conversationId,
+    (conversation) => ({
+      ...conversation,
+      messages: conversation.messages.map((message) =>
+        message.id === messageId && message.role === "assistant"
+          ? patch(message)
+          : message,
+      ),
+      updatedAt: Date.now(),
+    }),
+    options,
+  );
 }
 
 /*
- * Public actions.
+ * Actions.
  */
 
 export function newConversation(): void {
   const conversation = createConversation();
-  batch(() => {
-    conversations.value = [conversation, ...conversations.value];
-    activeConversationId.value = conversation.id;
-  });
+  setState((state) => ({
+    conversations: [conversation, ...state.conversations],
+    activeId: conversation.id,
+  }));
 }
 
 export function selectConversation(id: string): void {
-  if (id === activeConversationId.value) return;
+  if (id === getState().activeId) return;
   engine.stop();
-  batch(() => {
-    isGenerating.value = false;
-    activeConversationId.value = id;
-  });
+  setState({ activeId: id, isGenerating: false });
 }
 
 export function deleteConversation(id: string): void {
-  const remaining = conversations.value.filter(
-    (conversation) => conversation.id !== id,
-  );
+  void deleteConversationRow(id);
 
-  batch(() => {
+  setState((state) => {
+    const remaining = state.conversations.filter(
+      (conversation) => conversation.id !== id,
+    );
+
     if (remaining.length === 0) {
       const fresh = createConversation();
-      conversations.value = [fresh];
-      activeConversationId.value = fresh.id;
-      return;
+      return { conversations: [fresh], activeId: fresh.id };
     }
 
-    conversations.value = remaining;
-    if (activeConversationId.value === id) {
-      activeConversationId.value = remaining[0]?.id ?? createId();
-    }
+    return {
+      conversations: remaining,
+      activeId:
+        state.activeId === id ? (remaining[0]?.id ?? state.activeId) : state.activeId,
+    };
   });
 }
 
 export function clearActiveConversation(): void {
   engine.stop();
-  const id = activeConversationId.value;
-  batch(() => {
-    isGenerating.value = false;
-    updateConversation(id, (conversation) => ({
-      ...conversation,
-      title: NEW_CONVERSATION_TITLE,
-      messages: [],
-      updatedAt: Date.now(),
-    }));
-  });
+  setState({ isGenerating: false });
+
+  updateConversation(getState().activeId, (conversation) => ({
+    ...conversation,
+    title: NEW_CONVERSATION_TITLE,
+    messages: [],
+    updatedAt: Date.now(),
+  }));
 }
 
 export function stopGenerating(): void {
@@ -185,9 +206,9 @@ export function stopGenerating(): void {
 /** Sends a message and streams the reply into the transcript. */
 export async function sendMessage(text: string): Promise<void> {
   const trimmed = text.trim();
-  if (trimmed.length === 0 || isGenerating.value) return;
+  if (trimmed.length === 0 || getState().isGenerating) return;
 
-  const conversationId = activeConversationId.value;
+  const conversationId = getState().activeId;
 
   appendMessage(conversationId, {
     id: createId(),
@@ -204,10 +225,10 @@ export async function sendMessage(text: string): Promise<void> {
  * message — the fix for a stopped, failed, or simply unhelpful answer.
  */
 export async function retryLastReply(): Promise<void> {
-  if (isGenerating.value) return;
+  if (getState().isGenerating) return;
 
-  const conversationId = activeConversationId.value;
-  const current = activeConversation.value.messages;
+  const conversationId = getState().activeId;
+  const current = selectActiveConversation(getState()).messages;
   const lastIndex = current.findLastIndex((message) => message.role === "assistant");
   if (lastIndex === -1) return;
 
@@ -221,12 +242,10 @@ export async function retryLastReply(): Promise<void> {
 }
 
 async function generateReply(conversationId: string): Promise<void> {
-  const provider = activeProvider.value;
-  if (!provider) return;
-
+  const provider = await resolveProvider();
   const replyId = createId();
 
-  const placeholder: AssistantMessage = {
+  appendMessage(conversationId, {
     id: replyId,
     role: "assistant",
     text: "",
@@ -234,149 +253,142 @@ async function generateReply(conversationId: string): Promise<void> {
     source: provider.id,
     status: "streaming",
     attachments: [],
-  };
-
-  batch(() => {
-    isGenerating.value = true;
-    appendMessage(conversationId, placeholder);
   });
 
-  // Buffer chunks and flush on a frame, so a fast model cannot force one
-  // re-render per token.
-  const flush = createChunkFlusher((text) => {
+  setState({ isGenerating: true });
+
+  const stream = createChunkBatcher((text) => {
+    patchMessage(
+      conversationId,
+      replyId,
+      (message) => ({ ...message, text: message.text + text }),
+      { persist: false },
+    );
+  });
+
+  const history = selectActiveConversation(getState()).messages.filter(
+    (message) => message.id !== replyId,
+  );
+
+  const settle = (status: AssistantMessage["status"], error?: string) => {
+    stream.flush();
     patchMessage(conversationId, replyId, (message) => ({
       ...message,
-      text: message.text + text,
+      status,
+      ...(error === undefined ? {} : { error }),
     }));
-  });
-
-  const snapshot =
-    conversations.value.find((conversation) => conversation.id === conversationId)
-      ?.messages ?? [];
-
-  // The placeholder itself must not be sent to the model.
-  const history = snapshot.filter((message) => message.id !== replyId);
+    setState({ isGenerating: false });
+  };
 
   await engine.run(provider, history, {
-    onChunk: flush.push,
-    onComplete() {
-      flush.finish();
-      patchMessage(conversationId, replyId, (message) => ({
-        ...message,
-        status: "complete",
-      }));
-      isGenerating.value = false;
-    },
-    onStopped() {
-      flush.finish();
-      patchMessage(conversationId, replyId, (message) => ({
-        ...message,
-        status: "stopped",
-      }));
-      isGenerating.value = false;
-    },
-    onError(error) {
-      flush.finish();
-      patchMessage(conversationId, replyId, (message) => ({
-        ...message,
-        status: "failed",
-        error,
-      }));
-      isGenerating.value = false;
-    },
+    onChunk: stream.push,
+    onComplete: () => settle("complete"),
+    onStopped: () => settle("stopped"),
+    onError: (error) => settle("failed", error),
   });
 }
 
 /**
- * Coalesces streamed chunks into one write per animation frame.
+ * Resolves the provider to answer with, waiting for startup probing if it has
+ * not finished.
  *
- * Without this a model emitting 60 tokens a second drives 60 store writes and 60
- * re-renders a second; with it, the cost is one per frame regardless of rate.
+ * Sending before probing completes is entirely possible — the suggested-prompt
+ * chips make it a single click. Returning early there dropped the turn silently:
+ * the message appeared and nothing ever answered it. The rule provider needs
+ * nothing to be ready, so it guarantees every turn gets a reply.
  */
-function createChunkFlusher(commit: (text: string) => void) {
-  let pending = "";
-  let frame: number | undefined;
+async function resolveProvider(): Promise<ChatProvider> {
+  const current = getState().activeProvider;
+  if (current) return current;
 
-  const flush = () => {
-    frame = undefined;
-    if (pending.length === 0) return;
-    const text = pending;
-    pending = "";
-    commit(text);
-  };
+  await providersReady;
 
-  return {
-    push(chunk: string) {
-      pending += chunk;
-      frame ??= requestAnimationFrame(flush);
-    },
-    finish() {
-      if (frame !== undefined) cancelAnimationFrame(frame);
-      flush();
-    },
-  };
+  return getState().activeProvider ?? FALLBACK_PROVIDER;
 }
 
 /*
- * Provider lifecycle.
+ * Lifecycle. Called once from `main.tsx`.
  */
 
+let providersReady: Promise<void> = Promise.resolve();
+
+/** Reads persisted threads out of IndexedDB. */
+export async function hydrate(): Promise<void> {
+  const stored = await loadConversations();
+
+  setState((state) => ({
+    // An empty database means a first visit; keep the blank thread already in
+    // state rather than rendering a list with nothing in it.
+    conversations: stored.length > 0 ? stored : state.conversations,
+    activeId: stored[0]?.id ?? state.activeId,
+    isHydrated: true,
+  }));
+
+  void pruneConversations();
+}
+
 /** Probes providers and activates the preferred one, or the best default. */
-export async function initialiseProviders(): Promise<void> {
-  const statuses = await probeProviders();
-  providerStatuses.value = statuses;
+export function initialiseProviders(): Promise<void> {
+  providersReady = (async () => {
+    try {
+      const statuses = await probeProviders();
+      const preferred = useSettings.getState().preferredProviderId;
+      const preferredStatus = statuses.find(
+        (status) => status.provider.id === preferred,
+      );
 
-  const preferred = preferredProviderId.value;
-  const preferredStatus = statuses.find((status) => status.provider.id === preferred);
+      setState({
+        providerStatuses: statuses,
+        // Only honour a stored choice if it is still usable without a download —
+        // otherwise enabling WebLLM once would re-trigger the download on every
+        // visit before the UI appeared.
+        activeProvider:
+          preferredStatus?.availability.state === "ready"
+            ? preferredStatus.provider
+            : selectDefaultProvider(statuses),
+      });
+    } catch {
+      // Probing is best-effort; the baseline provider needs nothing probed.
+      setState({ activeProvider: FALLBACK_PROVIDER });
+    }
+  })();
 
-  // Only honour a stored choice if it is still usable without a download —
-  // otherwise a person who enabled WebLLM once would re-trigger the download on
-  // every visit before seeing the UI.
-  if (preferredStatus?.availability.state === "ready") {
-    activeProvider.value = preferredStatus.provider;
-    return;
-  }
-
-  activeProvider.value = selectDefaultProvider(statuses);
+  return providersReady;
 }
 
 /**
- * Switches provider, downloading weights first if required. Reports progress
- * through `downloadProgress` and leaves the previous provider active on failure.
+ * Switches provider, downloading weights first if required. Reports progress and
+ * leaves the previous provider active on failure.
  */
 export async function activateProvider(id: ReplySource): Promise<void> {
   const provider = getProvider(id);
-  const previous = activeProvider.value;
+  const previous = getState().activeProvider;
 
-  providerError.value = undefined;
+  setState({ providerError: undefined });
 
   try {
     const availability = await provider.availability();
 
     if (availability.state === "unavailable") {
-      providerError.value = describeUnavailable(availability.reason);
+      setState({ providerError: describeUnavailable(availability.reason) });
       return;
     }
 
     if (availability.state === "needs-download") {
-      downloadProgress.value = { label: "Starting download" };
-      await provider.prepare((progress) => {
-        downloadProgress.value = progress;
-      });
+      setState({ downloadProgress: { label: "Starting download" } });
+      await provider.prepare((progress) => setState({ downloadProgress: progress }));
     }
 
-    batch(() => {
-      activeProvider.value = provider;
-      setPreferredProvider(id);
-    });
-
-    providerStatuses.value = await probeProviders();
+    useSettings.getState().setPreferredProvider(id);
+    setState({ activeProvider: provider, providerStatuses: await probeProviders() });
   } catch (error) {
-    providerError.value =
-      error instanceof Error ? error.message : "Could not start that model.";
-    activeProvider.value = previous;
+    setState({
+      activeProvider: previous,
+      providerError:
+        error instanceof Error ? error.message : "Could not start that model.",
+    });
   } finally {
-    downloadProgress.value = undefined;
+    setState({ downloadProgress: undefined });
   }
 }
 
@@ -391,14 +403,4 @@ function describeUnavailable(reason: string): string {
     default:
       return "That model is not available on this device.";
   }
-}
-
-/**
- * Starts persisting threads. Called once from `main.tsx`; kept out of module
- * scope so importing the store in a test writes nothing to storage.
- */
-export function startChatPersistence(): void {
-  effect(() => {
-    saveConversations(conversations.value);
-  });
 }

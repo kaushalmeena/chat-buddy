@@ -1,5 +1,5 @@
-import type { JSX } from "preact";
-import { activeProvider, sendMessage } from "@/state/chat-store.ts";
+import { motion } from "motion/react";
+import { sendMessage, useChat } from "@/state/chat-store.ts";
 import { BrandMark } from "./brand-mark.tsx";
 
 /**
@@ -7,8 +7,7 @@ import { BrandMark } from "./brand-mark.tsx";
  *
  * Discoverability was the original app's weakest point: nothing on screen hinted
  * that "anime" was a keyword and "films" was not. Concrete starters replace
- * guesswork, and they double as a hint about what a small local model handles
- * well.
+ * guesswork, and they double as a hint about what a small local model does well.
  */
 const STARTERS: readonly string[] = [
   "What can you do?",
@@ -17,37 +16,59 @@ const STARTERS: readonly string[] = [
   "Is anything I type sent to a server?",
 ];
 
-export function EmptyState(): JSX.Element {
-  const provider = activeProvider.value;
+function EmptyState() {
+  const provider = useChat((state) => state.activeProvider);
 
   return (
-    <div class="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-12 text-center">
-      <BrandMark size={56} class="rounded-2xl shadow-lg" />
+    <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-12 text-center">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <BrandMark size={56} className="rounded-2xl shadow-lg" />
+      </motion.div>
 
-      <div class="space-y-2">
-        <h2 class="text-2xl font-semibold tracking-tight text-content">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+        className="space-y-2"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight text-content">
           What's on your mind?
         </h2>
-        <p class="max-w-sm text-sm text-content-muted">
+        <p className="max-w-sm text-sm text-content-muted">
           {provider
             ? `Answering with ${provider.label.toLowerCase()}. Nothing you type leaves this device.`
             : "Starting up…"}
         </p>
-      </div>
+      </motion.div>
 
-      <ul class="flex w-full max-w-lg flex-wrap justify-center gap-2">
-        {STARTERS.map((starter) => (
-          <li key={starter}>
+      <ul className="flex w-full max-w-lg flex-wrap justify-center gap-2">
+        {STARTERS.map((starter, index) => (
+          <motion.li
+            key={starter}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.3,
+              delay: 0.12 + index * 0.04,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
             <button
               type="button"
               onClick={() => void sendMessage(starter)}
-              class="rounded-full border border-border-subtle bg-surface px-3.5 py-1.5 text-sm text-content-muted transition-colors hover:border-brand-400 hover:text-content"
+              className="rounded-full border border-border-subtle bg-surface px-3.5 py-1.5 text-sm text-content-muted transition-colors hover:border-brand-400 hover:text-content"
             >
               {starter}
             </button>
-          </li>
+          </motion.li>
         ))}
       </ul>
     </div>
   );
 }
+
+export { EmptyState };

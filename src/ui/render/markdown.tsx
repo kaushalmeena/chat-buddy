@@ -1,167 +1,63 @@
-import { Fragment, type JSX } from "preact";
+import { memo } from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 /**
- * A deliberately small markdown subset renderer for assistant output.
+ * Renders assistant output as markdown.
  *
- * Model output is untrusted, and the original app's habit of interpolating remote
- * text straight into `innerHTML` is exactly the bug worth not reproducing. This
- * renderer never produces an HTML string: it returns Preact nodes, so anything
- * it does not recognise is escaped as text by construction.
+ * [react-markdown](https://github.com/remarkjs/react-markdown) rather than a
+ * hand-rolled parser: it covers the full CommonMark grammar plus GFM tables,
+ * strikethrough and task lists, which small models do emit and a bespoke subset
+ * parser would silently mangle.
  *
- * Supported, because it is what small chat models actually emit: fenced code
- * blocks, inline code, bold, italic, bullet and numbered lists, and paragraphs.
+ * It is also the safe choice by construction. react-markdown builds a syntax tree
+ * and renders React elements from it — it never touches `innerHTML`, and raw HTML
+ * in the source is escaped unless `rehype-raw` is added, which it deliberately is
+ * not here. Model output is untrusted input, and the original app's habit of
+ * interpolating remote strings straight into `innerHTML` is exactly the bug worth
+ * not reproducing.
  */
 
-type Block =
-  | { readonly type: "paragraph"; readonly lines: readonly string[] }
-  | { readonly type: "code"; readonly language: string; readonly code: string }
-  | {
-      readonly type: "list";
-      readonly ordered: boolean;
-      readonly items: readonly string[];
-    };
+/**
+ * Element overrides.
+ *
+ * Most styling comes from the `.message-prose` class in `global.css`, which keeps
+ * the theme tokens authoritative. Only elements needing structure rather than
+ * colour are overridden here.
+ */
+const COMPONENTS: Components = {
+  // Links in generated text point wherever the model decided. `noopener` and
+  // `noreferrer` are mandatory, and opening in a new tab avoids losing the chat.
+  a: ({ children, href }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer nofollow">
+      {children}
+    </a>
+  ),
 
-const FENCE = /^```(\w*)\s*$/;
-const BULLET = /^\s*[-*+]\s+(.*)$/;
-const NUMBERED = /^\s*\d+[.)]\s+(.*)$/;
+  // Tables need to scroll on their own rather than widening the bubble.
+  table: ({ children }) => (
+    <div className="scrollbar-slim -mx-1 overflow-x-auto px-1">
+      <table>{children}</table>
+    </div>
+  ),
+};
 
-/** Splits source text into blocks. A tiny state machine, not a real parser. */
-function parseBlocks(source: string): Block[] {
-  const blocks: Block[] = [];
-  const lines = source.split("\n");
-
-  let index = 0;
-
-  while (index < lines.length) {
-    const line = lines[index] ?? "";
-    const fence = FENCE.exec(line);
-
-    if (fence) {
-      const language = fence[1] ?? "";
-      const code: string[] = [];
-      index += 1;
-
-      while (index < lines.length && !FENCE.test(lines[index] ?? "")) {
-        code.push(lines[index] ?? "");
-        index += 1;
-      }
-      // Skip the closing fence, if the model produced one.
-      index += 1;
-
-      blocks.push({ type: "code", language, code: code.join("\n") });
-      continue;
-    }
-
-    const bullet = BULLET.exec(line);
-    const numbered = bullet ? null : NUMBERED.exec(line);
-
-    if (bullet ?? numbered) {
-      const ordered = bullet === null;
-      const items: string[] = [];
-
-      while (index < lines.length) {
-        const candidate = lines[index] ?? "";
-        const match = ordered ? NUMBERED.exec(candidate) : BULLET.exec(candidate);
-        if (!match) break;
-        items.push(match[1] ?? "");
-        index += 1;
-      }
-
-      blocks.push({ type: "list", ordered, items });
-      continue;
-    }
-
-    if (line.trim().length === 0) {
-      index += 1;
-      continue;
-    }
-
-    const paragraph: string[] = [];
-    while (index < lines.length) {
-      const candidate = lines[index] ?? "";
-      if (
-        candidate.trim().length === 0 ||
-        FENCE.test(candidate) ||
-        BULLET.test(candidate) ||
-        NUMBERED.test(candidate)
-      ) {
-        break;
-      }
-      paragraph.push(candidate);
-      index += 1;
-    }
-
-    blocks.push({ type: "paragraph", lines: paragraph });
-  }
-
-  return blocks;
-}
-
-/** Inline spans: `code`, **bold**, *italic*. Applied in that precedence order. */
-const INLINE = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_)/g;
-
-function renderInline(text: string): JSX.Element {
-  const parts = text.split(INLINE);
-
-  return (
-    <>
-      {parts.map((part, index) => {
-        const key = `${index}-${part.slice(0, 8)}`;
-
-        if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
-          return <code key={key}>{part.slice(1, -1)}</code>;
-        }
-        if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-          return <strong key={key}>{part.slice(2, -2)}</strong>;
-        }
-        if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
-          return <em key={key}>{part.slice(1, -1)}</em>;
-        }
-        if (part.startsWith("_") && part.endsWith("_") && part.length > 2) {
-          return <em key={key}>{part.slice(1, -1)}</em>;
-        }
-        // Anything unrecognised stays literal text.
-        return <Fragment key={key}>{part}</Fragment>;
-      })}
-    </>
-  );
-}
+const PLUGINS = [remarkGfm];
 
 type MarkdownProps = {
   readonly text: string;
 };
 
-export function Markdown({ text }: MarkdownProps): JSX.Element {
-  const blocks = parseBlocks(text);
-
+/**
+ * Memoised on `text`. During streaming this re-parses once per committed slice,
+ * and memoising stops every other bubble in the transcript re-parsing with it.
+ */
+const Markdown = memo(function Markdown({ text }: MarkdownProps) {
   return (
-    <>
-      {blocks.map((block, index) => {
-        const key = `${block.type}-${index}`;
-
-        switch (block.type) {
-          case "code":
-            return (
-              <pre key={key}>
-                <code data-language={block.language || undefined}>{block.code}</code>
-              </pre>
-            );
-          case "list": {
-            const items = block.items.map((item, itemIndex) => (
-              <li key={`${key}-${itemIndex}`}>{renderInline(item)}</li>
-            ));
-            return block.ordered ? (
-              <ol key={key}>{items}</ol>
-            ) : (
-              <ul key={key}>{items}</ul>
-            );
-          }
-          case "paragraph":
-            return <p key={key}>{renderInline(block.lines.join(" "))}</p>;
-          default:
-            return null;
-        }
-      })}
-    </>
+    <ReactMarkdown remarkPlugins={PLUGINS} components={COMPONENTS}>
+      {text}
+    </ReactMarkdown>
   );
-}
+});
+
+export { Markdown };

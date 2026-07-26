@@ -1,7 +1,7 @@
 import type { ReplySource } from "@/domain/message.ts";
 import type { ChatProvider, ProviderAvailability } from "@/domain/provider.ts";
+import { LocalRuleProvider } from "./local-rule-provider.ts";
 import { PromptApiProvider } from "./prompt-api-provider.ts";
-import { RuleProvider } from "./rule-provider.ts";
 import { WebLlmProvider } from "./web-llm-provider.ts";
 
 /**
@@ -12,10 +12,16 @@ import { WebLlmProvider } from "./web-llm-provider.ts";
  * resort — no in-browser language model has reach you can rely on, so something
  * has to answer on a phone, in Safari, and offline.
  */
+/**
+ * The baseline provider, held as a singleton so callers that need a guaranteed
+ * answer share one instance instead of constructing throwaway ones.
+ */
+export const FALLBACK_PROVIDER: ChatProvider = new LocalRuleProvider();
+
 export const PROVIDERS: readonly ChatProvider[] = [
   new PromptApiProvider(),
   new WebLlmProvider(),
-  new RuleProvider(),
+  FALLBACK_PROVIDER,
 ];
 
 export type ProviderStatus = {
@@ -51,5 +57,5 @@ export function selectDefaultProvider(
   statuses: readonly ProviderStatus[],
 ): ChatProvider {
   const ready = statuses.find((status) => status.availability.state === "ready");
-  return ready?.provider ?? new RuleProvider();
+  return ready?.provider ?? FALLBACK_PROVIDER;
 }

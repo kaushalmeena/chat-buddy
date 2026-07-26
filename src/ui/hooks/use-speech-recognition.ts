@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function getConstructor(): SpeechRecognitionConstructor | undefined {
   if (typeof window === "undefined") return undefined;
@@ -6,8 +6,7 @@ function getConstructor(): SpeechRecognitionConstructor | undefined {
 }
 
 /** True when this browser can transcribe speech at all. */
-export const isSpeechRecognitionSupported = (): boolean =>
-  getConstructor() !== undefined;
+const isSpeechRecognitionSupported = (): boolean => getConstructor() !== undefined;
 
 export type SpeechRecognitionState = {
   readonly isSupported: boolean;
@@ -31,7 +30,7 @@ type Options = {
  * speech service. That is a meaningful difference from the rest of the app, so
  * the UI labels the control rather than presenting it as local.
  */
-export function useSpeechRecognition(options: Options = {}): SpeechRecognitionState {
+function useSpeechRecognition(options: Options = {}): SpeechRecognitionState {
   const { onFinalResult } = options;
 
   const [isListening, setIsListening] = useState(false);
@@ -134,3 +133,5 @@ function describeRecognitionError(error: SpeechRecognitionErrorEvent["error"]): 
       return "Speech recognition failed.";
   }
 }
+
+export { isSpeechRecognitionSupported, useSpeechRecognition };
