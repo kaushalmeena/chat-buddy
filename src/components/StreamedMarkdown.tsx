@@ -1,7 +1,7 @@
 import { markdownLookBack } from "@llm-ui/markdown";
 import { type LLMOutputComponent, throttleBasic, useLLMOutput } from "@llm-ui/react";
 import { useMemo } from "react";
-import { Markdown } from "./markdown.tsx";
+import { Markdown } from "./Markdown.tsx";
 
 /**
  * Renders streaming assistant output smoothly, using

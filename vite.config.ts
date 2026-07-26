@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
@@ -40,8 +40,9 @@ function matchPackage(id: string): string | undefined {
 
 export default defineConfig({
   plugins: [
-    // SWC rather than the Babel plugin: nothing here needs a Babel transform,
-    // and SWC keeps cold start and HMR noticeably faster.
+    // The Babel plugin rather than the SWC one: Vite 8 on Rolldown recommends it,
+    // and it is the only route to Babel-based transforms such as the React
+    // Compiler, which SWC cannot host.
     react(),
     tailwindcss(),
     VitePWA({

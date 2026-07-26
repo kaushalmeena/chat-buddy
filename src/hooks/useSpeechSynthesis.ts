@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toSpeakableText, toUtteranceChunks } from "@/lib/speech-text.ts";
 import { loadVoices, pickVoice, usableVoices } from "@/lib/speech-voices.ts";
-import { useSettings } from "@/state/settings-store.ts";
+import { useConfig } from "@/stores/config.ts";
 
 /**
  * Slightly under the default rate. On-device voices at 1.0 read a shade faster
@@ -19,7 +19,7 @@ function useSpeechSynthesis() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
-  const preferredVoiceUri = useSettings((state) => state.voiceUri);
+  const preferredVoiceUri = useConfig((state) => state.voiceUri);
 
   const isSupported = typeof window !== "undefined" && "speechSynthesis" in window;
 

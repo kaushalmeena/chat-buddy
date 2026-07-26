@@ -1,5 +1,11 @@
 import { create } from "zustand";
 import {
+  deleteConversationRow,
+  loadConversations,
+  pruneConversations,
+  saveConversation,
+} from "@/db/conversations.ts";
+import {
   type Conversation,
   deriveTitle,
   NEW_CONVERSATION_TITLE,
@@ -16,13 +22,7 @@ import {
 } from "@/engine/providers/provider-registry.ts";
 import { createChunkBatcher } from "@/lib/chunk-batcher.ts";
 import { createId } from "@/lib/id.ts";
-import {
-  deleteConversationRow,
-  loadConversations,
-  pruneConversations,
-  saveConversation,
-} from "./database.ts";
-import { useSettings } from "./settings-store.ts";
+import { useConfig } from "./config.ts";
 
 function createConversation(): Conversation {
   const now = Date.now();
@@ -332,7 +332,7 @@ export function initialiseProviders(): Promise<void> {
   providersReady = (async () => {
     try {
       const statuses = await probeProviders();
-      const preferred = useSettings.getState().preferredProviderId;
+      const preferred = useConfig.getState().preferredProviderId;
       const preferredStatus = statuses.find(
         (status) => status.provider.id === preferred,
       );
@@ -379,7 +379,7 @@ export async function activateProvider(id: ReplySource): Promise<void> {
       await provider.prepare((progress) => setState({ downloadProgress: progress }));
     }
 
-    useSettings.getState().setPreferredProvider(id);
+    useConfig.getState().setPreferredProvider(id);
     setState({ activeProvider: provider, providerStatuses: await probeProviders() });
   } catch (error) {
     setState({

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { matchRule } from "../matcher.ts";
-import { compileRules, type Rule } from "../rule.ts";
-import { COMPILED_RULES } from "../rules.ts";
+import { matchRule } from "@/engine/rules/matcher.ts";
+import { compileRules, type Rule } from "@/engine/rules/rule.ts";
+import { COMPILED_RULES } from "@/engine/rules/rules.ts";
 
 /** Deterministic stand-in for `Math.random`, always selecting the first reply. */
 const alwaysFirst = () => 0;

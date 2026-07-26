@@ -2,9 +2,9 @@ import { Check, Copy, RefreshCw, TriangleAlert } from "lucide-react";
 import { motion } from "motion/react";
 import { memo, useState } from "react";
 import type { AssistantMessage, Message } from "@/domain/message.ts";
-import { retryLastReply } from "@/state/chat-store.ts";
-import { Markdown } from "../render/markdown.tsx";
-import { StreamedMarkdown } from "../render/streamed-markdown.tsx";
+import { retryLastReply } from "@/stores/chat.ts";
+import { Markdown } from "./Markdown.tsx";
+import { StreamedMarkdown } from "./StreamedMarkdown.tsx";
 
 const SOURCE_LABELS: Record<AssistantMessage["source"], string> = {
   "prompt-api": "Chrome built-in AI",

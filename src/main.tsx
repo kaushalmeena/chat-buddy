@@ -1,10 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { hydrate } from "./state/chat-store.ts";
-import { startThemeSync } from "./state/settings-store.ts";
+import { hydrate } from "@/stores/chat.ts";
+import { startThemeSync } from "@/stores/config.ts";
 import "./styles/global.css";
-import { registerServiceWorker } from "./service-worker.ts";
-import { App } from "./ui/app.tsx";
+import { App } from "./App.tsx";
+import { registerServiceWorker } from "./register-sw.ts";
 
 /**
  * Entry point. Starts the side-effecting subscriptions, mounts the app, and does

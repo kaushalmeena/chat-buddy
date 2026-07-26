@@ -1,6 +1,19 @@
 @import "tailwindcss";
 
 /*
+ * Class-based dark mode, the Tailwind way.
+ *
+ * Registering the variant means `dark:` utilities work as they do in any Tailwind
+ * project, for the cases where a token swap is not enough — an image that needs a
+ * different opacity, say. The token swap below still does the heavy lifting, so
+ * `dark:` should stay the exception rather than appear on every element.
+ *
+ * `:where()` keeps the variant at zero specificity, so `dark:` utilities do not
+ * silently outrank an unprefixed one that appears later.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
  * Design tokens. Every colour is declared as a `--color-*` custom property so
  * Tailwind generates matching utilities (`bg-surface`, `text-muted`, ...) and
  * so the dark theme can be a pure variable swap with no duplicated utilities.
@@ -37,11 +50,11 @@
 }
 
 /*
- * Dark theme. `data-theme` is stamped on <html> by the theme store, which also
+ * Dark theme. The `dark` class is toggled on <html> by the theme store, which also
  * honours `prefers-color-scheme` when the user has expressed no preference.
  */
 @layer theme {
-  :root[data-theme="dark"] {
+  :root.dark {
     --color-canvas: oklch(0.16 0.014 285);
     --color-surface: oklch(0.21 0.017 285);
     --color-surface-raised: oklch(0.25 0.019 285);
@@ -60,7 +73,7 @@
     color-scheme: light;
   }
 
-  :root[data-theme="dark"] {
+  :root.dark {
     color-scheme: dark;
   }
 

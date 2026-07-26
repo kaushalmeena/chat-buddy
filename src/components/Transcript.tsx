@@ -2,12 +2,12 @@ import { ArrowDown } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef } from "react";
 import { isAssistantMessage } from "@/domain/message.ts";
-import { selectMessages, useChat } from "@/state/chat-store.ts";
-import { useSettings } from "@/state/settings-store.ts";
-import { useAutoScroll } from "../hooks/use-auto-scroll.ts";
-import { useSpeechSynthesis } from "../hooks/use-speech-synthesis.ts";
-import { EmptyState } from "./empty-state.tsx";
-import { MessageBubble } from "./message-bubble.tsx";
+import { useChatAutoScroll } from "@/hooks/useChatAutoScroll.ts";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis.ts";
+import { selectMessages, useChat } from "@/stores/chat.ts";
+import { useConfig } from "@/stores/config.ts";
+import { EmptyState } from "./EmptyState.tsx";
+import { MessageBubble } from "./MessageBubble.tsx";
 
 function Transcript() {
   const messages = useChat(selectMessages);
@@ -15,7 +15,7 @@ function Transcript() {
   // The streamed length of the final message is the scroll trigger: new text
   // grows the container without changing the message count.
   const tail = messages.at(-1);
-  const { ref, isPinned, scrollToBottom } = useAutoScroll<HTMLDivElement>(
+  const { ref, isPinned, scrollToBottom } = useChatAutoScroll<HTMLDivElement>(
     `${messages.length}:${tail?.text.length ?? 0}`,
   );
 
@@ -78,7 +78,7 @@ function useSpokenReplies(): void {
   const spokenIdRef = useRef<string | undefined>(undefined);
 
   const messages = useChat(selectMessages);
-  const enabled = useSettings((state) => state.speakReplies);
+  const enabled = useConfig((state) => state.speakReplies);
 
   const tail = messages.at(-1);
   const readyToSpeak =

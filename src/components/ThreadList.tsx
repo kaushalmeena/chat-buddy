@@ -6,7 +6,7 @@ import {
   newConversation,
   selectConversation,
   useChat,
-} from "@/state/chat-store.ts";
+} from "@/stores/chat.ts";
 
 type ThreadListProps = {
   /** Called after a thread is picked, so the mobile drawer can close itself. */

@@ -99,6 +99,36 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/components/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "filenameCases": ["PascalCase", "camelCase"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/hooks/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "filenameCases": ["camelCase"]
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

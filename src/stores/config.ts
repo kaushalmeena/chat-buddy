@@ -4,7 +4,7 @@ import type { ReplySource } from "@/domain/message.ts";
 
 export type ThemePreference = "light" | "dark" | "system";
 
-type SettingsState = {
+type ConfigState = {
   /** What the person chose. `system` defers to the OS. */
   readonly theme: ThemePreference;
   /** Provider they last selected, or undefined to let tiering decide. */
@@ -35,7 +35,7 @@ type SettingsState = {
  * these are a handful of scalars that must be readable synchronously before
  * first paint, which is exactly what an async store cannot offer.
  */
-export const useSettings = create<SettingsState>()(
+export const useConfig = create<ConfigState>()(
   persist(
     (set) => ({
       theme: "system",
@@ -52,6 +52,14 @@ export const useSettings = create<SettingsState>()(
         set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
     }),
     {
+      /*
+       * Deliberately still `:settings`, not `:config`, despite this module's name.
+       *
+       * The key is a storage contract with every browser that has already visited:
+       * renaming it would silently discard everyone's saved theme, engine choice and
+       * voice. The pre-paint script in `index.html` reads the same key, so the two
+       * have to agree — and neither is worth a migration for cosmetics.
+       */
       name: "chat-buddy:settings",
       version: 1,
     },
@@ -78,10 +86,14 @@ const darkQuery = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
  */
 function applyTheme(resolved: "light" | "dark"): void {
   const root = document.documentElement;
-  if (root.dataset.theme === resolved) return;
+  const wantsDark = resolved === "dark";
+  if (root.classList.contains("dark") === wantsDark) return;
 
+  // A data attribute rather than a class for the transient flag: it is a
+  // one-off state marker, not a style hook, and keeping it out of `class`
+  // leaves `dark` the only class the theme system touches.
   root.dataset.themeSwitching = "";
-  root.dataset.theme = resolved;
+  root.classList.toggle("dark", wantsDark);
 
   // Two frames: one for the new variables to take effect, one to be sure the
   // suppressing rule was in force while they did.
@@ -104,15 +116,15 @@ export function resolveTheme(theme: ThemePreference): "light" | "dark" {
  * from a test has no side effects.
  */
 export function startThemeSync(): () => void {
-  applyTheme(resolveTheme(useSettings.getState().theme));
+  applyTheme(resolveTheme(useConfig.getState().theme));
 
-  const unsubscribe = useSettings.subscribe((state) => {
+  const unsubscribe = useConfig.subscribe((state) => {
     applyTheme(resolveTheme(state.theme));
   });
 
   const onSystemChange = () => {
     // Only matters while following the system; re-resolving is harmless anyway.
-    applyTheme(resolveTheme(useSettings.getState().theme));
+    applyTheme(resolveTheme(useConfig.getState().theme));
   };
 
   darkQuery?.addEventListener("change", onSystemChange);

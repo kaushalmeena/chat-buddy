@@ -11,7 +11,7 @@ const PIN_THRESHOLD_PX = 64;
  * itself back down every frame is unusable. Once they scroll up, auto-scroll
  * disengages and a "jump to latest" affordance takes over until they return.
  */
-function useAutoScroll<T extends HTMLElement>(dependency: unknown) {
+function useChatAutoScroll<T extends HTMLElement>(dependency: unknown) {
   const ref = useRef<T | null>(null);
   const [isPinned, setIsPinned] = useState(true);
 
@@ -56,4 +56,4 @@ function useAutoScroll<T extends HTMLElement>(dependency: unknown) {
   return { ref, isPinned, scrollToBottom };
 }
 
-export { useAutoScroll };
+export { useChatAutoScroll };

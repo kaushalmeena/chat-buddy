@@ -1,8 +1,8 @@
 import { ChevronDown, Volume2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
-import { useSettings } from "@/state/settings-store.ts";
-import { useSpeechSynthesis } from "../hooks/use-speech-synthesis.ts";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis.ts";
+import { useConfig } from "@/stores/config.ts";
 
 const PREVIEW_TEXT = "Hello — this is how I sound.";
 
@@ -18,9 +18,9 @@ const PREVIEW_TEXT = "Hello — this is how I sound.";
  * Only rendered while spoken replies are on — it is meaningless otherwise.
  */
 function VoicePicker() {
-  const speakReplies = useSettings((state) => state.speakReplies);
-  const voiceUri = useSettings((state) => state.voiceUri);
-  const setVoiceUri = useSettings((state) => state.setVoiceUri);
+  const speakReplies = useConfig((state) => state.speakReplies);
+  const voiceUri = useConfig((state) => state.voiceUri);
+  const setVoiceUri = useConfig((state) => state.setVoiceUri);
 
   const { voices, speak, isSupported } = useSpeechSynthesis();
 

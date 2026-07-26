@@ -3,8 +3,8 @@ import type {
   GenerateOptions,
   ProviderAvailability,
 } from "@/domain/provider.ts";
-import { matchRule } from "../rules/matcher.ts";
-import { COMPILED_RULES } from "../rules/rules.ts";
+import { matchRule } from "@/engine/rules/matcher.ts";
+import { COMPILED_RULES } from "@/engine/rules/rules.ts";
 
 /**
  * The always-available baseline provider, backed by the built-in rule table.

@@ -1,7 +1,7 @@
 import { Monitor, Moon, Sun } from "lucide-react";
 import { motion } from "motion/react";
-import { type ThemePreference, useSettings } from "@/state/settings-store.ts";
-import type { IconComponent } from "../types.ts";
+import { type ThemePreference, useConfig } from "@/stores/config.ts";
+import type { IconComponent } from "./types.ts";
 
 const OPTIONS: readonly {
   readonly value: ThemePreference;
@@ -20,8 +20,8 @@ const OPTIONS: readonly {
  * who wants the app to track their OS can say so after having pinned it once.
  */
 function ThemeToggle() {
-  const theme = useSettings((state) => state.theme);
-  const setTheme = useSettings((state) => state.setTheme);
+  const theme = useConfig((state) => state.theme);
+  const setTheme = useConfig((state) => state.setTheme);
 
   return (
     // A real fieldset of radio inputs rather than buttons with role="radio":

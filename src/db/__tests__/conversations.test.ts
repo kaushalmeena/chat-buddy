@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { isConversation, normalise } from "@/db/conversations.ts";
 import type { Conversation } from "@/domain/conversation.ts";
-import { isConversation, normalise } from "../database.ts";
 
 function thread(overrides: Partial<Conversation> = {}): Conversation {
   return {

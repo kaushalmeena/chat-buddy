@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
-import { sendMessage, useChat } from "@/state/chat-store.ts";
-import { BrandMark } from "./brand-mark.tsx";
+import { sendMessage, useChat } from "@/stores/chat.ts";
+import { BrandMark } from "./BrandMark.tsx";
 
 /**
  * Prompts offered on an empty thread.

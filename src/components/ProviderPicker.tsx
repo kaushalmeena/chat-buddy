@@ -1,7 +1,7 @@
 import { Check, Cpu, Download, TriangleAlert } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ProviderAvailability } from "@/domain/provider.ts";
-import { activateProvider, useChat } from "@/state/chat-store.ts";
+import { activateProvider, useChat } from "@/stores/chat.ts";
 
 /** Renders bytes as a rounded figure; only used for coarse sizes. */
 function formatBytes(bytes: number): string {

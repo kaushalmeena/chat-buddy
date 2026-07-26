@@ -1,15 +1,15 @@
 import { ExternalLink, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { initialiseProviders, useChat } from "@/state/chat-store.ts";
-import { useSettings } from "@/state/settings-store.ts";
-import { BrandMark } from "./components/brand-mark.tsx";
-import { Composer } from "./components/composer.tsx";
-import { ProviderPicker } from "./components/provider-picker.tsx";
-import { ThemeToggle } from "./components/theme-toggle.tsx";
-import { ThreadList } from "./components/thread-list.tsx";
-import { Transcript } from "./components/transcript.tsx";
-import { VoicePicker } from "./components/voice-picker.tsx";
+import { BrandMark } from "@/components/BrandMark.tsx";
+import { Composer } from "@/components/Composer.tsx";
+import { ProviderPicker } from "@/components/ProviderPicker.tsx";
+import { ThemeToggle } from "@/components/ThemeToggle.tsx";
+import { ThreadList } from "@/components/ThreadList.tsx";
+import { Transcript } from "@/components/Transcript.tsx";
+import { VoicePicker } from "@/components/VoicePicker.tsx";
+import { initialiseProviders, useChat } from "@/stores/chat.ts";
+import { useConfig } from "@/stores/config.ts";
 
 const REPO_URL = "https://github.com/kaushalmeena/chat-buddy";
 
@@ -17,8 +17,8 @@ const SIDEBAR_WIDTH_PX = 288;
 
 function App() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const isCollapsed = useSettings((state) => state.isSidebarCollapsed);
-  const toggleSidebar = useSettings((state) => state.toggleSidebar);
+  const isCollapsed = useConfig((state) => state.isSidebarCollapsed);
+  const toggleSidebar = useConfig((state) => state.toggleSidebar);
 
   useEffect(() => {
     void initialiseProviders();

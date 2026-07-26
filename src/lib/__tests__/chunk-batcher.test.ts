@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createChunkBatcher } from "../chunk-batcher.ts";
+import { createChunkBatcher } from "@/lib/chunk-batcher.ts";
 
 /**
  * `requestAnimationFrame` is driven manually so the batching behaviour can be

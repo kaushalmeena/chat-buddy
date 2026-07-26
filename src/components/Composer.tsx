@@ -1,11 +1,11 @@
 import { ArrowUp, Mic, Square, Volume2, VolumeX } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
-import { sendMessage, stopGenerating, useChat } from "@/state/chat-store.ts";
-import { useSettings } from "@/state/settings-store.ts";
-import { type Command, matchCommands, resolveCommand } from "../commands.ts";
-import { useSpeechRecognition } from "../hooks/use-speech-recognition.ts";
-import type { IconComponent } from "../types.ts";
+import { type Command, matchCommands, resolveCommand } from "@/commands.ts";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition.ts";
+import { sendMessage, stopGenerating, useChat } from "@/stores/chat.ts";
+import { useConfig } from "@/stores/config.ts";
+import type { IconComponent } from "./types.ts";
 
 /** Cap on textarea auto-growth before it starts scrolling internally. */
 const MAX_TEXTAREA_HEIGHT_PX = 200;
@@ -205,8 +205,8 @@ function Composer() {
 }
 
 function SpeakToggle() {
-  const enabled = useSettings((state) => state.speakReplies);
-  const toggle = useSettings((state) => state.toggleSpeakReplies);
+  const enabled = useConfig((state) => state.speakReplies);
+  const toggle = useConfig((state) => state.toggleSpeakReplies);
 
   return (
     <IconButton
