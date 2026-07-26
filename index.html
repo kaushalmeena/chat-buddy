@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Chat Buddy</title>
+    <meta
+      name="description"
+      content="A private-by-default chat companion that runs its language model entirely in your browser."
+    />
+    <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16161f" media="(prefers-color-scheme: dark)" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <script>
+      // Resolve the theme before first paint so a dark-mode reload never
+      // flashes a white canvas. Kept inline and tiny for exactly that reason.
+      (() => {
+        try {
+          const stored = localStorage.getItem("chat-buddy:theme");
+          const dark =
+            stored === "dark" ||
+            (stored !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+        } catch {
+          /* Storage unavailable (private mode); the default attribute stands. */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <noscript>
+      <p style="padding: 2rem; font-family: system-ui, sans-serif">
+        Chat Buddy needs JavaScript, because the language model runs on your own device.
+      </p>
+    </noscript>
+  </body>
+</html>

@@ -1,6 +1,35 @@
-# Dependency directories
+# Dependencies
 node_modules/
 
-# Misc
+# Build output
+dist/
+dist-ssr/
+# vite-plugin-pwa's dev-mode service worker scratch directory
+dev-dist/
+
+# Test and tooling caches
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local environment overrides
+.env
+.env.*
+!.env.example
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# OS
 .DS_Store
-.vscode
+Thumbs.db
+.claude
