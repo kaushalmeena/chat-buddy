@@ -76,6 +76,7 @@ export function serviceWorker(options: Options): Plugin {
 
   let root = process.cwd();
   let publicDir = "public";
+  let base = "/";
 
   return {
     name: "chat-buddy:service-worker",
@@ -85,19 +86,33 @@ export function serviceWorker(options: Options): Plugin {
     configResolved(config) {
       root = config.root;
       publicDir = config.publicDir;
+      // Vite normalises this to always start and end with a slash.
+      base = config.base;
     },
 
     async generateBundle(_outputOptions, bundle) {
+      /*
+       * Every precached URL is resolved against `base`. On GitHub Pages the app lives
+       * at `/<repo>/`, so a manifest of root-relative paths would have the worker
+       * caching URLs that 404 — and, because `install` throws on a bad response, no
+       * worker at all.
+       */
+      const withBase = (path: string) => `${base}${path.replace(/^\//, "")}`;
+
       const fromBundle = Object.keys(bundle)
         .filter((name) => SHELL_EXTENSIONS.test(name))
         .filter((name) => !exclude.some((pattern) => pattern.test(name)))
-        .map((name) => `/${name}`);
+        .map(withBase);
 
-      const fromPublic = [...(await listPublicFiles(publicDir)), ...publicAssets];
+      const fromPublic = [...(await listPublicFiles(publicDir)), ...publicAssets].map(
+        withBase,
+      );
 
       // Sorted and de-duplicated so the hash below depends on content, not on the
       // order the bundler happened to emit things in.
-      const precache = [...new Set([appShell, ...fromBundle, ...fromPublic])].sort();
+      const precache = [
+        ...new Set([withBase(appShell), ...fromBundle, ...fromPublic]),
+      ].sort();
 
       const version = createHash("sha256")
         .update(precache.join("\n"))

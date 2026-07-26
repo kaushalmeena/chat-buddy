@@ -7,8 +7,16 @@
  * can never replace the app mid-reply.
  */
 
-/** Where the build plugin emits the worker. Root scope, so it covers the whole app. */
-const SCRIPT_URL = "/sw.js";
+/*
+ * Where the build plugin emits the worker, and the scope it should control.
+ *
+ * Both derived from `BASE_URL` rather than hard-coded to `/`. On GitHub Pages the app is
+ * served from `/<repo>/`, where a worker registered at `/sw.js` would 404 — and even if
+ * it resolved, a worker's scope cannot extend above its own directory, so it could not
+ * control the app anyway.
+ */
+const SCRIPT_URL = `${import.meta.env.BASE_URL}sw.js`;
+const SCOPE = import.meta.env.BASE_URL;
 
 type Options = {
   /**
@@ -57,7 +65,9 @@ export function registerServiceWorker(options: Options = {}): void {
   window.addEventListener("load", () => {
     void (async () => {
       try {
-        const registration = await navigator.serviceWorker.register(SCRIPT_URL);
+        const registration = await navigator.serviceWorker.register(SCRIPT_URL, {
+          scope: SCOPE,
+        });
 
         if (registration.waiting) {
           await announce(registration.waiting);

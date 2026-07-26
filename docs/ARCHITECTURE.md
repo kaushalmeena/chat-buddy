@@ -19,7 +19,7 @@ something else, and the reason we did not.
 - [Build and bundle](#build-and-bundle)
 - [Conventions](#conventions)
 - [The service worker](#the-service-worker)
-- [Dependencies](#dependencies)
+- [Deployment](#deployment)
 - [Known gaps](#known-gaps)
 
 ## The shape of the app
@@ -398,7 +398,44 @@ deleted the cache `install` had just filled.
   the members actually used. `LanguageModel.params()` is documented but absent from
   some shipping Chrome builds, so it is deliberately not declared — declaring an API
   that may not exist invites a call that type-checks and then crashes.
-- **`npm run verify`** runs lint, typecheck and tests. It is what CI runs.
+- **`npm run verify`** runs lint, typecheck and tests. It is the gate in
+  `.github/workflows/deploy.yml`; nothing is built for Pages until it passes.
+
+## Deployment
+
+GitHub Actions builds and publishes to GitHub Pages on every push to `main`:
+`verify` → `build` → `deploy`. A pull request stops after `verify`, so nothing is ever
+published from a branch.
+
+**The base path is the whole difficulty.** A Pages project site is served from
+`/<repo>/`, not the domain root, and this app emits absolute URLs in five places:
+
+| What | How it is handled |
+| --- | --- |
+| Asset URLs in `index.html` | Vite rebases these from `base` automatically |
+| The worker's precache list | `plugins/service-worker.ts` prefixes every entry with the resolved `base` |
+| The worker's app-shell URL | Resolved at runtime from `worker.location`, so it needs no injection |
+| The worker's script URL and scope | `register-sw.ts` derives both from `import.meta.env.BASE_URL` |
+| `manifest.webmanifest` | Copied verbatim from `public/`, so its paths are *relative* (`./`) and resolve against wherever the manifest lands |
+
+`base` comes from `BASE_PATH`, which the workflow fills from
+`actions/configure-pages`. That step therefore runs **before** the build, the opposite
+of the usual ordering. It reports `/<repo>` for a project site and an empty string for
+a custom domain, so `vite.config.ts` uses `||` rather than `??` — an empty string is
+not nullish but does mean "serve from the root".
+
+Two smaller details:
+
+- **`dist/404.html` is a copy of `index.html`.** Pages has no rewrite rules, so a deep
+  link 404s on a cold visit, before any service worker exists to serve the shell.
+- **A worker's scope cannot extend above its own directory.** Registering `/sw.js` from
+  a page at `/chat-buddy/` would fail twice over: the file is not there, and even if it
+  were it could not control the app.
+
+Verified by serving a `BASE_PATH=/chat-buddy/` build from a subpath: the worker
+registered with scope `/chat-buddy/`, all 13 precached URLs carried the prefix, the
+manifest's relative paths resolved correctly, and the app still worked with the server
+stopped.
 
 ## Known gaps
 

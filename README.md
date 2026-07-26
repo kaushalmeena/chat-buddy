@@ -72,7 +72,7 @@ The app runs at [localhost:5173](http://localhost:5173/).
 | `npm run dev` | Start the dev server |
 | `npm run build` | Typecheck, then build to `dist/` |
 | `npm run preview` | Serve the production build |
-| `npm run verify` | Lint, typecheck and test — what CI runs |
+| `npm run verify` | Lint, typecheck and test — the CI gate |
 | `npm run icons` | Regenerate PWA icons from the SVG brand source |
 
 ## Documentation

@@ -43,7 +43,24 @@ function matchPackage(id: string): string | undefined {
     : segments[0];
 }
 
+/*
+ * Where the app will be served from.
+ *
+ * GitHub Pages puts a project site under `/<repo>/`, not the domain root, so every
+ * absolute URL the app emits has to carry that prefix — the bundle's asset paths, the
+ * service worker's precache list and scope, the manifest, all of it. Vite handles the
+ * bundle; the rest is handled explicitly below and in the worker.
+ *
+ * Defaults to `/` so a local build and `vite preview` behave normally. The deploy
+ * workflow sets `BASE_PATH` from `actions/configure-pages`, which reports `/<repo>` for
+ * a project site and an empty string for a custom domain — hence `||` rather than `??`,
+ * since an empty string is not nullish but does mean "serve from the root". Vite
+ * normalises the trailing slash itself.
+ */
+const base = process.env.BASE_PATH || "/";
+
 export default defineConfig({
+  base,
   plugins: [
     // The Babel plugin rather than the SWC one: Vite 8 on Rolldown recommends it,
     // and it is the only route to Babel-based transforms such as the React

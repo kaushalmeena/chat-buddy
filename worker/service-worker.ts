@@ -43,8 +43,15 @@ declare const __SW_PRECACHE__: readonly string[];
 const CACHE_PREFIX = "chat-buddy-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}${__SW_VERSION__}`;
 
-/** The document served for any navigation, since the app is a single page. */
-const APP_SHELL = "/index.html";
+/**
+ * The document served for any navigation, since the app is a single page.
+ *
+ * Resolved against the worker's own URL rather than hard-coded to `/index.html`. The
+ * worker is emitted beside the app, so `./index.html` is correct whether the app is
+ * served from the domain root or from a subpath like GitHub Pages' `/<repo>/` — and it
+ * needs no build-time injection to know which.
+ */
+const APP_SHELL = new URL("./index.html", worker.location.href).pathname;
 
 /** True for caches this worker owns. Anything else is a previous build's. */
 function isCurrentCache(name: string): boolean {
