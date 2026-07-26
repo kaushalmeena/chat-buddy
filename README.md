@@ -13,6 +13,8 @@
 
 No API keys, no accounts, no server. Nothing you type leaves your device.
 
+[**Try it live**](https://kaushalmeena.github.io/chat-buddy/)
+
 </div>
 
 ---
