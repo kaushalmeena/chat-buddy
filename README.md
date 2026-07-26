@@ -2,13 +2,13 @@
 
 # Chat-Buddy
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-3DA639?logo=opensourceinitiative&logoColor=white)](LICENSE) [![Node.js](https://img.shields.io/badge/Node.js-lts-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org/)
+
 **A lightweight XML chatbot that can tell the time, show cat and dog images,
 and crack a joke or share a fact.**
 
 A simple Node.js chatbot application driven by XML responses — type a message
 and get date/time info, adorable pet images, or a random joke or fact.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-3DA639?logo=opensourceinitiative&logoColor=white)](LICENSE) [![Node.js](https://img.shields.io/badge/Node.js-lts-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org/)
 
 </div>
 
