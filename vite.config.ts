@@ -54,10 +54,20 @@ function matchPackage(id: string): string | undefined {
  * Defaults to `/` so a local build and `vite preview` behave normally. The deploy
  * workflow sets `BASE_PATH` from `actions/configure-pages`, which reports `/<repo>` for
  * a project site and an empty string for a custom domain — hence `||` rather than `??`,
- * since an empty string is not nullish but does mean "serve from the root". Vite
- * normalises the trailing slash itself.
+ * since an empty string is not nullish but does mean "serve from the root".
+ *
+ * The trailing slash is added here rather than left to Vite. Vite normalises it when
+ * rewriting asset URLs, but `import.meta.env.BASE_URL` keeps whatever it was given — so
+ * a `BASE_PATH` of `/chat-buddy` produced a correct-looking bundle and a service worker
+ * registration for `/chat-buddysw.js`, which 404'd in production.
  */
-const base = process.env.BASE_PATH || "/";
+function normaliseBase(value: string): string {
+  if (value === "" || value === "/") return "/";
+  const leading = value.startsWith("/") ? value : `/${value}`;
+  return leading.endsWith("/") ? leading : `${leading}/`;
+}
+
+const base = normaliseBase(process.env.BASE_PATH ?? "");
 
 export default defineConfig({
   base,

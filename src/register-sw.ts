@@ -14,9 +14,18 @@
  * served from `/<repo>/`, where a worker registered at `/sw.js` would 404 — and even if
  * it resolved, a worker's scope cannot extend above its own directory, so it could not
  * control the app anyway.
+ *
+ * The trailing slash is re-asserted rather than assumed. `vite.config.ts` normalises it,
+ * but string-concatenating a base is exactly how this broke once already: a `BASE_URL` of
+ * `/chat-buddy` yielded `/chat-buddysw.js` and a 404 in production, while every build
+ * artefact looked correct.
  */
-const SCRIPT_URL = `${import.meta.env.BASE_URL}sw.js`;
-const SCOPE = import.meta.env.BASE_URL;
+const BASE = import.meta.env.BASE_URL.endsWith("/")
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+
+const SCRIPT_URL = `${BASE}sw.js`;
+const SCOPE = BASE;
 
 type Options = {
   /**
