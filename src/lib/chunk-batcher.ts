@@ -6,10 +6,10 @@
  * buffering outside React and flushing once per frame makes that one, regardless
  * of the incoming rate.
  *
- * Visual smoothing is a separate job, handled downstream by llm-ui in
- * `ui/render/streamed-markdown.tsx`: it decides how fast the arrived text is
- * *revealed*. Keeping the two apart means neither has to compromise — this file
- * never withholds text, and the renderer never has to guess at network timing.
+ * Visual smoothing is a separate job, handled downstream by `useRevealedText`: it
+ * decides how fast the arrived text is *revealed*. Keeping the two apart means
+ * neither has to compromise — this file never withholds text, and the renderer never
+ * has to guess at network timing.
  */
 
 export type ChunkBatcher = {

@@ -4,7 +4,7 @@ import { memo, useState } from "react";
 import type { AssistantMessage, Message } from "@/domain/message.ts";
 import { retryLastReply } from "@/stores/chat.ts";
 import { Markdown } from "./Markdown.tsx";
-import { StreamedMarkdown } from "./StreamedMarkdown.tsx";
+import { StreamingMarkdown } from "./StreamingMarkdown.tsx";
 
 const SOURCE_LABELS: Record<AssistantMessage["source"], string> = {
   "prompt-api": "Chrome built-in AI",
@@ -85,13 +85,14 @@ function AssistantBubble({
            * generation is in progress, and a blinking block on the last character
            * fights the reading eye.
            *
-           * Streaming replies go through llm-ui, which paces the reveal at frame
-           * rate. Settled ones render directly — there is nothing left to pace, and
-           * routing them through the hook would re-animate history on every mount.
+           * Streaming replies go through StreamingMarkdown, which paces the reveal at
+           * frame rate. Settled ones render directly — there is nothing left to
+           * pace, and routing them through the hook would re-animate history on
+           * every mount.
            */
           <div className="message-prose text-[0.9375rem] text-content">
             {isStreaming ? (
-              <StreamedMarkdown text={message.text} isStreaming />
+              <StreamingMarkdown text={message.text} isStreaming />
             ) : (
               <Markdown text={message.text} />
             )}

@@ -1,29 +1,81 @@
-import { registerSW } from "virtual:pwa-register";
-
 /**
- * Registers the Workbox-generated service worker.
+ * Registers the service worker and surfaces updates.
  *
- * This replaces the hand-written `sw.js` from v1, which had a real bug: its
- * `activate` handler computed the set of caches to keep as `[RUNTIME]`, omitting
- * the very cache `install` had just populated — so the precached app shell was
- * deleted the moment the worker activated, and offline never worked.
- *
- * `registerType: "prompt"` in the Vite config means updates are not applied
- * behind the user's back mid-conversation.
+ * Replaces `virtual:pwa-register` from `vite-plugin-pwa`. The behaviour that plugin
+ * gave us with `registerType: "prompt"` is the important part, and is reproduced here:
+ * a new worker installs but does not take over until the person agrees, so an update
+ * can never replace the app mid-reply.
  */
-export function registerServiceWorker(): void {
-  if (import.meta.env.DEV) return;
 
-  const updateSW = registerSW({
-    onNeedRefresh() {
-      // A blocking `confirm` is a poor pattern, but reloading unprompted would
-      // discard an in-flight reply. Replace with an in-app toast when one exists.
-      if (window.confirm("A new version of Chat Buddy is available. Reload?")) {
-        void updateSW(true);
+/** Where the build plugin emits the worker. Root scope, so it covers the whole app. */
+const SCRIPT_URL = "/sw.js";
+
+type Options = {
+  /**
+   * Called when a new version is installed and waiting. Return true to apply it.
+   *
+   * Defaults to `window.confirm`, which is a blunt instrument — but reloading
+   * unprompted would discard an in-flight reply, and updating silently leaves someone
+   * on stale code indefinitely. Replace with an in-app toast when there is one.
+   */
+  readonly onUpdateReady?: (() => boolean | Promise<boolean>) | undefined;
+};
+
+function promptByDefault(): boolean {
+  return window.confirm("A new version of Chat Buddy is available. Reload?");
+}
+
+export function registerServiceWorker(options: Options = {}): void {
+  // The worker is only built for production; in dev Vite serves modules directly.
+  if (import.meta.env.DEV) return;
+  if (!("serviceWorker" in navigator)) return;
+
+  const onUpdateReady = options.onUpdateReady ?? promptByDefault;
+
+  /*
+   * A worker that is `waiting` or newly `installed` while another one still controls
+   * the page is exactly the update case. Without a controller it is simply a first
+   * visit, and there is nothing to announce.
+   */
+  const announce = async (worker: ServiceWorker): Promise<void> => {
+    if (!navigator.serviceWorker.controller) return;
+    if (!(await onUpdateReady())) return;
+
+    // Reload once the new worker takes control, not before, so the page is served by
+    // the version it is about to run.
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      () => window.location.reload(),
+      { once: true },
+    );
+
+    worker.postMessage({ type: "SKIP_WAITING" });
+  };
+
+  // Registering after load keeps the worker's own fetches from competing with the
+  // ones painting the page.
+  window.addEventListener("load", () => {
+    void (async () => {
+      try {
+        const registration = await navigator.serviceWorker.register(SCRIPT_URL);
+
+        if (registration.waiting) {
+          await announce(registration.waiting);
+          return;
+        }
+
+        registration.addEventListener("updatefound", () => {
+          const installing = registration.installing;
+          if (!installing) return;
+
+          installing.addEventListener("statechange", () => {
+            if (installing.state === "installed") void announce(installing);
+          });
+        });
+      } catch (error) {
+        // A failed registration costs offline support, nothing else. The app runs.
+        console.error("[ServiceWorker] registration failed:", error);
       }
-    },
-    onRegisterError(error: unknown) {
-      console.error("[ServiceWorker] registration failed:", error);
-    },
+    })();
   });
 }

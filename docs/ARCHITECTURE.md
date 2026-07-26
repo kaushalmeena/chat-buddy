@@ -166,7 +166,7 @@ frame regardless of token rate. It never withholds text — it only batches writ
 in clumps as batches finish; Chrome's Prompt API can hand over a whole sentence at
 once after a pause. Committing each chunk the moment it lands makes text lurch — a
 paragraph appears, nothing happens, three words appear.
-[`StreamedMarkdown.tsx`](../src/components/StreamedMarkdown.tsx) solves this with
+[`StreamingMarkdown.tsx`](../src/components/StreamingMarkdown.tsx) solves this with
 [llm-ui](https://llm-ui.com/)'s `useLLMOutput`, which keeps its own buffer and
 reveals from it at display frame rate, speeding up or slowing down to hold the
 buffer near a target size.

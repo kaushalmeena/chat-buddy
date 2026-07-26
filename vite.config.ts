@@ -2,10 +2,22 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { VitePWA } from "vite-plugin-pwa";
+import { serviceWorker } from "./plugins/service-worker.ts";
 
-const BRAND_COLOR = "#6366f1";
-
+/*
+ * Vendor chunk assignment.
+ *
+ * Two small explicit sets, and everything else in `node_modules` falls into one
+ * `vendor` chunk. Naming what goes *in* a chunk only works for dependencies with few,
+ * stable package names, which React and Motion have and the markdown pipeline
+ * emphatically does not: react-markdown pulls in around eighty packages across the
+ * unified, remark, micromark, mdast and hast families.
+ *
+ * A hand-maintained list of those was the previous approach, and it had already
+ * drifted — `style-to-js`, `dequal`, `is-alphabetical` and several others were absent,
+ * so they silently landed in the entry chunk. An allow-list of that shape cannot
+ * survive a dependency update. Inverting the rule removes the maintenance entirely.
+ */
 const REACT_PACKAGES = new Set(["react", "react-dom", "scheduler"]);
 const MOTION_PACKAGES = new Set([
   "motion",
@@ -13,13 +25,6 @@ const MOTION_PACKAGES = new Set([
   "motion-dom",
   "motion-utils",
 ]);
-
-/**
- * The markdown pipeline: react-markdown plus the unified/remark/micromark tree it
- * pulls in. Matched by pattern because that tree is dozens of small packages.
- */
-const MARKDOWN_PACKAGE_PATTERN =
-  /^(react-markdown|remark-.*|rehype-.*|unified|unist-.*|micromark.*|mdast-.*|hast-.*|vfile.*|@llm-ui\/.*|property-information|space-separated-tokens|comma-separated-tokens|html-url-attributes|character-entities.*|decode-named-character-reference|devlop|trim-lines|zwitch|longest-streak|ccount|escape-string-regexp|markdown-table|estree-.*|is-plain-obj|bail|extend|trough)$/;
 
 /**
  * Extracts the installed package name from a module id, handling scopes.
@@ -45,42 +50,15 @@ export default defineConfig({
     // Compiler, which SWC cannot host.
     react(),
     tailwindcss(),
-    VitePWA({
-      registerType: "prompt",
-      includeAssets: ["favicon.svg", "apple-touch-icon.png"],
-      manifest: {
-        name: "Chat Buddy",
-        short_name: "Chat Buddy",
-        description:
-          "A private-by-default chat companion that runs its language model entirely in your browser.",
-        start_url: "/",
-        display: "standalone",
-        theme_color: BRAND_COLOR,
-        background_color: "#0b0b12",
-        icons: [
-          { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
-          {
-            src: "/icons/icon-maskable-512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
-          },
-        ],
-      },
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
-        /*
-         * The WebLLM engine is a ~6 MB chunk that most visitors never load, and
-         * the model weights it fetches are hundreds of megabytes more, cached by
-         * the engine itself in the Cache API. Precaching any of that would make
-         * a first visit pay for a feature it has not opted into. Excluded here so
-         * the offline shell stays small; the chunk is still served and
-         * HTTP-cached normally when someone does enable it.
-         */
-        globIgnores: ["**/web-llm-*.js", "**/*.map"],
-        navigateFallback: "index.html",
-      },
+    serviceWorker({
+      source: "src/service-worker.ts",
+      /*
+       * The WebLLM engine is a ~6 MB chunk most visitors never load, and the model
+       * weights it fetches are hundreds of megabytes more, cached by the engine
+       * itself. Precaching any of it would make a first visit pay for a feature
+       * nobody opted into. It is still served and HTTP-cached normally.
+       */
+      exclude: [/^assets\/web-llm-/, /\.map$/],
     }),
   ],
   resolve: {
@@ -107,11 +85,11 @@ export default defineConfig({
           if (id.includes("@mlc-ai/web-llm")) return "web-llm";
 
           /*
-           * Vendor splits, so dependencies that change far less often than app
-           * code stay cached across deploys.
+           * Vendor splits, so dependencies that change far less often than app code
+           * stay cached across deploys.
            *
-           * Matched on the full package boundary, not a prefix: `react` as a
-           * prefix also matches `react-markdown`, which quietly pulled the whole
+           * Matched on the full package boundary, not a prefix: `react` as a prefix
+           * also matches `react-markdown`, which once pulled the whole
            * micromark/mdast parser stack into the chunk labelled "react".
            */
           const vendor = matchPackage(id);
@@ -119,10 +97,9 @@ export default defineConfig({
 
           if (REACT_PACKAGES.has(vendor)) return "react";
           if (MOTION_PACKAGES.has(vendor)) return "motion";
-          // The markdown pipeline is a large, self-contained dependency tree.
-          if (MARKDOWN_PACKAGE_PATTERN.test(vendor)) return "markdown";
 
-          return undefined;
+          // Everything else third-party. No list to keep up to date.
+          return "vendor";
         },
       },
     },
