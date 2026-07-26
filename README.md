@@ -53,6 +53,19 @@ opt-in and lives in its own lazily-imported chunk.
 - **Accessible** — a `role="log"` transcript, native form controls, visible focus
   rings, and full `prefers-reduced-motion` support.
 
+## Tech Stack
+
+| Area | Tools |
+| --- | --- |
+| **Framework** | [React 19](https://react.dev/) · [TypeScript 7](https://www.typescriptlang.org/) |
+| **Build** | [Vite 8](https://vite.dev/) · a hand-written service worker, no PWA plugin |
+| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) via its Vite plugin · [Motion](https://motion.dev/) · [Lucide](https://lucide.dev/) icons |
+| **State** | [Zustand 5](https://zustand.docs.pmnd.rs/) · [Dexie 4](https://dexie.org/) over IndexedDB |
+| **Inference** | [Chrome built-in AI](https://developer.chrome.com/docs/ai/built-in) · [WebLLM](https://webllm.mlc.ai/) as an optional dependency · a built-in rule engine |
+| **Rendering** | [react-markdown](https://github.com/remarkjs/react-markdown) · [remark-gfm](https://github.com/remarkjs/remark-gfm) |
+| **Tooling** | [Biome](https://biomejs.dev/) · [Vitest](https://vitest.dev/) with [jsdom](https://github.com/jsdom/jsdom) · [sharp](https://sharp.pixelplumbing.com/) for icons |
+| **Deployment** | [GitHub Pages](https://pages.github.com/) via [GitHub Actions](https://github.com/features/actions) |
+
 ## Getting started
 
 You need [Node.js](https://nodejs.org/) 20.19 or newer.
