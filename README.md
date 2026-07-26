@@ -4,10 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-3DA639?logo=opensourceinitiative&logoColor=white)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 [![Preact](https://img.shields.io/badge/Preact-10-673AB8?logo=preact&logoColor=white)](https://preactjs.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Biome](https://img.shields.io/badge/Biome-2-60A5FA?logo=biome&logoColor=white)](https://biomejs.dev/)
 
 **A chat companion whose language model runs entirely in your browser.**
 
@@ -94,10 +92,6 @@ The app runs at [localhost:5173](http://localhost:5173/).
 | `npm run dev` | Start the dev server |
 | `npm run build` | Typecheck, then build to `dist/` |
 | `npm run preview` | Serve the production build |
-| `npm run verify` | Lint, typecheck and test — what CI runs |
-| `npm run lint:fix` | Apply Biome's safe fixes |
-| `npm run test:watch` | Vitest in watch mode |
-| `npm run icons` | Regenerate PWA icons from the SVG brand source |
 
 ## Architecture
 

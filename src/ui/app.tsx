@@ -9,6 +9,7 @@ import { ProviderPicker } from "./components/provider-picker.tsx";
 import { ThemeToggle } from "./components/theme-toggle.tsx";
 import { ThreadList } from "./components/thread-list.tsx";
 import { Transcript } from "./components/transcript.tsx";
+import { VoicePicker } from "./components/voice-picker.tsx";
 
 const REPO_URL = "https://github.com/kaushalmeena/chat-buddy";
 
@@ -189,6 +190,7 @@ function SidebarContents({
 
       <div className="flex flex-col gap-4 border-t border-border-subtle pt-4">
         <ProviderPicker />
+        <VoicePicker />
         <ThemeToggle />
 
         <a

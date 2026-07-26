@@ -11,12 +11,20 @@ type SettingsState = {
   readonly preferredProviderId: ReplySource | undefined;
   /** Whether assistant replies are read aloud. */
   readonly speakReplies: boolean;
+  /**
+   * `voiceURI` of the chosen speech voice, or undefined to auto-select.
+   *
+   * Stored as the URI rather than the voice object, which is not serialisable, and
+   * rather than the name, which is not unique across languages.
+   */
+  readonly voiceUri: string | undefined;
   /** Whether the desktop sidebar is collapsed to its rail. */
   readonly isSidebarCollapsed: boolean;
 
   setTheme(theme: ThemePreference): void;
   setPreferredProvider(id: ReplySource): void;
   toggleSpeakReplies(): void;
+  setVoiceUri(uri: string | undefined): void;
   toggleSidebar(): void;
 };
 
@@ -33,11 +41,13 @@ export const useSettings = create<SettingsState>()(
       theme: "system",
       preferredProviderId: undefined,
       speakReplies: false,
+      voiceUri: undefined,
       isSidebarCollapsed: false,
 
       setTheme: (theme) => set({ theme }),
       setPreferredProvider: (preferredProviderId) => set({ preferredProviderId }),
       toggleSpeakReplies: () => set((state) => ({ speakReplies: !state.speakReplies })),
+      setVoiceUri: (voiceUri) => set({ voiceUri }),
       toggleSidebar: () =>
         set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
     }),
