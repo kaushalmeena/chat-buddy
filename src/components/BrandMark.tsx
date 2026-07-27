@@ -10,7 +10,7 @@ type BrandMarkProps = {
  *
  * Inline means no request, no layout shift, and gradient stops that can be tuned
  * alongside the theme. The same artwork lives in `src/assets/brand-icon.svg`,
- * which is the source `scripts/generate-icons.mjs` renders the PWA icons from.
+ * which is the source `scripts/build-icons.mjs` renders the PWA icons from.
  */
 function BrandMark({ size = 32, className }: BrandMarkProps) {
   /*

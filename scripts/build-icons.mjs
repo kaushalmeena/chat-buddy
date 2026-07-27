@@ -2,7 +2,7 @@
  * Renders every PWA/browser icon from the single SVG brand source, so the
  * artwork has exactly one place to be edited.
  *
- *   node scripts/generate-icons.mjs
+ *   node scripts/build-icons.mjs
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";

@@ -21,7 +21,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify": "npm run lint && npm run typecheck && npm run test",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/build-icons.mjs"
   },
   "dependencies": {
     "dexie": "^4.4.4",

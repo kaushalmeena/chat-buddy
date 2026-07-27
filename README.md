@@ -92,9 +92,9 @@ The app runs at [localhost:5173](http://localhost:5173/).
 
 ## Documentation
 
-- **[Architecture](docs/ARCHITECTURE.md)** — layers, the provider seam, how streaming
+- **[Architecture](docs/architecture.md)** — layers, the provider seam, how streaming
   and persistence work, and the compromises that are pinned rather than solved.
-- **[Design](docs/DESIGN.md)** — colour and theming, typography, motion, and the
+- **[Design](docs/design.md)** — colour and theming, typography, motion, and the
   accessibility commitments.
 
 ## Privacy
