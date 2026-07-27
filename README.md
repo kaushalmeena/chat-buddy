@@ -110,10 +110,10 @@ text-to-speech that reads replies back, runs locally.
 
 ## Contributing
 
-Contributions are welcome. Please
-[open an issue](https://github.com/kaushalmeena/chat-buddy/issues/new/choose) before
-starting on anything substantial, and run `npm run verify` before opening a pull
-request.
+Contributions are welcome! If you find a bug or have a feature request, please
+[open an issue](https://github.com/kaushalmeena/chat-buddy/issues/new/choose)
+first to discuss it. For code changes, fork the repository, create a branch,
+and open a pull request.
 
 ## License
 
