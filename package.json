@@ -20,8 +20,8 @@
     "format": "biome format --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "npm run lint && npm run typecheck && npm run test",
-    "icons": "node scripts/build-icons.mjs"
+    "icons": "node scripts/build-icons.mjs",
+    "check": "npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {
     "dexie": "^4.4.4",
