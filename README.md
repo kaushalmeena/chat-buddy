@@ -87,15 +87,28 @@ The app runs at [localhost:5173](http://localhost:5173/).
 | `npm run dev` | Start the dev server |
 | `npm run build` | Typecheck, then build to `dist/` |
 | `npm run preview` | Serve the production build |
-| `npm run verify` | Lint, typecheck and test — the CI gate |
+| `npm run check` | Lint, typecheck and test — the CI gate |
 | `npm run icons` | Regenerate PWA icons from the SVG brand source |
 
 ## Documentation
 
-- **[Architecture](docs/architecture.md)** — layers, the provider seam, how streaming
-  and persistence work, and the compromises that are pinned rather than solved.
-- **[Design](docs/design.md)** — colour and theming, typography, motion, and the
-  accessibility commitments.
+Full documentation is available in the [`/docs`](./docs) directory.
+
+**Core Concepts:**
+
+- [How the App Fits Together](./docs/overview.md) — the shape of the app, and the layer boundaries everything else hangs off.
+- [Providers and Streaming](./docs/providers.md) — the seam every model sits behind, how the tiers fall back, and why streaming is three separate jobs.
+- [State and Persistence](./docs/state.md) — what lives in stores versus IndexedDB, plus the rule engine, the skill registry and speech.
+
+**Design System:**
+
+- [Foundations](./docs/foundations.md) — principles, colour, theming, typography and spacing.
+- [Motion and Iconography](./docs/motion.md) — what animates, what deliberately does not, and the brand mark.
+- [Layout and Components](./docs/components.md) — the recurring patterns, and how to add to the system without breaking it.
+
+**Advanced:**
+
+- [Build, Service Worker and Deployment](./docs/build.md) — the bundle, the hand-written service worker, and the gaps that are known and accepted.
 
 ## Privacy
 
