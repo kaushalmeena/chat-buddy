@@ -1,11 +1,13 @@
 import { ArrowDown } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef } from "react";
+
 import { isAssistantMessage } from "@/domain/message.ts";
 import { useChatAutoScroll } from "@/hooks/useChatAutoScroll.ts";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis.ts";
 import { selectMessages, useChat } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
+
 import { EmptyState } from "./EmptyState.tsx";
 import { MessageBubble } from "./MessageBubble.tsx";
 

@@ -1,6 +1,7 @@
 import { ArrowUp, type LucideIcon, Mic, Square, Volume2, VolumeX } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+
 import { type Command, matchCommands, resolveCommand } from "@/commands.ts";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition.ts";
 import { sendMessage, stopGenerating, useChat } from "@/stores/chat.ts";
@@ -32,7 +33,7 @@ function Composer() {
   // Grow to fit the draft, up to a limit. `draft` is the trigger rather than a
   // read value: the effect measures the already-rendered `scrollHeight`, and
   // resetting to `auto` first is what lets it shrink again on delete.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `draft` triggers the re-measure.
+  // `draft` is listed because it triggers the re-measure, not because it is read.
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;

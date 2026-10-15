@@ -1,6 +1,7 @@
 import { ExternalLink, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+
 import { BrandMark } from "@/components/BrandMark.tsx";
 import { Composer } from "@/components/Composer.tsx";
 import { ProviderPicker } from "@/components/ProviderPicker.tsx";

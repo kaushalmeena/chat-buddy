@@ -1,5 +1,6 @@
 import type { ReplySource } from "@/domain/message.ts";
 import type { ChatProvider, ProviderAvailability } from "@/domain/provider.ts";
+
 import { LocalRuleProvider } from "./local-rule-provider.ts";
 import { PromptApiProvider } from "./prompt-api-provider.ts";
 import { WebLlmProvider } from "./web-llm-provider.ts";

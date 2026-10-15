@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
+
 import { createChunkBatcher } from "@/lib/chunk-batcher.ts";
 
 /**

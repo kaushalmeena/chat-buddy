@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
+
 import type { Conversation } from "@/domain/conversation.ts";
 import type { Attachment, Message } from "@/domain/message.ts";
 

@@ -41,7 +41,7 @@ the storage layer.
 
 **Preferences → `localStorage` via zustand `persist`**
 ([`config.ts`](../src/stores/config.ts)). These are a handful of
-scalars that must be readable *synchronously before first paint* — the inline script
+scalars that must be readable _synchronously before first paint_ — the inline script
 in `index.html` reads the theme to avoid a white flash on a dark-mode reload. That
 is precisely what an async store cannot offer.
 
@@ -112,7 +112,7 @@ properly:
 - Markdown is converted to prose first. Passing raw markdown made the synthesiser
   read hashes, asterisks, table pipes and full URLs aloud.
 - macOS ships ~19 novelty voices (`Zarvox`, `Bubbles`, `Trinoids`, `Bad News`) in the
-  *same list* as real ones with no distinguishing flag. They are excluded from
+  _same list_ as real ones with no distinguishing flag. They are excluded from
   automatic selection.
 
 **Input (recognition) is not local.** Chrome's `SpeechRecognition` sends audio to

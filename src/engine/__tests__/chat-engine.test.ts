@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
+
 import type { Message } from "@/domain/message.ts";
 import type { ChatProvider, GenerateOptions } from "@/domain/provider.ts";
 import { ProviderError } from "@/domain/provider.ts";

@@ -1,5 +1,6 @@
 import { Check, Cpu, Download, TriangleAlert } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+
 import type { ProviderAvailability } from "@/domain/provider.ts";
 import { activateProvider, useChat } from "@/stores/chat.ts";
 

@@ -1,5 +1,6 @@
 import { type LucideIcon, Monitor, Moon, Sun } from "lucide-react";
 import { motion } from "motion/react";
+
 import { type ThemePreference, useConfig } from "@/stores/config.ts";
 
 const OPTIONS: readonly {

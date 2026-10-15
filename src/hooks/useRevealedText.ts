@@ -113,7 +113,7 @@ export function useRevealedText(text: string, isStreaming: boolean): string {
    * it. Restarting when streaming *stops* is what lets the tail drain and the effect
    * settle, instead of polling every frame forever.
    */
-  // biome-ignore lint/correctness/useExhaustiveDependencies: restart trigger, read via ref.
+  // The restart trigger is listed as a dependency; its value is read via a ref.
   useEffect(() => {
     // Frames do not run in a background tab. Revealing progressively there would
     // stall until the tab is looked at again, so show everything instead.

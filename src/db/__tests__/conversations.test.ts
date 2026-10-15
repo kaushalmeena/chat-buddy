@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
+
 import { isConversation, normalise } from "@/db/conversations.ts";
 import type { Conversation } from "@/domain/conversation.ts";
 

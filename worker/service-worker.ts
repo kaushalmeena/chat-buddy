@@ -33,11 +33,11 @@ const worker = self as unknown as ServiceWorkerGlobalScope;
  * A hash of the precache list. A new hash means a new cache name, which is what makes
  * an old shell collectable.
  */
-// biome-ignore lint/style/useNamingConvention: build-time substitution placeholder.
+// Build-time substitution placeholder.
 declare const __SW_VERSION__: string;
 
 /** The content-hashed files making up the app shell. */
-// biome-ignore lint/style/useNamingConvention: build-time substitution placeholder.
+// Build-time substitution placeholder.
 declare const __SW_PRECACHE__: readonly string[];
 
 const CACHE_PREFIX = "chat-buddy-shell-";

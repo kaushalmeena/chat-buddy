@@ -57,7 +57,7 @@ live region announces the menu instead.
 
 Each engine shows label, one-line description, and an availability note: download
 size, WebGPU requirement, or browser requirement. Unavailable engines are visibly
-disabled rather than hidden — knowing *why* something is unavailable is more useful
+disabled rather than hidden — knowing _why_ something is unavailable is more useful
 than its absence.
 
 ## Accessibility
@@ -71,7 +71,7 @@ Commitments, not aspirations:
   navigation and a single tab stop for free.
 - **Icon-only controls always have an accessible name.**
 - **Destructive actions stay keyboard-reachable.** Thread delete buttons are hidden
-  until hover *or* `focus-visible`, never hover alone.
+  until hover _or_ `focus-visible`, never hover alone.
 - **`prefers-reduced-motion` is fully honoured.**
 - **ARIA that fits the element.** `aria-expanded` is not valid on a textbox, and giving
   the composer `role="combobox"` to accept it would cost its multiline semantics — so a

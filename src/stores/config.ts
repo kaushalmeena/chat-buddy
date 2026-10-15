@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
 import type { ReplySource } from "@/domain/message.ts";
 
 export type ThemePreference = "light" | "dark" | "system";

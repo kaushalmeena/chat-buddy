@@ -94,7 +94,7 @@
   :root[data-theme-switching] *,
   :root[data-theme-switching] *::before,
   :root[data-theme-switching] *::after {
-    /* biome-ignore lint/complexity/noImportantStyles: must beat every transition utility. */
+    /* `!important` must beat every transition utility. */
     transition: none !important;
   }
 
@@ -139,7 +139,7 @@
    * declared before the element rules below, so a heading or list can override the
    * margin it sets — which is the descending specificity the linter objects to.
    */
-  /* biome-ignore lint/style/noDescendingSpecificity: must precede the element rules it seeds. */
+  /* Must precede the element rules it seeds, hence the descending specificity. */
   .message-prose > * + * {
     margin-top: 0.75em;
   }
@@ -311,16 +311,14 @@
  * file does not know about.
  */
 @media (prefers-reduced-motion: reduce) {
-  /* biome-ignore-start lint/style/noDescendingSpecificity: a deliberate catch-all override. */
+  /* A deliberate catch-all override, so specificity descends from here. */
   *,
   *::before,
   *::after {
-    /* biome-ignore-end lint/style/noDescendingSpecificity: end of catch-all. */
-    /* biome-ignore-start lint/complexity/noImportantStyles: an accessibility override must win the cascade. */
+    /* An accessibility override must win the cascade, hence `!important`. */
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-    /* biome-ignore-end lint/complexity/noImportantStyles: end of override block. */
   }
 }

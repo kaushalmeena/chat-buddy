@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
+
 import { deriveTitle, NEW_CONVERSATION_TITLE } from "@/domain/conversation.ts";
 import type { AssistantMessage, Message, UserMessage } from "@/domain/message.ts";
 import { toProviderTurns } from "@/domain/message.ts";

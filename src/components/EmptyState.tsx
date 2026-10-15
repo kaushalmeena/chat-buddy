@@ -1,5 +1,7 @@
 import { motion } from "motion/react";
+
 import { sendMessage, useChat } from "@/stores/chat.ts";
+
 import { BrandMark } from "./BrandMark.tsx";
 
 /**

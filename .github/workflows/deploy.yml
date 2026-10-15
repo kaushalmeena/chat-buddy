@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Lint, typecheck, test
+    name: Check and test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -33,11 +33,10 @@ jobs:
 
       - run: npm ci
 
-      - name: Lint and format check
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
+      # `vp check` is format, lint and typecheck in one pass, so the three former
+      # steps collapse into this one.
+      - name: Check
+        run: npm run check
 
       - name: Test
         run: npm run test

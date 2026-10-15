@@ -1,4 +1,4 @@
-import { beforeEach } from "vitest";
+import { beforeEach } from "vite-plus/test";
 
 /**
  * Installs a real in-memory `Storage` on `globalThis`.

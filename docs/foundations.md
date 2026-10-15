@@ -30,22 +30,22 @@ dark palette feel like siblings rather than two unrelated designs.
 
 ### Semantic tokens
 
-Named by *role*, never by appearance. There is no `--color-gray-200`, because the
+Named by _role_, never by appearance. There is no `--color-gray-200`, because the
 whole point is that the same token resolves to a light value in one theme and a dark
 one in the other.
 
-| Token | Role |
-| --- | --- |
-| `canvas` | Page background, behind everything |
-| `surface` | Cards, bubbles, inputs — one step off the canvas |
-| `surface-raised` | Hover states, code blocks, table headers |
-| `border-subtle` | Default borders and dividers |
-| `border-strong` | Hover borders, scrollbar thumbs |
-| `content` | Primary text |
-| `content-muted` | Secondary text, descriptions |
-| `content-faint` | Metadata, labels, placeholders |
-| `danger` | Errors and destructive actions |
-| `success` | The active-engine indicator |
+| Token            | Role                                             |
+| ---------------- | ------------------------------------------------ |
+| `canvas`         | Page background, behind everything               |
+| `surface`        | Cards, bubbles, inputs — one step off the canvas |
+| `surface-raised` | Hover states, code blocks, table headers         |
+| `border-subtle`  | Default borders and dividers                     |
+| `border-strong`  | Hover borders, scrollbar thumbs                  |
+| `content`        | Primary text                                     |
+| `content-muted`  | Secondary text, descriptions                     |
+| `content-faint`  | Metadata, labels, placeholders                   |
+| `danger`         | Errors and destructive actions                   |
+| `success`        | The active-engine indicator                      |
 
 ### Brand ramp
 
@@ -86,7 +86,7 @@ live via `matchMedia`. Someone who pinned a theme once can go back to following 
 system.
 
 **Transitions are suppressed during the swap.** This one is worth spelling out.
-Utilities like `transition-colors` exist for hover and focus, but they *also* apply
+Utilities like `transition-colors` exist for hover and focus, but they _also_ apply
 when the underlying custom property changes — so flipping the theme animated hundreds
 of elements from their old colour to their new one at once. Because the palettes sit
 at opposite ends of the lightness range, those interpolations swept through dark
@@ -112,12 +112,12 @@ as the only class the theme system touches.
 One family: **Inter** where available, falling back to the system UI stack. One mono
 stack for code.
 
-| Context | Size | Notes |
-| --- | --- | --- |
-| Message body | `0.9375rem` (15px) | Between Tailwind's `sm` and `base`; 14px is too tight for sustained reading, 16px too loose in a bubble |
-| Section labels | `0.75rem` uppercase, tracked | Sidebar headings |
-| Metadata | `0.6875rem` (11px) | Message footers, availability notes |
-| Code | `0.8125rem` | Blocks; inline code is `0.875em` so it scales with its parent |
+| Context        | Size                         | Notes                                                                                                   |
+| -------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Message body   | `0.9375rem` (15px)           | Between Tailwind's `sm` and `base`; 14px is too tight for sustained reading, 16px too loose in a bubble |
+| Section labels | `0.75rem` uppercase, tracked | Sidebar headings                                                                                        |
+| Metadata       | `0.6875rem` (11px)           | Message footers, availability notes                                                                     |
+| Code           | `0.8125rem`                  | Blocks; inline code is `0.875em` so it scales with its parent                                           |
 
 Message prose uses `line-height: 1.65` and `overflow-wrap: anywhere` — the latter
 because model output contains unbroken strings that would otherwise widen a bubble

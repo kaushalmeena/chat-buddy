@@ -1,6 +1,7 @@
 import { ChevronDown, Volume2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
+
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis.ts";
 import { useConfig } from "@/stores/config.ts";
 

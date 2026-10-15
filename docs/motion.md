@@ -4,15 +4,15 @@
 
 [Motion](https://motion.dev/) for anything stateful, CSS for anything continuous.
 
-| Movement | Treatment |
-| --- | --- |
-| Message entry | Fade + 8px rise, 0.24s, `cubic-bezier(0.22, 1, 0.36, 1)` |
-| Sidebar collapse | Spring, stiffness 380, damping 34 |
-| Drawer | Spring, stiffness 420, damping 38 |
-| Theme indicator | Spring via shared `layoutId` |
-| Menus, badges | 0.16–0.22s ease-out |
-| Typing dots, indeterminate progress | CSS keyframes — continuous, so no JS |
-| Button press | `whileTap` scale 0.92 |
+| Movement                            | Treatment                                                |
+| ----------------------------------- | -------------------------------------------------------- |
+| Message entry                       | Fade + 8px rise, 0.24s, `cubic-bezier(0.22, 1, 0.36, 1)` |
+| Sidebar collapse                    | Spring, stiffness 380, damping 34                        |
+| Drawer                              | Spring, stiffness 420, damping 38                        |
+| Theme indicator                     | Spring via shared `layoutId`                             |
+| Menus, badges                       | 0.16–0.22s ease-out                                      |
+| Typing dots, indeterminate progress | CSS keyframes — continuous, so no JS                     |
+| Button press                        | `whileTap` scale 0.92                                    |
 
 The easing curve is a decelerating ease-out: fast to start, settling gently. It reads
 as responsive rather than floaty.
@@ -49,7 +49,7 @@ Conventions:
 
 - **20px** default, **13–17px** in dense contexts, **12px** in message footers.
 - Icons beside a text label get `aria-hidden`. Icon-only buttons carry `aria-label`
-  *and* `title`.
+  _and_ `title`.
 - Icons passed as props are typed as `LucideIcon`, imported from `lucide-react`. There
   was briefly a local alias for this, on the theory that it decoupled component
   signatures from the icon library. It did not buy anything: the alias was structurally

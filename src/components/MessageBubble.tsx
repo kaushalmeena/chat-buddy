@@ -1,8 +1,10 @@
 import { Check, Copy, RefreshCw, TriangleAlert } from "lucide-react";
 import { motion } from "motion/react";
 import { memo, useState } from "react";
+
 import type { AssistantMessage, Message } from "@/domain/message.ts";
 import { retryLastReply } from "@/stores/chat.ts";
+
 import { Markdown } from "./Markdown.tsx";
 import { StreamingMarkdown } from "./StreamingMarkdown.tsx";
 

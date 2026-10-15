@@ -1,6 +1,8 @@
 import { useMemo } from "react";
+
 import { useRevealedText } from "@/hooks/useRevealedText.ts";
 import { toRenderableMarkdown } from "@/lib/markdown-stream.ts";
+
 import { Markdown } from "./Markdown.tsx";
 
 /**

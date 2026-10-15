@@ -28,10 +28,10 @@ button, the typing indicator and the batching all work identically regardless of
 which backend answered. The alternative, a `generate` that sometimes returns a
 string and sometimes an iterable, pushes a branch into every consumer.
 
-**`availability()` is separate from `prepare()`.** Asking whether a provider *could*
+**`availability()` is separate from `prepare()`.** Asking whether a provider _could_
 work must not download 950 MB to find out. Availability is a cheap probe; preparing
 is the expensive commitment. Splitting them is what lets the UI show download sizes
-and hardware requirements *before* someone opts in.
+and hardware requirements _before_ someone opts in.
 
 **`AbortSignal` is the only cancellation mechanism.** Implementations must treat it
 as authoritative and stop yielding promptly. Some providers throw on abort, some
@@ -47,11 +47,11 @@ Adding a fourth backend means writing one class and adding it to
 Providers are ordered by preference in
 [`provider-registry.ts`](../src/engine/providers/provider-registry.ts):
 
-| Order | Provider | Cost | Reach |
-| --- | --- | --- | --- |
-| 1 | `PromptApiProvider` — Chrome's Gemini Nano | Free; weights ship with the browser | Chrome 148+ desktop, with disk and RAM headroom |
-| 2 | `WebLlmProvider` — Llama 3.2 1B on WebGPU | ~950 MB one-time download | Any browser with WebGPU |
-| 3 | `LocalRuleProvider` — the built-in rule table | Free | Everywhere, including offline |
+| Order | Provider                                      | Cost                                | Reach                                           |
+| ----- | --------------------------------------------- | ----------------------------------- | ----------------------------------------------- |
+| 1     | `PromptApiProvider` — Chrome's Gemini Nano    | Free; weights ship with the browser | Chrome 148+ desktop, with disk and RAM headroom |
+| 2     | `WebLlmProvider` — Llama 3.2 1B on WebGPU     | ~950 MB one-time download           | Any browser with WebGPU                         |
+| 3     | `LocalRuleProvider` — the built-in rule table | Free                                | Everywhere, including offline                   |
 
 **The rule provider is the floor, not a fallback of last resort.** No in-browser
 language model has reach you can rely on, so something has to answer on a phone, in
@@ -80,7 +80,7 @@ neither gets solved properly.
 
 **Job one: not melting React.** A model emitting 60 tokens a second would drive 60
 store writes and 60 re-renders a second if each chunk committed immediately.
-[`chunk-batcher.ts`](../src/lib/chunk-batcher.ts) buffers arriving text *outside*
+[`chunk-batcher.ts`](../src/lib/chunk-batcher.ts) buffers arriving text _outside_
 React entirely and commits once per animation frame. Cost becomes one render per
 frame regardless of token rate. It never withholds text — it only batches writes.
 

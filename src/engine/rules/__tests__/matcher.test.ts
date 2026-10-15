@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
+
 import { matchRule } from "@/engine/rules/matcher.ts";
 import { compileRules, type Rule } from "@/engine/rules/rule.ts";
 import { COMPILED_RULES } from "@/engine/rules/rules.ts";

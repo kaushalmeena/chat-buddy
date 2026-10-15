@@ -42,10 +42,8 @@ function useChatAutoScroll<T extends HTMLElement>(dependency: unknown) {
    *
    * `dependency` is a change trigger, not a value the effect reads: the caller
    * passes something derived from the content (message count and streamed
-   * length) so this re-runs whenever the container has grown. Biome's rule
-   * cannot model that, hence the suppression.
+   * length) so this re-runs whenever the container has grown.
    */
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `dependency` is the intentional change trigger.
   useEffect(() => {
     if (!isPinned) return;
     const element = ref.current;

@@ -65,7 +65,7 @@ deleted the cache `install` had just filled.
 
 - **Filenames** follow what the file exports: `PascalCase.tsx` for components,
   `camelCase.ts` for hooks (so `useChatAutoScroll.ts`), `kebab-case.ts` everywhere
-  else. Biome enforces the first two per-directory via `useFilenamingConvention`.
+  else. Oxlint enforces the first two per-directory via `unicorn/filename-case`.
 - **Tests** live in `__tests__/` beside the code they cover.
 - **Components** declare functions normally and `export { … }` once at the bottom of
   the file.
@@ -75,8 +75,9 @@ deleted the cache `install` had just filled.
   the members actually used. `LanguageModel.params()` is documented but absent from
   some shipping Chrome builds, so it is deliberately not declared — declaring an API
   that may not exist invites a call that type-checks and then crashes.
-- **`npm run verify`** runs lint, typecheck and tests. It is the gate in
-  `.github/workflows/deploy.yml`; nothing is built for Pages until it passes.
+- **`npm run check`** (`vp check`) formats, lints and type-checks in one pass. It and
+  the test run are the gate in `.github/workflows/deploy.yml`; nothing is built for
+  Pages until both pass.
 
 ## Deployment
 
@@ -87,13 +88,13 @@ published from a branch.
 **The base path is the whole difficulty.** A Pages project site is served from
 `/<repo>/`, not the domain root, and this app emits absolute URLs in five places:
 
-| What | How it is handled |
-| --- | --- |
-| Asset URLs in `index.html` | Vite rebases these from `base` automatically |
-| The worker's precache list | `plugins/service-worker.ts` prefixes every entry with the resolved `base` |
-| The worker's app-shell URL | Resolved at runtime from `worker.location`, so it needs no injection |
-| The worker's script URL and scope | `register-sw.ts` derives both from `import.meta.env.BASE_URL` |
-| `manifest.webmanifest` | Copied verbatim from `public/`, so its paths are *relative* (`./`) and resolve against wherever the manifest lands |
+| What                              | How it is handled                                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Asset URLs in `index.html`        | Vite rebases these from `base` automatically                                                                       |
+| The worker's precache list        | `plugins/service-worker.ts` prefixes every entry with the resolved `base`                                          |
+| The worker's app-shell URL        | Resolved at runtime from `worker.location`, so it needs no injection                                               |
+| The worker's script URL and scope | `register-sw.ts` derives both from `import.meta.env.BASE_URL`                                                      |
+| `manifest.webmanifest`            | Copied verbatim from `public/`, so its paths are _relative_ (`./`) and resolve against wherever the manifest lands |
 
 `base` comes from `BASE_PATH`, which the workflow fills from
 `actions/configure-pages`. That step therefore runs **before** the build, the opposite

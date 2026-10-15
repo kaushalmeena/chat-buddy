@@ -1,7 +1,9 @@
 import { fileURLToPath } from "node:url";
+
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, lazyPlugins } from "vite-plus";
+
 import { serviceWorker } from "./plugins/service-worker.ts";
 
 /*
@@ -69,25 +71,112 @@ function normaliseBase(value: string): string {
 
 const base = normaliseBase(process.env.BASE_PATH ?? "");
 
+/*
+ * Generated or vendored output that neither the linter nor the formatter should
+ * walk. `dev-dist` and `public/icons` are written by the service-worker plugin and
+ * `npm run icons` respectively, so both reappear on any clean build.
+ */
+const IGNORED_PATHS = ["dist/**", "dev-dist/**", "public/icons/**", "coverage/**"];
+
+/*
+ * `lazyPlugins` returns `undefined` when Vite+ loads this config only to read a
+ * non-plugin block — `vp check`, `vp lint` and `vp fmt` all do — so those commands
+ * never pay to construct the plugin chain. That puts `undefined` in its return
+ * type, which `exactOptionalPropertyTypes` will not accept for an optional
+ * `plugins?`. Spreading leaves the key absent in that case rather than present
+ * and set to `undefined`, which is what the option actually means.
+ */
+const lazy = lazyPlugins(() => [
+  // The Babel plugin rather than the SWC one: Vite 8 on Rolldown recommends it,
+  // and it is the only route to Babel-based transforms such as the React
+  // Compiler, which SWC cannot host.
+  react(),
+  tailwindcss(),
+  serviceWorker({
+    source: "worker/service-worker.ts",
+    /*
+     * The WebLLM engine is a ~6 MB chunk most visitors never load, and the model
+     * weights it fetches are hundreds of megabytes more, cached by the engine
+     * itself. Precaching any of it would make a first visit pay for a feature
+     * nobody opted into. It is still served and HTTP-cached normally.
+     */
+    exclude: [/^assets\/web-llm-/, /\.map$/],
+  }),
+]);
+
+const plugins = lazy ? { plugins: lazy } : {};
+
 export default defineConfig({
+  /*
+   * Formatting, ported from the `biome.json` this project used before Vite+.
+   * Oxfmt is Prettier-shaped, so the Biome names map onto Prettier's: `lineWidth`
+   * became `printWidth`, `quoteStyle: "double"` became `singleQuote: false`, and
+   * so on. `sortImports` replaces Biome's `organizeImports` assist action.
+   */
+  fmt: {
+    ignorePatterns: IGNORED_PATHS,
+    printWidth: 88,
+    tabWidth: 2,
+    useTabs: false,
+    semi: true,
+    singleQuote: false,
+    trailingComma: "all",
+    arrowParens: "always",
+    sortImports: {},
+  },
+  lint: {
+    ignorePatterns: IGNORED_PATHS,
+    jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
+    /*
+     * `react` carries the hooks rules and `unicorn` the filename rule; neither is
+     * on by default. The TypeScript and oxc plugins are, so they stay unlisted.
+     */
+    plugins: ["react", "unicorn", "import", "promise"],
+    // Declared by the Prompt API, which ships without ambient types here.
+    globals: { LanguageModel: "readonly" },
+    options: { typeAware: true, typeCheck: true },
+    rules: {
+      "vite-plus/prefer-vite-plus-imports": "error",
+      // Biome's `correctness` selections.
+      "typescript/no-unused-vars": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      // Biome's `style` selections.
+      "prefer-const": "error",
+      "typescript/consistent-type-imports": "error",
+      "typescript/no-non-null-assertion": "error",
+      // Biome's `suspicious` selections.
+      "typescript/no-explicit-any": "error",
+      "no-console": ["error", { allow: ["warn", "error"] }],
+      // Type-aware, so it depends on `options.typeAware` above.
+      "typescript/no-floating-promises": "error",
+    },
+    overrides: [
+      {
+        // Build scripts report progress on stdout.
+        files: ["scripts/**"],
+        rules: { "no-console": "off" },
+      },
+      {
+        // Components are `PascalCase.tsx`, except for non-component helpers.
+        files: ["src/components/**"],
+        rules: {
+          "unicorn/filename-case": [
+            "error",
+            { cases: { pascalCase: true, camelCase: true } },
+          ],
+        },
+      },
+      {
+        // Hooks are `useThing.ts`.
+        files: ["src/hooks/**"],
+        rules: {
+          "unicorn/filename-case": ["error", { cases: { camelCase: true } }],
+        },
+      },
+    ],
+  },
   base,
-  plugins: [
-    // The Babel plugin rather than the SWC one: Vite 8 on Rolldown recommends it,
-    // and it is the only route to Babel-based transforms such as the React
-    // Compiler, which SWC cannot host.
-    react(),
-    tailwindcss(),
-    serviceWorker({
-      source: "worker/service-worker.ts",
-      /*
-       * The WebLLM engine is a ~6 MB chunk most visitors never load, and the model
-       * weights it fetches are hundreds of megabytes more, cached by the engine
-       * itself. Precaching any of it would make a first visit pay for a feature
-       * nobody opted into. It is still served and HTTP-cached normally.
-       */
-      exclude: [/^assets\/web-llm-/, /\.map$/],
-    }),
-  ],
+  ...plugins,
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

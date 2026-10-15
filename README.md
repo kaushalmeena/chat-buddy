@@ -41,11 +41,11 @@ No API keys, no accounts, no server. Nothing you type leaves your device.
 Chat Buddy talks to whichever inference engine your browser can actually offer,
 picked in order of preference:
 
-| Engine | Model | Cost | Availability |
-| --- | --- | --- | --- |
-| **Chrome built-in AI** | Gemini Nano | Nothing — the weights ship with the browser | Chrome 148+ on desktop |
-| **Local model** | Llama 3.2 1B via [WebLLM](https://webllm.mlc.ai/) | One-time ~950 MB download, then fully offline | Any browser with WebGPU |
-| **Built-in rules** | A small hand-written knowledge base | Nothing | Everywhere, including offline |
+| Engine                 | Model                                             | Cost                                          | Availability                  |
+| ---------------------- | ------------------------------------------------- | --------------------------------------------- | ----------------------------- |
+| **Chrome built-in AI** | Gemini Nano                                       | Nothing — the weights ship with the browser   | Chrome 148+ on desktop        |
+| **Local model**        | Llama 3.2 1B via [WebLLM](https://webllm.mlc.ai/) | One-time ~950 MB download, then fully offline | Any browser with WebGPU       |
+| **Built-in rules**     | A small hand-written knowledge base               | Nothing                                       | Everywhere, including offline |
 
 The rule engine is the floor, not a fallback of last resort — no in-browser language
 model has reach you can rely on, so something has to answer on a phone, in Safari,
@@ -55,20 +55,20 @@ opt-in and lives in its own lazily-imported chunk.
 
 ## Tech Stack
 
-| Area | Tools |
-| --- | --- |
-| **Framework** | [React 19](https://react.dev/) · [TypeScript 7](https://www.typescriptlang.org/) |
-| **Build** | [Vite 8](https://vite.dev/) · a hand-written service worker, no PWA plugin |
-| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) via its Vite plugin · [Motion](https://motion.dev/) · [Lucide](https://lucide.dev/) icons |
-| **State** | [Zustand 5](https://zustand.docs.pmnd.rs/) · [Dexie 4](https://dexie.org/) over IndexedDB |
-| **Inference** | [Chrome built-in AI](https://developer.chrome.com/docs/ai/built-in) · [WebLLM](https://webllm.mlc.ai/) as an optional dependency · a built-in rule engine |
-| **Rendering** | [react-markdown](https://github.com/remarkjs/react-markdown) · [remark-gfm](https://github.com/remarkjs/remark-gfm) |
-| **Tooling** | [Biome](https://biomejs.dev/) · [Vitest](https://vitest.dev/) with [jsdom](https://github.com/jsdom/jsdom) · [sharp](https://sharp.pixelplumbing.com/) for icons |
-| **Deployment** | [GitHub Pages](https://pages.github.com/) via [GitHub Actions](https://github.com/features/actions) |
+| Area           | Tools                                                                                                                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Framework**  | [React 19](https://react.dev/) · [TypeScript 7](https://www.typescriptlang.org/)                                                                                                    |
+| **Build**      | [Vite+](https://viteplus.dev/) on Rolldown · a hand-written service worker, no PWA plugin                                                                                           |
+| **Styling**    | [Tailwind CSS 4](https://tailwindcss.com/) via its Vite plugin · [Motion](https://motion.dev/) · [Lucide](https://lucide.dev/) icons                                                |
+| **State**      | [Zustand 5](https://zustand.docs.pmnd.rs/) · [Dexie 4](https://dexie.org/) over IndexedDB                                                                                           |
+| **Inference**  | [Chrome built-in AI](https://developer.chrome.com/docs/ai/built-in) · [WebLLM](https://webllm.mlc.ai/) as an optional dependency · a built-in rule engine                           |
+| **Rendering**  | [react-markdown](https://github.com/remarkjs/react-markdown) · [remark-gfm](https://github.com/remarkjs/remark-gfm)                                                                 |
+| **Tooling**    | [Vite+](https://viteplus.dev/) — Oxlint, Oxfmt and [Vitest](https://vitest.dev/) with [jsdom](https://github.com/jsdom/jsdom) · [sharp](https://sharp.pixelplumbing.com/) for icons |
+| **Deployment** | [GitHub Pages](https://pages.github.com/) via [GitHub Actions](https://github.com/features/actions)                                                                                 |
 
 ## Getting Started
 
-You need [Node.js](https://nodejs.org/) 20.19 or newer.
+You need [Node.js](https://nodejs.org/) 22.18 or newer.
 
 ```bash
 git clone https://github.com/kaushalmeena/chat-buddy.git
@@ -82,13 +82,19 @@ The app runs at [localhost:5173](http://localhost:5173/).
 
 ### Scripts
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Start the dev server |
-| `npm run build` | Typecheck, then build to `dist/` |
-| `npm run preview` | Serve the production build |
-| `npm run check` | Lint, typecheck and test — the CI gate |
-| `npm run icons` | Regenerate PWA icons from the SVG brand source |
+Every task runs through [Vite+](https://viteplus.dev/)'s `vp` CLI. The scripts below
+wrap it, so `npm run <name>` and `vp <name>` do the same thing.
+
+| Command            | What it does                                   |
+| ------------------ | ---------------------------------------------- |
+| `npm run dev`      | Start the dev server                           |
+| `npm run build`    | Build to `dist/`                               |
+| `npm run preview`  | Serve the production build                     |
+| `npm run check`    | Format, lint and typecheck — the CI gate       |
+| `npm run lint:fix` | Apply lint fixes                               |
+| `npm run format`   | Format in place                                |
+| `npm run test`     | Run the test suite                             |
+| `npm run icons`    | Regenerate PWA icons from the SVG brand source |
 
 ## Documentation
 
