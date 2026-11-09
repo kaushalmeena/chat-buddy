@@ -11,6 +11,11 @@
       name="description"
       content="A private-by-default chat companion that runs its language model entirely in your browser."
     />
+    <!--
+      Tells the browser both schemes are supported, so its default canvas — painted
+      before any stylesheet arrives — already follows the OS instead of flashing white.
+    -->
+    <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f9fafb" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#080f10" media="(prefers-color-scheme: dark)" />
 
@@ -51,6 +56,20 @@
       })();
     </script>
     <style>
+      /*
+       * The canvas colour, inline so the first frame of a hard reload is already
+       * right, before the stylesheet loads. Values are --color-canvas from
+       * global.css (light and dark); the pre-paint script above sets .dark.
+       */
+      html {
+        background-color: #f9fafb;
+        color-scheme: light;
+      }
+      html.dark {
+        background-color: #080f10;
+        color-scheme: dark;
+      }
+
       /* Collapsed-sidebar variants of the static shell, keyed off the pre-paint flag. */
       @media (min-width: 64rem) {
         html[data-sidebar="collapsed"] .shell-sidebar {
@@ -96,7 +115,7 @@
             <span class="shell-collapsed size-9 shrink-0 lg:hidden"></span>
             <span class="flex min-w-0 flex-1 items-center gap-2 px-1">
               <span
-                class="shell-collapsed size-[22px] shrink-0 rounded-md bg-brand-500 lg:hidden"
+                class="shell-collapsed size-5.5 shrink-0 rounded-md bg-brand-500 lg:hidden"
               ></span>
               <span class="truncate text-sm font-medium text-content">Chat Buddy</span>
             </span>
