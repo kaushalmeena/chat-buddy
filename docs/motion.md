@@ -67,7 +67,8 @@ none respect `padding-right` consistently, so it cannot be spaced reliably.
 A white bot glyph on a two-stop accent gradient squircle. The glyph is "Bot" from
 [SVG Repo](https://www.svgrepo.com/svg/334455/bot), CC0 (no attribution required);
 its eyes and mouth are cut-outs, so the accent shows through. In the app the gradient
-follows the chosen accent; the favicon and PWA icons are rendered in teal.
+follows the chosen accent; the favicon and PWA icons use a neutral near-black tile,
+so they suit every accent.
 
 One source of truth: [`brand-icon.svg`](../src/assets/brand-icon.svg).
 `scripts/build-icons.mjs` renders every PWA and favicon asset from it. The outputs

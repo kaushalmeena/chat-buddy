@@ -64,8 +64,9 @@ toggles), `600` as light-mode text ≥ 4.7:1, `400` as dark-mode text ≥ 7:1, `
 The colour is kept rare so it means something — the primary action, focus, selection
 and a 12% tint for the person's own messages. Neutrals carry a faint cool tint (hue 210) and do not change with the accent.
 
-The favicon, PWA icons and `theme-color` are static (teal); browsers read them before
-any script could apply a choice.
+The favicon, PWA icons, manifest colours and `theme-color` are deliberately
+**neutral** (a near-black tile, the canvas colours for the browser chrome): browsers
+read them before any script runs, and a neutral mark is right for every accent.
 
 Brand colours are **theme-independent** — they sit in the shared `@theme` block, not
 the per-theme ones, because an accent that shifts between themes stops reading as a
