@@ -3,6 +3,7 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -40,17 +41,31 @@ function Composer() {
     },
   });
 
-  // Grow to fit the draft, up to a limit. Resetting to `auto` first is what lets it
-  // shrink again on delete; `draft` is the trigger, not a value read here.
+  // Grow to fit the draft, up to a limit; `draft` is the trigger, not a value read.
+  // useLayoutEffect, so the new height is applied before the browser paints.
+  useLayoutEffect(() => {
+    if (textareaRef.current) fitToContent(textareaRef.current);
+  }, [draft]);
+
+  /*
+   * Re-fit whenever the box's width changes — including its first real layout.
+   * A tab opened in the background mounts before layout is meaningful, measured
+   * the empty box at its 200px cap, and kept it until the first keystroke, when
+   * it snapped back to one line and shifted the whole page.
+   */
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-    textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT_PX)}px`;
-    // Scroll only past the cap; below it, sub-pixel rounding would flash a scrollbar.
-    textarea.style.overflowY =
-      textarea.scrollHeight > MAX_TEXTAREA_HEIGHT_PX ? "auto" : "hidden";
-  }, [draft]);
+
+    let width = textarea.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (textarea.clientWidth === width) return;
+      width = textarea.clientWidth;
+      fitToContent(textarea);
+    });
+    observer.observe(textarea);
+    return () => observer.disconnect();
+  }, []);
 
   const runCommand = (command: Command) => {
     command.run();
@@ -219,6 +234,18 @@ function Composer() {
       </p>
     </div>
   );
+}
+
+/**
+ * Sizes the textarea to its content, up to the cap. Resetting to `auto` first is
+ * what lets it shrink again on delete.
+ */
+function fitToContent(textarea: HTMLTextAreaElement): void {
+  textarea.style.height = "auto";
+  textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT_PX)}px`;
+  // Scroll only past the cap; below it, sub-pixel rounding would flash a scrollbar.
+  textarea.style.overflowY =
+    textarea.scrollHeight > MAX_TEXTAREA_HEIGHT_PX ? "auto" : "hidden";
 }
 
 function SpeakToggle() {
