@@ -17,6 +17,7 @@ import { ChatEngine } from "@/engine/chat.ts";
 import {
   FALLBACK_PROVIDER,
   getProvider,
+  LOCAL_PROVIDER,
   type ProviderStatus,
   probeProviders,
   selectDefaultProvider,
@@ -489,6 +490,7 @@ export async function hydrate(): Promise<void> {
 /** Probes providers and activates the preferred one, or the best default. */
 export function initialiseProviders(): Promise<void> {
   providersReady = (async () => {
+    LOCAL_PROVIDER.selectModel(useConfig.getState().localModelId);
     try {
       const statuses = await probeProviders();
       const preferred = useConfig.getState().preferredProviderId;
@@ -576,4 +578,25 @@ export async function activateProvider(id: ReplySource): Promise<void> {
   } finally {
     setState({ downloadProgress: undefined });
   }
+}
+
+/**
+ * Stops using the local model — after its weights were deleted, say — and falls
+ * back to the best provider that needs nothing downloaded.
+ */
+export async function releaseLocalModel(): Promise<void> {
+  await LOCAL_PROVIDER.dispose();
+  const statuses = await probeProviders();
+  setState((state) => ({
+    providerStatuses: statuses,
+    activeProvider:
+      state.activeProvider?.id === "web-llm"
+        ? selectDefaultProvider(statuses)
+        : state.activeProvider,
+  }));
+}
+
+/** Re-reads every provider's availability, e.g. after a download finishes. */
+export async function refreshProviders(): Promise<void> {
+  setState({ providerStatuses: await probeProviders() });
 }

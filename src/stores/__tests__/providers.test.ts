@@ -42,6 +42,11 @@ vi.mock("@/engine/providers/registry.ts", () => {
 
   return {
     FALLBACK_PROVIDER: fallback,
+    LOCAL_PROVIDER: {
+      ...model,
+      selectModel: () => {},
+      dispose: () => Promise.resolve(),
+    },
     UNAVAILABLE_COPY: {},
     getProvider: (id: string) => (id === "web-llm" ? model : fallback),
     probeProviders: async () => [

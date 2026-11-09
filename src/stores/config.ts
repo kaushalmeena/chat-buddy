@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import type { ReplySource } from "@/domain/message.ts";
+import { DEFAULT_MODEL_ID } from "@/engine/providers/models.ts";
 
 export type ThemePreference = "light" | "dark" | "system";
 
@@ -36,6 +37,8 @@ type ConfigState = {
    * rather than the name, which is not unique across languages.
    */
   readonly voiceUri: string | undefined;
+  /** Which local (WebLLM) model to run, from `LOCAL_MODELS`. */
+  readonly localModelId: string;
   /** Whether the desktop sidebar is collapsed to its rail. */
   readonly isSidebarCollapsed: boolean;
 
@@ -45,6 +48,7 @@ type ConfigState = {
   toggleSpeakReplies(): void;
   setVoiceUri(uri: string | undefined): void;
   toggleSidebar(): void;
+  setLocalModel(id: string): void;
 };
 
 /**
@@ -63,12 +67,14 @@ export const useConfig = create<ConfigState>()(
       speakReplies: false,
       voiceUri: undefined,
       isSidebarCollapsed: false,
+      localModelId: DEFAULT_MODEL_ID,
 
       setTheme: (theme) => set({ theme }),
       setAccent: (accent) => set({ accent }),
       setPreferredProvider: (preferredProviderId) => set({ preferredProviderId }),
       toggleSpeakReplies: () => set((state) => ({ speakReplies: !state.speakReplies })),
       setVoiceUri: (voiceUri) => set({ voiceUri }),
+      setLocalModel: (localModelId) => set({ localModelId }),
       toggleSidebar: () =>
         set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
     }),
