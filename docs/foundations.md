@@ -47,16 +47,25 @@ one in the other.
 | `danger`         | Errors and destructive actions                   |
 | `success`        | The active-engine indicator                      |
 
-### Brand ramp
+### Accents
 
-`brand-50` through `brand-700`, teal at hue 190: calm, and read as private and
-on-device. It replaced indigo/violet, which had become the default look of AI tools.
-Chroma is held to what sRGB can show at each lightness, so the ramp never clips.
+`brand-50` through `brand-700` point at `--accent-*`, and five accent palettes define
+those: **teal, blue, green, orange, pink**. A first visit is dealt one at random by
+the pre-paint script in `index.html`, so the right colour is there on first paint;
+`startThemeSync` then persists it. Settings → Appearance lets the person choose.
 
-The colour is kept rare so it means something: `brand-600` for the send button,
-toggles and text accents in light mode (5.3:1 with white), `brand-400` for text
-accents in dark mode, `brand-500` for focus rings and icons (3:1 suffices), and a
-12% tint for user messages. Neutrals carry a faint cool tint (hue 210).
+The brand tokens live in `@theme inline` so utilities resolve `--accent-*` per
+element — which is how each swatch shows its own palette inside a page set to another.
+
+Every ramp is held inside sRGB and checked for WCAG AA: white on `600` ≥ 4.9:1 (send,
+toggles), `600` as light-mode text ≥ 4.7:1, `400` as dark-mode text ≥ 7:1, `500` ≥ 3:1
+(focus rings, icons). There is no violet: it has become the default look of AI tools.
+
+The colour is kept rare so it means something — the primary action, focus, selection
+and a 12% tint for the person's own messages. Neutrals carry a faint cool tint (hue 210) and do not change with the accent.
+
+The favicon, PWA icons and `theme-color` are static (teal); browsers read them before
+any script could apply a choice.
 
 Brand colours are **theme-independent** — they sit in the shared `@theme` block, not
 the per-theme ones, because an accent that shifts between themes stops reading as a

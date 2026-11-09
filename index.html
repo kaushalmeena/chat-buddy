@@ -25,14 +25,23 @@
       (() => {
         try {
           const raw = localStorage.getItem("chat-buddy:settings");
-          const theme = raw ? JSON.parse(raw)?.state?.theme : "system";
+          const state = raw ? JSON.parse(raw)?.state : undefined;
+          const theme = state?.theme ?? "system";
+
+          // A first visit is dealt an accent at random; the app persists it.
+          // Keep this list in step with ACCENTS in src/stores/config.ts.
+          const accents = ["teal", "blue", "green", "orange", "pink"];
+          document.documentElement.dataset.accent = accents.includes(state?.accent)
+            ? state.accent
+            : accents[Math.floor(Math.random() * accents.length)];
+
           const dark =
             theme === "dark" ||
             (theme !== "light" &&
               window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.classList.toggle("dark", dark);
         } catch {
-          /* Storage unavailable, or a shape we don't recognise: light stands. */
+          /* Storage unavailable, or a shape we don't recognise: light and teal stand. */
         }
       })();
     </script>

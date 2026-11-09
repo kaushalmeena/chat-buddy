@@ -1,6 +1,7 @@
 import { ShieldCheck, X } from "lucide-react";
 import { type MouseEvent, type ReactNode, useEffect, useRef } from "react";
 
+import { AccentPicker } from "@/components/accent.tsx";
 import { ProviderPicker } from "@/components/engines.tsx";
 import { ThemeToggle } from "@/components/theme.tsx";
 import { VoicePicker } from "@/components/voice.tsx";
@@ -75,6 +76,7 @@ function SettingsDialog() {
 
             <Section title="Appearance">
               <ThemeToggle />
+              <AccentPicker />
             </Section>
 
             <p className="flex items-start gap-2 rounded-xl bg-brand-500/8 px-3 py-2.5 text-xs leading-relaxed text-content-muted">
