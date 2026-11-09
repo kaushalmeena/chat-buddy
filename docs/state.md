@@ -50,6 +50,12 @@ Two details worth knowing:
 **Streaming writes skip persistence.** Saving on every frame would mean hundreds of
 IndexedDB transactions per reply. The turn is written once when it settles.
 
+**Chats move in and out as files.** [`transfer.ts`](../src/db/transfer.ts) writes a
+JSON backup of every thread and a Markdown transcript of one; Settings → Your chats
+and `/export` use it. Imports are untrusted input and pass the same validation as
+stored rows; an existing thread is replaced only by a newer copy, so importing the
+same backup twice changes nothing.
+
 **Persisted data is validated on read.** Rows may have been written by an older
 build, hand-edited in devtools, or left half-written by a failed transaction. Every
 field is checked before it re-enters the typed domain model. `normalise` also repairs

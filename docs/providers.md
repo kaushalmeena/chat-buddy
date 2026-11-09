@@ -70,9 +70,15 @@ also what makes the PWA genuinely useful offline.
 whose availability is `ready` — never one that is `needs-download`. A
 several-hundred-megabyte download is a decision for the person using the app.
 
-**A stored provider preference is only honoured if it is still `ready`.** Otherwise
-someone who enabled WebLLM once would re-trigger the download on every single visit
-before the UI appeared.
+**A stored preference never triggers a download.** If the chosen model's weights are
+already on the device — availability `downloaded`, read straight from Cache Storage
+so the probe never loads WebLLM's 6 MB engine — the app answers with the default at
+once and loads the model in the background, then switches. If they are not, the
+choice waits for the person.
+
+**Loading has two phases.** A download's progress shows as a percentage; once it
+reaches 100% the weights still compile onto the GPU for several seconds with no
+ratio, which shows as an indeterminate "Loading model…" rather than a frozen 100%.
 
 **Every turn gets an answer.** `resolveProvider` in
 [`chat.ts`](../src/stores/chat.ts) waits on startup probing rather than

@@ -73,13 +73,17 @@ function BackupTools() {
           <Download size={14} aria-hidden />
           Back up all
         </ToolButton>
-        <ToolButton onClick={handleExportCurrent} isDisabled={!hasCurrent}>
+        <ToolButton
+          onClick={handleExportCurrent}
+          isDisabled={!hasCurrent}
+          title="Download this chat as Markdown"
+        >
           <FileText size={14} aria-hidden />
-          This chat (.md)
+          Export chat
         </ToolButton>
         <ToolButton onClick={handleChooseFile}>
           <Upload size={14} aria-hidden />
-          Import backup
+          Import
         </ToolButton>
       </div>
 
@@ -103,18 +107,21 @@ function BackupTools() {
 function ToolButton({
   onClick,
   isDisabled = false,
+  title,
   children,
 }: {
   readonly onClick: () => void;
   readonly isDisabled?: boolean;
+  readonly title?: string;
   readonly children: ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      title={title}
       disabled={isDisabled}
-      className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-3 text-sm text-content transition-colors hover:border-border-strong disabled:cursor-not-allowed disabled:opacity-50 pointer-coarse:h-11"
+      className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-3 text-sm whitespace-nowrap text-content transition-colors hover:border-border-strong disabled:cursor-not-allowed disabled:opacity-50 pointer-coarse:h-11"
     >
       {children}
     </button>

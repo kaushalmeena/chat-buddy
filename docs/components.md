@@ -20,6 +20,11 @@ Heights use `dvh`, not `vh`, so mobile browser chrome does not crop the composer
 
 ## No layout shift
 
+- `index.html` paints a **static copy of the shell** (sidebar, header, badge skeleton,
+  composer) before any JavaScript runs, built from the same utility classes; the
+  pre-paint script mirrors the sidebar's collapsed state. React's first render lands on
+  identical boxes — verified to the pixel at narrow and desktop widths, sidebar open
+  and collapsed. Change a shell component's outer layout and update `index.html` too.
 - The transcript renders nothing until IndexedDB has answered, so a returning visitor
   never sees the empty state flash before their history.
 - Markdown is lazy-loaded (`RichText`) but its chunk is fetched in parallel with the
@@ -28,6 +33,11 @@ Heights use `dvh`, not `vh`, so mobile browser chrome does not crop the composer
 - The transcript uses `scrollbar-gutter: stable` so a growing reply never nudges the
   content sideways.
 - Skeletons (engine badge, engine list) match the size of what replaces them.
+- The typing dots and the first line of a reply are the same height (`h-lh`), and
+  the dots stay until text is actually visible, so a reply starting never moves the
+  transcript.
+- The composer re-fits whenever its width changes, so a tab opened in the background
+  cannot keep a mis-measured height.
 
 ## Components
 
@@ -42,6 +52,19 @@ it; on wide screens the actions on older replies appear on hover or focus.
 
 Failed replies show the error in a danger-tinted panel. Stopped replies keep their
 partial text and are labelled `stopped`.
+
+**Editing.** A pencil on each of the person's messages opens it in place. Saving
+rewrites it, drops the replies that answered the old wording and regenerates.
+
+**Code blocks** get a header with the language and a Copy button. Highlighting is
+highlight.js core plus a curated language set, in its own chunk loaded only when a
+code block renders; its colours map onto the theme tokens.
+
+### Thread list
+
+Search, then a **Pinned** group, then recency groups. Each row has a ⋯ menu — Pin,
+Rename (also double-click), Delete — rather than hover buttons that would cover the
+title. Deleting offers Undo for six seconds instead of asking for confirmation.
 
 ### Transcript
 
