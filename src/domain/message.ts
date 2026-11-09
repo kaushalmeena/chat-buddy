@@ -26,7 +26,8 @@ export type MessageStatus = "streaming" | "complete" | "stopped" | "failed";
  * Skills return attachments rather than markup, which keeps rendering
  * decisions in the UI layer and means no skill can inject HTML. The union is
  * the extension point: adding a renderer is adding a variant here plus a case
- * in the attachment renderer. No variants ship yet — see `skills/registry.ts`.
+ * in the attachment renderer. No variants ship yet; the field exists because
+ * stored threads already carry it.
  */
 export type Attachment = {
   readonly kind: string;
@@ -56,11 +57,6 @@ export type Message = UserMessage | AssistantMessage;
 
 export function isAssistantMessage(message: Message): message is AssistantMessage {
   return message.role === "assistant";
-}
-
-/** True while a message is still receiving tokens. */
-export function isStreaming(message: Message): boolean {
-  return isAssistantMessage(message) && message.status === "streaming";
 }
 
 /**

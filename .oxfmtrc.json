@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 88,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "arrowParens": "always",
+  "sortImports": {},
+  "sortTailwindcss": {
+    "stylesheet": "src/styles/global.css",
+    "functions": ["cn"]
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "dev-dist/**",
+    "public/icons/**",
+    "coverage/**",
+    "package-lock.json"
+  ]
+}

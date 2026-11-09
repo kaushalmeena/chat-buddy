@@ -15,19 +15,18 @@ mostly about absorbing that variance without the UI having to know about it.
 
 ```
 src/
-├── App.tsx        The app shell: layout, sidebar, drawer
+├── app.tsx        The app shell: layout, sidebar, drawer
 ├── main.tsx       Entry point. Starts subscriptions, mounts, registers the SW
 ├── commands.ts    Slash command registry
-├── register-sw.ts Service worker registration (not the worker itself)
+├── pwa.ts         Service worker registration (not the worker itself)
 ├── assets/        The SVG brand source
-├── components/    React components, PascalCase filenames
+├── components/    React components
 ├── db/            Dexie schema and conversation persistence
 ├── domain/        Types only. No imports from anywhere else in src
 ├── engine/        Inference and capabilities
 │   ├── providers/   One ChatProvider per backend, plus tiering
-│   ├── rules/       The built-in knowledge base and its matcher
-│   └── skills/      Registry for structured capabilities
-├── hooks/         React hooks, camelCase filenames
+│   └── rules/       The built-in conversation engine: memory, intents, skills
+├── hooks/         React hooks
 ├── lib/           Small shared utilities with no app knowledge
 ├── stores/        Zustand stores
 ├── styles/        global.css: tokens, theme, prose
@@ -38,9 +37,15 @@ src/
 One concern per folder, so the root view is readable at a glance. Two choices in
 there are worth naming:
 
+**File names are short, kebab-case, and similar in length to their siblings.** A
+name says what the file is within its folder and drops what the folder already
+implies — `components/engines.tsx`, not `ProviderPicker.tsx`; `providers/chrome.ts`,
+not `prompt-api-provider.ts`. Exports keep their descriptive names (`engines.tsx`
+exports `ProviderPicker`), so code reads the same while the tree stays scannable.
+Oxlint enforces kebab-case.
+
 **`db/` is separate from `stores/`.** Persistence is infrastructure, not state. Keeping
-them apart means `stores/` holds exactly the two Zustand stores — parallel in name and
-in role — and swapping the storage engine touches one folder.
+them apart means `stores/` holds only Zustand stores, and swapping the storage engine touches one folder.
 
 **`components/` and `hooks/` sit at the src root** rather than nested under a `ui/`
 wrapper. With domain, engine and db already separating the non-visual layers, the
@@ -52,9 +57,9 @@ import all of them. Nothing imports a component. This is not enforced by tooling
 is a convention worth keeping, because the moment `domain` imports from a store, the
 types stop being a shared vocabulary and become a dependency knot.
 
-`lib` is deliberately app-agnostic: [`chunk-batcher.ts`](../src/lib/chunk-batcher.ts),
-[`speech-text.ts`](../src/lib/speech-text.ts) and
-[`speech-voices.ts`](../src/lib/speech-voices.ts) would work unchanged in any other
+`lib` is deliberately app-agnostic: [`batch.ts`](../src/lib/batch.ts),
+[`speech.ts`](../src/lib/speech.ts) and
+[`voices.ts`](../src/lib/voices.ts) would work unchanged in any other
 project. Anything that knows what a `Conversation` is belongs elsewhere.
 
 Three folders sit outside `src`, all typechecked with everything else:

@@ -6,6 +6,8 @@ export type Conversation = {
   readonly createdAt: number;
   readonly updatedAt: number;
   readonly messages: readonly Message[];
+  /** Kept at the top of the thread list. Absent means not pinned. */
+  readonly pinned?: boolean;
 };
 
 /** Longest a derived title may run before it is ellipsised. */

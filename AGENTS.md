@@ -5,29 +5,27 @@ no build-time secret — inference, storage and speech all happen on the device.
 
 ## Toolchain
 
-Vite+ (`vp`) is the entry point for every task. `vp check` formats, lints and
-type-checks in one pass; it is the gate CI runs.
+Plain Vite 8 builds and serves the app; Vitest runs the tests. Oxlint lints (with the
+`oxlint-tailwindcss` plugin reading `src/styles/global.css` as the design system, and
+type-aware rules via `oxlint-tsgolint`), and Oxfmt formats and sorts Tailwind classes.
+Config lives in `.oxlintrc.json` and `.oxfmtrc.json`.
 
-`vp <name>` runs a built-in command, `vp run <name>` runs a `package.json` script, and
-a script never shadows a built-in — so `vp build` and `vp run build` can differ. Reach
-for `vp run` when you mean the script.
-
-Commands live in `package.json`. Vite+'s own docs are local, at
-`node_modules/vite-plus/docs`.
+`npm run check` runs typecheck, lint and format check — it is the gate CI runs.
+Commands live in `package.json`.
 
 ## Reading the codebase
 
 Start with [`docs/overview.md`](docs/overview.md) for the layer map and what each
 folder owns. Then follow the work:
 
-| Working on                                           | Read                                  |
-| ---------------------------------------------------- | ------------------------------------- |
-| Inference backends, streaming, token batching        | [providers.md](docs/providers.md)     |
-| Stores, persistence, the rule engine, skills, speech | [state.md](docs/state.md)             |
-| Components, layout, accessibility                    | [components.md](docs/components.md)   |
-| Colour, theming, typography, spacing                 | [foundations.md](docs/foundations.md) |
-| Animation, iconography, the brand mark               | [motion.md](docs/motion.md)           |
-| Bundling, the service worker, deployment             | [build.md](docs/build.md)             |
+| Working on                                    | Read                                  |
+| --------------------------------------------- | ------------------------------------- |
+| Inference backends, streaming, token batching | [providers.md](docs/providers.md)     |
+| Stores, persistence, the rule engine, speech  | [state.md](docs/state.md)             |
+| Components, layout, accessibility             | [components.md](docs/components.md)   |
+| Colour, theming, typography, spacing          | [foundations.md](docs/foundations.md) |
+| Animation, iconography, the brand mark        | [motion.md](docs/motion.md)           |
+| Bundling, the service worker, deployment      | [build.md](docs/build.md)             |
 
 ## Conventions
 
@@ -40,7 +38,7 @@ dependency knot.
 **`lib/` stays app-agnostic.** Anything that knows what a `Conversation` is belongs
 elsewhere.
 
-**Tests import from `vite-plus/test`**, not `vitest`. Tests sit in a `__tests__` folder
+**Tests import from `vitest`.** Tests sit in a `__tests__` folder
 beside the code they cover.
 
 **Optional keys are omitted, not set to `undefined`.** `exactOptionalPropertyTypes` is
@@ -58,8 +56,5 @@ registry already tiers around it being unavailable.
 `BASE_PATH` decides where the app is served from, and the build bakes it into asset
 URLs, the service worker's precache list and its scope. Leave it unset for local work.
 
-`vp check` reports seven pre-existing React Compiler warnings about refs during render
-and `setState` in an effect. They predate the Vite+ migration and do not fail the gate.
-
-Run `vp install` after pulling, and `vp env doctor` when setup or runtime behaviour
-looks wrong.
+Oxlint reports a handful of pre-existing React Compiler warnings about refs during
+render. They are warnings, not errors, and do not fail the gate.

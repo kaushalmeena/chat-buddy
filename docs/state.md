@@ -13,7 +13,7 @@ Two rules follow from that:
 **Selectors must not allocate.** A selector returning a fresh array or object every
 call re-renders on every store write, defeating the point. Sorting and filtering
 happen in `useMemo` inside components (see
-[`ThreadList.tsx`](../src/components/ThreadList.tsx)), not in selectors.
+[`threads.tsx`](../src/components/threads.tsx)), not in selectors.
 
 **Shared selectors are exported.** `selectActiveConversation` and `selectMessages`
 live in the store so no component inlines a slice expression and accidentally
@@ -50,6 +50,12 @@ Two details worth knowing:
 **Streaming writes skip persistence.** Saving on every frame would mean hundreds of
 IndexedDB transactions per reply. The turn is written once when it settles.
 
+**Chats move in and out as files.** [`transfer.ts`](../src/db/transfer.ts) writes a
+JSON backup of every thread and a Markdown transcript of one; Settings → Your chats
+and `/export` use it. Imports are untrusted input and pass the same validation as
+stored rows; an existing thread is replaced only by a newer copy, so importing the
+same backup twice changes nothing.
+
 **Persisted data is validated on read.** Rows may have been written by an older
 build, hand-edited in devtools, or left half-written by a failed transaction. Every
 field is checked before it re-enters the typed domain model. `normalise` also repairs
@@ -57,46 +63,59 @@ states that cannot exist at rest: a thread saved mid-generation would otherwise
 reload with a message stuck in `streaming`, waiting on a stream that no longer
 exists.
 
-## The rule engine
+## The built-in conversation engine
 
-The knowledge base is a typed array in
-[`rules.ts`](../src/engine/rules/rules.ts). It replaced a `brain.xml` file parsed at
-runtime with jQuery.
+[`reply(turns)`](../src/engine/rules/reply.ts) is the whole interface: the transcript
+in, one reply out. It replaced a table of eleven regexes (itself ported from a
+`brain.xml` parsed with jQuery) that only ever saw the last message.
 
-```ts
-{
-  id: "gratitude",
-  patterns: ["\\b(thanks|thank you)\\b"],
-  replies: ["Any time.", "You're welcome!"],
-}
-```
+**It holds no state.** Everything that makes it feel like a conversation is re-read
+from the transcript on every turn:
 
-Moving it into TypeScript bought three things: the shape is checked at build time,
-patterns compile once at module load instead of on every message, and the table is
-tree-shaken into the bundle with no runtime fetch or `DOMParser` pass.
+| Module                                         | Job                                                                                                       |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| [`memory.ts`](../src/engine/rules/memory.ts)   | Learns facts from the person's messages: name, age, place, job, likes, dislikes, favourites, pets, mood   |
+| [`reply.ts`](../src/engine/rules/reply.ts)     | Orchestrates, and owns the _flows_: replies that depend on what the engine itself just said               |
+| [`intents.ts`](../src/engine/rules/intents.ts) | The intent table — recall, statements, small talk, fun — plus reflections and fallbacks                   |
+| [`skills.ts`](../src/engine/rules/skills.ts)   | Things it can work out: arithmetic (a recursive-descent parser, never `eval`), time and date, dice, coins |
+| [`corpus.ts`](../src/engine/rules/corpus.ts)   | Plain data: jokes, facts, riddles, would-you-rather, the persona's favourites                             |
+| [`text.ts`](../src/engine/rules/text.ts)       | Normalising input (contractions, shorthand), pronoun reflection, no-repeat picking                        |
 
-**Order matters** — the first match wins. Keep specific patterns above general ones
-and leave the catch-all last.
+Because memory is derived, it is exactly as private and durable as the chat: clear
+the thread and it is gone, and each thread remembers only itself.
 
-**Anchor patterns with `\b`** unless you mean to match inside words. The original XML
-used bare substrings, so `cat` also matched "concatenate" and `hi` matched "this".
+**Order of precedence** in `reply`: open flows first (so "yes" after "Want another
+joke?" gets a joke and an answer to a riddle is marked), then skills, then intents,
+then ELIZA-style reflections ("I feel stuck" → "Why do you feel stuck?"), then a
+fallback that suggests something that will work.
 
-`matchRule` takes an injectable random source so reply selection is deterministic in
-tests without stubbing globals.
+**Flows key off the engine's own words.** A riddle is open while the last reply
+contains its question; an offer is open while the last reply ends with one of the
+`OFFER_*` phrases. Change those strings and the flows follow automatically — they
+are constants, not copies.
 
-## The skill registry
+**No repeats.** Every choice prefers lines not yet said in this thread, so asking for
+five jokes gets five different jokes.
 
-[`SkillRegistry`](../src/engine/skills/registry.ts) is where structured capabilities
-plug in. **It ships empty** — it is the seam, not a feature.
+**Within the intent table, order matters**: recall sits above statements, which sit
+above small talk, so "what is my name" is never read as an introduction. An intent
+whose `respond` returns `undefined` passes to the next one.
 
-It replaced numeric action codes (`101`–`108`) where the meaning of a reply lived in
-a `switch` statement and every branch wrote remote strings straight into
-`innerHTML`. Skills return a typed `Attachment` instead, so the UI decides how to
-render and a skill cannot inject markup.
+`reply` takes an injectable random source and clock, so the tests in
+[`__tests__/reply.test.ts`](../src/engine/rules/__tests__/reply.test.ts) play whole
+scripted conversations deterministically.
 
-To add one: implement `Skill`, add its `Attachment` variant in
-[`message.ts`](../src/domain/message.ts), render that variant in the attachment
-renderer, and register it.
+## Attachments
+
+Assistant messages carry an `attachments` list, always empty today. It replaced the
+original numeric action codes (`101`–`108`), where every branch wrote remote strings
+straight into `innerHTML`: structured output is a typed value the UI renders, never
+markup.
+
+There was a `SkillRegistry` here, shipped empty as an extension point. It was removed:
+a seam with no adapter is hypothetical, and nothing called it. When the first
+structured capability arrives, add its `Attachment` variant in
+[`message.ts`](../src/domain/message.ts) and build the seam around the real case.
 
 ## Speech
 

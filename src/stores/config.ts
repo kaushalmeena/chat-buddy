@@ -2,12 +2,30 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import type { ReplySource } from "@/domain/message.ts";
+import { DEFAULT_MODEL_ID } from "@/engine/providers/models.ts";
 
 export type ThemePreference = "light" | "dark" | "system";
+
+/**
+ * Accent palettes, defined in `global.css`. The pre-paint script in `index.html`
+ * keeps its own copy of this list, so the two must change together.
+ */
+export const ACCENTS = ["teal", "blue", "green", "orange", "pink"] as const;
+
+export type Accent = (typeof ACCENTS)[number];
+
+export function isAccent(value: unknown): value is Accent {
+  return typeof value === "string" && (ACCENTS as readonly string[]).includes(value);
+}
 
 type ConfigState = {
   /** What the person chose. `system` defers to the OS. */
   readonly theme: ThemePreference;
+  /**
+   * Accent palette. Undefined only until first paint: a first visit is dealt one at
+   * random by `index.html`, and `startThemeSync` persists that choice.
+   */
+  readonly accent: Accent | undefined;
   /** Provider they last selected, or undefined to let tiering decide. */
   readonly preferredProviderId: ReplySource | undefined;
   /** Whether assistant replies are read aloud. */
@@ -19,14 +37,18 @@ type ConfigState = {
    * rather than the name, which is not unique across languages.
    */
   readonly voiceUri: string | undefined;
+  /** Which local (WebLLM) model to run, from `LOCAL_MODELS`. */
+  readonly localModelId: string;
   /** Whether the desktop sidebar is collapsed to its rail. */
   readonly isSidebarCollapsed: boolean;
 
   setTheme(theme: ThemePreference): void;
+  setAccent(accent: Accent): void;
   setPreferredProvider(id: ReplySource): void;
   toggleSpeakReplies(): void;
   setVoiceUri(uri: string | undefined): void;
   toggleSidebar(): void;
+  setLocalModel(id: string): void;
 };
 
 /**
@@ -40,15 +62,19 @@ export const useConfig = create<ConfigState>()(
   persist(
     (set) => ({
       theme: "system",
+      accent: undefined,
       preferredProviderId: undefined,
       speakReplies: false,
       voiceUri: undefined,
       isSidebarCollapsed: false,
+      localModelId: DEFAULT_MODEL_ID,
 
       setTheme: (theme) => set({ theme }),
+      setAccent: (accent) => set({ accent }),
       setPreferredProvider: (preferredProviderId) => set({ preferredProviderId }),
       toggleSpeakReplies: () => set((state) => ({ speakReplies: !state.speakReplies })),
       setVoiceUri: (voiceUri) => set({ voiceUri }),
+      setLocalModel: (localModelId) => set({ localModelId }),
       toggleSidebar: () =>
         set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
     }),
@@ -105,6 +131,26 @@ function applyTheme(resolved: "light" | "dark"): void {
   });
 }
 
+function applyAccent(accent: Accent): void {
+  document.documentElement.dataset.accent = accent;
+}
+
+/**
+ * Persists the accent the pre-paint script dealt on a first visit, so it stays the
+ * same on the next one. The store only writes on change, so without this the random
+ * pick would be redrawn every visit until the person chose one themselves.
+ */
+function adoptAccent(): void {
+  const { accent, setAccent } = useConfig.getState();
+  if (accent) {
+    applyAccent(accent);
+    return;
+  }
+
+  const dealt = document.documentElement.dataset.accent;
+  setAccent(isAccent(dealt) ? dealt : ACCENTS[0]);
+}
+
 export function resolveTheme(theme: ThemePreference): "light" | "dark" {
   if (theme !== "system") return theme;
   return darkQuery?.matches ? "dark" : "light";
@@ -118,9 +164,11 @@ export function resolveTheme(theme: ThemePreference): "light" | "dark" {
  */
 export function startThemeSync(): () => void {
   applyTheme(resolveTheme(useConfig.getState().theme));
+  adoptAccent();
 
   const unsubscribe = useConfig.subscribe((state) => {
     applyTheme(resolveTheme(state.theme));
+    if (state.accent) applyAccent(state.accent);
   });
 
   const onSystemChange = () => {

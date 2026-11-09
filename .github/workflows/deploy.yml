@@ -33,8 +33,7 @@ jobs:
 
       - run: npm ci
 
-      # `vp check` is format, lint and typecheck in one pass, so the three former
-      # steps collapse into this one.
+      # Typecheck, lint (Oxlint + Tailwind rules) and format check in one script.
       - name: Check
         run: npm run check
 

@@ -135,7 +135,8 @@ export function isConversation(value: unknown): value is Conversation {
     typeof value.createdAt === "number" &&
     typeof value.updatedAt === "number" &&
     Array.isArray(value.messages) &&
-    value.messages.every(isMessage)
+    value.messages.every(isMessage) &&
+    (value.pinned === undefined || typeof value.pinned === "boolean")
   );
 }
 

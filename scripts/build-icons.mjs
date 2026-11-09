@@ -39,7 +39,7 @@ async function render(svg, { file, size, maskable = false }) {
       width: size,
       height: size,
       channels: 4,
-      background: "#6366f1",
+      background: "#101719",
     },
   })
     .composite([{ input: art, gravity: "centre" }])
@@ -62,7 +62,7 @@ for (const target of targets) {
 // render it flat at the documented 180px.
 await sharp(svg, { density: 384 })
   .resize(180, 180)
-  .flatten({ background: "#6366f1" })
+  .flatten({ background: "#101719" })
   .png()
   .toFile(resolve(root, "public/apple-touch-icon.png"));
 console.log("  public/apple-touch-icon.png");

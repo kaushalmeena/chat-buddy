@@ -15,6 +15,8 @@ export type UnavailableReason =
 export type ProviderAvailability =
   /** Usable immediately, no download required. */
   | { readonly state: "ready" }
+  /** Weights are on this device already; loading them takes seconds, no network. */
+  | { readonly state: "downloaded" }
   /** Usable, but weights must be fetched first. `bytes` is an estimate. */
   | { readonly state: "needs-download"; readonly bytes: number }
   /** Not usable on this device or in this browser. */

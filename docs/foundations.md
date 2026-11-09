@@ -47,11 +47,26 @@ one in the other.
 | `danger`         | Errors and destructive actions                   |
 | `success`        | The active-engine indicator                      |
 
-### Brand ramp
+### Accents
 
-`brand-50` through `brand-700`, indigo/violet at hue 285. In practice only a few are
-used: `brand-500` for accents and focus rings, `brand-600` for the send button and
-user bubbles, `brand-400` for hover borders.
+`brand-50` through `brand-700` point at `--accent-*`, and five accent palettes define
+those: **teal, blue, green, orange, pink**. A first visit is dealt one at random by
+the pre-paint script in `index.html`, so the right colour is there on first paint;
+`startThemeSync` then persists it. Settings → Appearance lets the person choose.
+
+The brand tokens live in `@theme inline` so utilities resolve `--accent-*` per
+element — which is how each swatch shows its own palette inside a page set to another.
+
+Every ramp is held inside sRGB and checked for WCAG AA: white on `600` ≥ 4.9:1 (send,
+toggles), `600` as light-mode text ≥ 4.7:1, `400` as dark-mode text ≥ 7:1, `500` ≥ 3:1
+(focus rings, icons). There is no violet: it has become the default look of AI tools.
+
+The colour is kept rare so it means something — the primary action, focus, selection
+and a 12% tint for the person's own messages. Neutrals carry a faint cool tint (hue 210) and do not change with the accent.
+
+The favicon, PWA icons, manifest colours and `theme-color` are deliberately
+**neutral** (a near-black tile, the canvas colours for the browser chrome): browsers
+read them before any script runs, and a neutral mark is right for every accent.
 
 Brand colours are **theme-independent** — they sit in the shared `@theme` block, not
 the per-theme ones, because an accent that shifts between themes stops reading as a

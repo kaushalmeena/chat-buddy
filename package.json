@@ -8,23 +8,23 @@
   "repository": "git@github.com:kaushalmeena/chat-buddy.git",
   "type": "module",
   "scripts": {
-    "dev": "vp dev",
-    "build": "vp build",
-    "preview": "vp preview",
-    "typecheck": "vp lint --type-aware",
-    "lint": "vp lint",
-    "lint:fix": "vp lint --fix",
-    "format": "vp fmt",
-    "format:check": "vp fmt --check",
-    "test": "vp test run",
-    "test:watch": "vp test",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "icons": "node scripts/build-icons.mjs",
-    "check": "vp check"
+    "check": "npm run typecheck && npm run lint && npm run format:check"
   },
   "dependencies": {
     "dexie": "^4.4.4",
+    "highlight.js": "^11.12.0",
     "lucide-react": "^1.27.0",
-    "motion": "^12.42.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
@@ -38,19 +38,18 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "jsdom": "^27.0.0",
+    "oxfmt": "^0.77.0",
+    "oxlint": "^1.92.0",
+    "oxlint-tailwindcss": "^1.17.1",
+    "oxlint-tsgolint": "^7.0.2006",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.2.0",
-    "vite-plus": "1.2.0",
-    "vitest": "5.0.4"
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
   },
   "optionalDependencies": {
     "@mlc-ai/web-llm": "^0.2.84"
-  },
-  "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.2.0",
-    "vitest": "5.0.4"
   },
   "engines": {
     "node": "^22.18.0 || ^24.11.0 || >=26.0.0"

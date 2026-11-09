@@ -28,6 +28,14 @@ button, the typing indicator and the batching all work identically regardless of
 which backend answered. The alternative, a `generate` that sometimes returns a
 string and sometimes an iterable, pushes a branch into every consumer.
 
+**The rule provider paces itself like typing.** Its answer exists in microseconds,
+and an instant wall of text reads as canned. So it pauses to "think" first (350 ms
+plus a little per character, capped at 1.2 s; the typing dots show meanwhile), then
+sends each word after a short jittered gap, longer after commas and full stops. Two
+guards: pauses are skipped while the tab is hidden, because background tabs throttle
+timers to a second or more, and every wait is abortable through
+[`sleep`](../src/lib/sleep.ts), so stop is immediate.
+
 **`availability()` is separate from `prepare()`.** Asking whether a provider _could_
 work must not download 950 MB to find out. Availability is a cheap probe; preparing
 is the expensive commitment. Splitting them is what lets the UI show download sizes
@@ -35,23 +43,23 @@ and hardware requirements _before_ someone opts in.
 
 **`AbortSignal` is the only cancellation mechanism.** Implementations must treat it
 as authoritative and stop yielding promptly. Some providers throw on abort, some
-return cleanly — [`ChatEngine`](../src/engine/chat-engine.ts) handles both by
+return cleanly — [`ChatEngine`](../src/engine/chat.ts) handles both by
 checking the signal rather than relying on an exception.
 
 Adding a fourth backend means writing one class and adding it to
-[`provider-registry.ts`](../src/engine/providers/provider-registry.ts). Nothing in
+[`registry.ts`](../src/engine/providers/registry.ts). Nothing in
 `components/` or `stores/` changes.
 
 ## Provider tiering
 
 Providers are ordered by preference in
-[`provider-registry.ts`](../src/engine/providers/provider-registry.ts):
+[`registry.ts`](../src/engine/providers/registry.ts):
 
-| Order | Provider                                      | Cost                                | Reach                                           |
-| ----- | --------------------------------------------- | ----------------------------------- | ----------------------------------------------- |
-| 1     | `PromptApiProvider` — Chrome's Gemini Nano    | Free; weights ship with the browser | Chrome 148+ desktop, with disk and RAM headroom |
-| 2     | `WebLlmProvider` — Llama 3.2 1B on WebGPU     | ~950 MB one-time download           | Any browser with WebGPU                         |
-| 3     | `LocalRuleProvider` — the built-in rule table | Free                                | Everywhere, including offline                   |
+| Order | Provider                                                           | Cost                                | Reach                                           |
+| ----- | ------------------------------------------------------------------ | ----------------------------------- | ----------------------------------------------- |
+| 1     | `PromptApiProvider` — Chrome's Gemini Nano                         | Free; weights ship with the browser | Chrome 148+ desktop, with disk and RAM headroom |
+| 2     | `WebLlmProvider` — Llama 3.2 1B on WebGPU                          | ~950 MB one-time download           | Any browser with WebGPU                         |
+| 3     | `LocalRuleProvider` — Buddy Lite, the built-in conversation engine | Free                                | Everywhere, including offline                   |
 
 **The rule provider is the floor, not a fallback of last resort.** No in-browser
 language model has reach you can rely on, so something has to answer on a phone, in
@@ -62,15 +70,47 @@ also what makes the PWA genuinely useful offline.
 whose availability is `ready` — never one that is `needs-download`. A
 several-hundred-megabyte download is a decision for the person using the app.
 
-**A stored provider preference is only honoured if it is still `ready`.** Otherwise
-someone who enabled WebLLM once would re-trigger the download on every single visit
-before the UI appeared.
+**A stored preference never triggers a download.** If the chosen model's weights are
+already on the device — availability `downloaded`, read straight from Cache Storage
+so the probe never loads WebLLM's 6 MB engine — the app answers with the default at
+once and loads the model in the background, then switches. If they are not, the
+choice waits for the person.
+
+**Loading has two phases.** A download's progress shows as a percentage; once it
+reaches 100% the weights still compile onto the GPU for several seconds with no
+ratio, which shows as an indeterminate "Loading model…" rather than a frozen 100%.
 
 **Every turn gets an answer.** `resolveProvider` in
 [`chat.ts`](../src/stores/chat.ts) waits on startup probing rather than
 bailing out, and falls back to the rule provider if probing failed. This was a real
 bug: sending a message before probing finished appended the message and then
 silently answered nothing.
+
+## Local models and downloads
+
+[`models.ts`](../src/engine/providers/models.ts) lists the WebLLM models offered, with
+exact download sizes (summed from each model's `tensor-cache.json`) and WebLLM's GPU
+memory figures — stated before anyone commits to a 2 GB download.
+
+**Downloads do not go through WebLLM.** [`weights.ts`](../src/engine/providers/weights.ts)
+fetches the manifest and weight shards itself, into the same Cache Storage keys
+WebLLM reads (`webllm/model`, keyed by URL). When WebLLM later loads the model it
+finds every file cached and only reads. Owning the fetch is what makes downloads
+controllable:
+
+- **Pause** aborts in-flight shards but keeps their bytes in memory; **resume**
+  continues each from its byte offset with an HTTP `Range` request. A server that
+  ignores the range gets that shard restarted cleanly — never a corrupt join.
+- **Stop** aborts and deletes everything fetched for that model.
+- Progress is exact: bytes against the manifest's total, smoothed speed, time left.
+- Finished shards persist across reloads; in-memory partials do not, so a reload
+  resumes from the last whole shard.
+
+[`downloads.ts`](../src/stores/downloads.ts) runs one download at a time and is
+rebuilt from Cache Storage at startup. `chooseLocalModel` is the single entry point:
+switch if the model is on the device, otherwise download it and switch when done.
+The composer's model picker, the top-left download card and Settings → Local models
+are all views over that store.
 
 ## Streaming is three separate jobs
 
@@ -80,7 +120,7 @@ neither gets solved properly.
 
 **Job one: not melting React.** A model emitting 60 tokens a second would drive 60
 store writes and 60 re-renders a second if each chunk committed immediately.
-[`chunk-batcher.ts`](../src/lib/chunk-batcher.ts) buffers arriving text _outside_
+[`batch.ts`](../src/lib/batch.ts) buffers arriving text _outside_
 React entirely and commits once per animation frame. Cost becomes one render per
 frame regardless of token rate. It never withholds text — it only batches writes.
 
@@ -88,7 +128,7 @@ frame regardless of token rate. It never withholds text — it only batches writ
 in clumps as batches finish; Chrome's Prompt API can hand over a whole sentence at
 once after a pause. Committing each chunk the moment it lands makes text lurch — a
 paragraph appears, nothing happens, three words appear.
-[`useRevealedText`](../src/hooks/useRevealedText.ts) solves this by keeping a buffer
+[`useRevealedText`](../src/hooks/use-reveal.ts) solves this by keeping a buffer
 and releasing a slice of it per animation frame, sized from how much is waiting. A
 small read-ahead reserve is held back so a pause between batches does not stall the
 reveal, and a very large burst is shown at once rather than paced for seconds.
@@ -99,7 +139,7 @@ it look smoother, and the renderer never has to reason about network timing.
 **Job three: not rendering broken markdown.** Revealing a raw prefix flashes
 half-written syntax — a lone `**` before its closing pair, a stray `[`, an open code
 fence swallowing the rest of the message.
-[`toRenderableMarkdown`](../src/lib/markdown-stream.ts) fixes each construct one of
+[`toRenderableMarkdown`](../src/lib/stream.ts) fixes each construct one of
 two ways: an open fence gets a synthetic closing fence, so code streams line by line;
 short constructs like emphasis and links are truncated at their opening marker and
 reappear a frame later, already formatted.
@@ -111,5 +151,5 @@ including one that walks every prefix length of a realistic reply and asserts no
 unpaired marker ever escapes.
 
 Settled messages bypass all of it and render through
-[`Markdown.tsx`](../src/components/Markdown.tsx) directly. There is nothing left to
+[`markdown.tsx`](../src/components/markdown.tsx) directly. There is nothing left to
 pace, and routing history through the hook would re-animate old replies on mount.

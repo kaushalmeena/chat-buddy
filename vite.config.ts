@@ -2,31 +2,20 @@ import { fileURLToPath } from "node:url";
 
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig, lazyPlugins } from "vite-plus";
+import { defineConfig } from "vite";
 
 import { serviceWorker } from "./plugins/service-worker.ts";
 
 /*
  * Vendor chunk assignment.
  *
- * Two small explicit sets, and everything else in `node_modules` falls into one
- * `vendor` chunk. Naming what goes *in* a chunk only works for dependencies with few,
- * stable package names, which React and Motion have and the markdown pipeline
- * emphatically does not: react-markdown pulls in around eighty packages across the
- * unified, remark, micromark, mdast and hast families.
- *
- * A hand-maintained list of those was the previous approach, and it had already
- * drifted — `style-to-js`, `dequal`, `is-alphabetical` and several others were absent,
- * so they silently landed in the entry chunk. An allow-list of that shape cannot
- * survive a dependency update. Inverting the rule removes the maintenance entirely.
+ * Only React gets a named chunk: it changes far less often than app code, so it
+ * stays cached across deploys. Everything else is left to Rolldown's own splitting
+ * on purpose. A catch-all `vendor` chunk used to sit here, and it dragged every
+ * lazily imported dependency — the whole react-markdown stack — onto the critical
+ * path, because a chunk is loaded whole the moment anything in it is needed.
  */
 const REACT_PACKAGES = new Set(["react", "react-dom", "scheduler"]);
-const MOTION_PACKAGES = new Set([
-  "motion",
-  "framer-motion",
-  "motion-dom",
-  "motion-utils",
-]);
 
 /**
  * Extracts the installed package name from a module id, handling scopes.
@@ -71,25 +60,7 @@ function normaliseBase(value: string): string {
 
 const base = normaliseBase(process.env.BASE_PATH ?? "");
 
-/*
- * Generated or vendored output that neither the linter nor the formatter should
- * walk. `dev-dist` and `public/icons` are written by the service-worker plugin and
- * `npm run icons` respectively, so both reappear on any clean build.
- */
-const IGNORED_PATHS = ["dist/**", "dev-dist/**", "public/icons/**", "coverage/**"];
-
-/*
- * `lazyPlugins` returns `undefined` when Vite+ loads this config only to read a
- * non-plugin block — `vp check`, `vp lint` and `vp fmt` all do — so those commands
- * never pay to construct the plugin chain. That puts `undefined` in its return
- * type, which `exactOptionalPropertyTypes` will not accept for an optional
- * `plugins?`. Spreading leaves the key absent in that case rather than present
- * and set to `undefined`, which is what the option actually means.
- */
-const lazy = lazyPlugins(() => [
-  // The Babel plugin rather than the SWC one: Vite 8 on Rolldown recommends it,
-  // and it is the only route to Babel-based transforms such as the React
-  // Compiler, which SWC cannot host.
+const plugins = [
   react(),
   tailwindcss(),
   serviceWorker({
@@ -102,81 +73,11 @@ const lazy = lazyPlugins(() => [
      */
     exclude: [/^assets\/web-llm-/, /\.map$/],
   }),
-]);
-
-const plugins = lazy ? { plugins: lazy } : {};
+];
 
 export default defineConfig({
-  /*
-   * Formatting, ported from the `biome.json` this project used before Vite+.
-   * Oxfmt is Prettier-shaped, so the Biome names map onto Prettier's: `lineWidth`
-   * became `printWidth`, `quoteStyle: "double"` became `singleQuote: false`, and
-   * so on. `sortImports` replaces Biome's `organizeImports` assist action.
-   */
-  fmt: {
-    ignorePatterns: IGNORED_PATHS,
-    printWidth: 88,
-    tabWidth: 2,
-    useTabs: false,
-    semi: true,
-    singleQuote: false,
-    trailingComma: "all",
-    arrowParens: "always",
-    sortImports: {},
-  },
-  lint: {
-    ignorePatterns: IGNORED_PATHS,
-    jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
-    /*
-     * `react` carries the hooks rules and `unicorn` the filename rule; neither is
-     * on by default. The TypeScript and oxc plugins are, so they stay unlisted.
-     */
-    plugins: ["react", "unicorn", "import", "promise"],
-    // Declared by the Prompt API, which ships without ambient types here.
-    globals: { LanguageModel: "readonly" },
-    options: { typeAware: true, typeCheck: true },
-    rules: {
-      "vite-plus/prefer-vite-plus-imports": "error",
-      // Biome's `correctness` selections.
-      "typescript/no-unused-vars": "error",
-      "react-hooks/exhaustive-deps": "warn",
-      // Biome's `style` selections.
-      "prefer-const": "error",
-      "typescript/consistent-type-imports": "error",
-      "typescript/no-non-null-assertion": "error",
-      // Biome's `suspicious` selections.
-      "typescript/no-explicit-any": "error",
-      "no-console": ["error", { allow: ["warn", "error"] }],
-      // Type-aware, so it depends on `options.typeAware` above.
-      "typescript/no-floating-promises": "error",
-    },
-    overrides: [
-      {
-        // Build scripts report progress on stdout.
-        files: ["scripts/**"],
-        rules: { "no-console": "off" },
-      },
-      {
-        // Components are `PascalCase.tsx`, except for non-component helpers.
-        files: ["src/components/**"],
-        rules: {
-          "unicorn/filename-case": [
-            "error",
-            { cases: { pascalCase: true, camelCase: true } },
-          ],
-        },
-      },
-      {
-        // Hooks are `useThing.ts`.
-        files: ["src/hooks/**"],
-        rules: {
-          "unicorn/filename-case": ["error", { cases: { camelCase: true } }],
-        },
-      },
-    ],
-  },
   base,
-  ...plugins,
+  plugins,
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -201,21 +102,13 @@ export default defineConfig({
           if (id.includes("@mlc-ai/web-llm")) return "web-llm";
 
           /*
-           * Vendor splits, so dependencies that change far less often than app code
-           * stay cached across deploys.
-           *
            * Matched on the full package boundary, not a prefix: `react` as a prefix
            * also matches `react-markdown`, which once pulled the whole
            * micromark/mdast parser stack into the chunk labelled "react".
            */
           const vendor = matchPackage(id);
-          if (!vendor) return undefined;
-
-          if (REACT_PACKAGES.has(vendor)) return "react";
-          if (MOTION_PACKAGES.has(vendor)) return "motion";
-
-          // Everything else third-party. No list to keep up to date.
-          return "vendor";
+          if (vendor && REACT_PACKAGES.has(vendor)) return "react";
+          return undefined;
         },
       },
     },

@@ -2,28 +2,27 @@
 
 ## Motion
 
-[Motion](https://motion.dev/) for anything stateful, CSS for anything continuous.
+CSS only. The app used [Motion](https://motion.dev/) until the UI revamp, which put
+~43 KB gzipped on the critical path for a handful of fades and slides. Every movement
+below is now a Tailwind transition or a keyframe declared in
+[`global.css`](../src/styles/global.css).
 
-| Movement                            | Treatment                                                |
-| ----------------------------------- | -------------------------------------------------------- |
-| Message entry                       | Fade + 8px rise, 0.24s, `cubic-bezier(0.22, 1, 0.36, 1)` |
-| Sidebar collapse                    | Spring, stiffness 380, damping 34                        |
-| Drawer                              | Spring, stiffness 420, damping 38                        |
-| Theme indicator                     | Spring via shared `layoutId`                             |
-| Menus, badges                       | 0.16–0.22s ease-out                                      |
-| Typing dots, indeterminate progress | CSS keyframes — continuous, so no JS                     |
-| Button press                        | `whileTap` scale 0.92                                    |
+| Movement                            | Treatment                                                     |
+| ----------------------------------- | ------------------------------------------------------------- |
+| Message entry                       | `animate-enter`: fade + 8px rise, 0.24s, `--ease-out-soft`    |
+| Sidebar collapse                    | `transition-[width]`, 200ms                                   |
+| Drawer                              | Always mounted, `translate-x` transition, 250ms               |
+| Theme indicator                     | One element, `translate-x` transition between three positions |
+| Menus, dialog                       | `animate-pop`, 0.16s                                          |
+| Typing dots, indeterminate progress | Infinite keyframes                                            |
+| Button press                        | `active:scale-92`                                             |
 
-The easing curve is a decelerating ease-out: fast to start, settling gently. It reads
-as responsive rather than floaty.
+`--ease-out-soft` is `cubic-bezier(0.22, 1, 0.36, 1)`: fast to start, settling gently.
 
-Two rules:
-
-**Springs for anything that tracks a position** — a sliding indicator, a drawer, a
-collapsing panel. Duration-based easing on a spatial change looks mechanical.
-
-**`whileTap` only when the press will do something.** A disabled button that still
-reacts to a tap reads as broken.
+**Animate transform and opacity, never layout.** Elements that come and go (the drawer,
+the jump-to-latest button) stay mounted and toggle opacity/transform, so showing them
+never reflows anything. Staggered entries use `animation-delay` with `both` fill mode,
+so a delayed item is hidden until its turn rather than flashing its final state.
 
 ### Reduced motion
 
@@ -65,14 +64,17 @@ none respect `padding-right` consistently, so it cannot be spaced reliably.
 
 ## The brand mark
 
-A speech bubble with three dots — conversation plus a reply in progress — on an
-indigo/violet gradient squircle.
+A white bot glyph on a two-stop accent gradient squircle. The glyph is "Bot" from
+[SVG Repo](https://www.svgrepo.com/svg/334455/bot), CC0 (no attribution required);
+its eyes and mouth are cut-outs, so the accent shows through. In the app the gradient
+follows the chosen accent; the favicon and PWA icons use a neutral near-black tile,
+so they suit every accent.
 
 One source of truth: [`brand-icon.svg`](../src/assets/brand-icon.svg).
 `scripts/build-icons.mjs` renders every PWA and favicon asset from it. The outputs
 are committed, so run `npm run icons` after editing the SVG — nothing checks this for
 you. The React component
-[`BrandMark.tsx`](../src/components/BrandMark.tsx) inlines the same artwork —
+[`logo.tsx`](../src/components/logo.tsx) inlines the same artwork —
 inline means no request, no layout shift, and gradient stops that can be tuned
 alongside the theme.
 

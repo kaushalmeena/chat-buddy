@@ -13,15 +13,17 @@ import {
 } from "@/domain/conversation.ts";
 import type { AssistantMessage, Message, ReplySource } from "@/domain/message.ts";
 import type { ChatProvider, DownloadProgress } from "@/domain/provider.ts";
-import { ChatEngine } from "@/engine/chat-engine.ts";
+import { ChatEngine } from "@/engine/chat.ts";
 import {
-  FALLBACK_PROVIDER,
+  RULE_PROVIDER,
   getProvider,
+  WEBLLM_PROVIDER,
   type ProviderStatus,
   probeProviders,
   selectDefaultProvider,
-} from "@/engine/providers/provider-registry.ts";
-import { createChunkBatcher } from "@/lib/chunk-batcher.ts";
+  UNAVAILABLE_COPY,
+} from "@/engine/providers/registry.ts";
+import { createChunkBatcher } from "@/lib/batch.ts";
 import { createId } from "@/lib/id.ts";
 
 import { useConfig } from "./config.ts";
@@ -46,6 +48,8 @@ type ChatState = {
   readonly providerStatuses: readonly ProviderStatus[];
   readonly activeProvider: ChatProvider | undefined;
   readonly downloadProgress: DownloadProgress | undefined;
+  /** The engine `downloadProgress` belongs to, while one is being prepared. */
+  readonly preparingId: ReplySource | undefined;
   readonly providerError: string | undefined;
   readonly isGenerating: boolean;
 };
@@ -68,6 +72,7 @@ export const useChat = create<ChatState>(() => ({
   providerStatuses: [],
   activeProvider: undefined,
   downloadProgress: undefined,
+  preparingId: undefined,
   providerError: undefined,
   isGenerating: false,
 }));
@@ -87,6 +92,51 @@ export const selectActiveConversation = (state: ChatState): Conversation =>
 
 export const selectMessages = (state: ChatState): readonly Message[] =>
   selectActiveConversation(state).messages;
+
+/** What the thread list needs to render a row: no messages. */
+export type ThreadSummary = {
+  readonly id: string;
+  readonly title: string;
+  readonly updatedAt: number;
+  readonly pinned: boolean;
+};
+
+let threadList: readonly ThreadSummary[] = [];
+
+/**
+ * Non-empty threads, most recent first, as a referentially stable list.
+ *
+ * Streaming rewrites a conversation many times a second, but changes none of
+ * these fields (`updatedAt` moves only when the turn settles), so the cached list
+ * is returned and the sidebar does not re-render while a reply streams.
+ */
+export function selectThreadList(state: ChatState): readonly ThreadSummary[] {
+  const next = state.conversations
+    .filter((conversation) => conversation.messages.length > 0)
+    .toSorted((a, b) => b.updatedAt - a.updatedAt);
+
+  const isSame =
+    next.length === threadList.length &&
+    next.every((conversation, index) => {
+      const previous = threadList[index];
+      return (
+        previous?.id === conversation.id &&
+        previous.title === conversation.title &&
+        previous.updatedAt === conversation.updatedAt &&
+        previous.pinned === (conversation.pinned ?? false)
+      );
+    });
+
+  if (!isSame) {
+    threadList = next.map(({ id, title, updatedAt, pinned }) => ({
+      id,
+      title,
+      updatedAt,
+      pinned: pinned ?? false,
+    }));
+  }
+  return threadList;
+}
 
 /*
  * Thread mutation.
@@ -144,7 +194,8 @@ function patchMessage(
           ? patch(message)
           : message,
       ),
-      updatedAt: Date.now(),
+      // Streaming slices leave recency alone; the settled write moves it once.
+      updatedAt: options.persist === false ? conversation.updatedAt : Date.now(),
     }),
     options,
   );
@@ -155,6 +206,15 @@ function patchMessage(
  */
 
 export function newConversation(): void {
+  // Reuse an untouched thread rather than stacking blank ones on every click.
+  const blank = getState().conversations.find(
+    (conversation) => conversation.messages.length === 0,
+  );
+  if (blank) {
+    if (blank.id !== getState().activeId) selectConversation(blank.id);
+    return;
+  }
+
   const conversation = createConversation();
   setState((state) => ({
     conversations: [conversation, ...state.conversations],
@@ -168,7 +228,12 @@ export function selectConversation(id: string): void {
   setState({ activeId: id, isGenerating: false });
 }
 
-export function deleteConversation(id: string): void {
+/** Deletes a thread and returns it, so the caller can offer an undo. */
+export function deleteConversation(id: string): Conversation | undefined {
+  const removed = getState().conversations.find(
+    (conversation) => conversation.id === id,
+  );
+  if (id === getState().activeId) engine.stop();
   void deleteConversationRow(id);
 
   setState((state) => {
@@ -187,6 +252,67 @@ export function deleteConversation(id: string): void {
         state.activeId === id ? (remaining[0]?.id ?? state.activeId) : state.activeId,
     };
   });
+
+  return removed;
+}
+
+/**
+ * Puts a deleted thread back, in place and persisted again. A blank thread created
+ * only because the list had emptied is dropped, so undo restores exactly what was
+ * there before.
+ */
+export function restoreConversation(conversation: Conversation): void {
+  setState((state) => ({
+    conversations: [
+      conversation,
+      ...state.conversations.filter(
+        (existing) => existing.id !== conversation.id && existing.messages.length > 0,
+      ),
+    ],
+    activeId: conversation.id,
+  }));
+  void saveConversation(conversation);
+}
+
+/** Renames a thread. A blank name is ignored rather than saved. */
+export function renameConversation(id: string, title: string): void {
+  const trimmed = title.trim().slice(0, 80);
+  if (trimmed.length === 0) return;
+  // Not a content change, so recency (and the thread's place in the list) stays.
+  updateConversation(id, (conversation) => ({ ...conversation, title: trimmed }));
+}
+
+/** Pins a thread to the top of the list, or unpins it. */
+export function togglePinned(id: string): void {
+  updateConversation(id, ({ pinned, ...conversation }) =>
+    pinned ? conversation : { ...conversation, pinned: true },
+  );
+}
+
+/**
+ * Adds imported threads. A thread already present is replaced only when the
+ * imported copy is newer, so importing the same backup twice changes nothing.
+ * Returns how many were added or updated.
+ */
+export function importConversations(incoming: readonly Conversation[]): number {
+  const existing = new Map(
+    getState().conversations.map((thread) => [thread.id, thread]),
+  );
+  const accepted = incoming.filter((thread) => {
+    const current = existing.get(thread.id);
+    return current === undefined || thread.updatedAt > current.updatedAt;
+  });
+  if (accepted.length === 0) return 0;
+
+  const acceptedIds = new Set(accepted.map((thread) => thread.id));
+  setState((state) => ({
+    conversations: [
+      ...accepted,
+      ...state.conversations.filter((thread) => !acceptedIds.has(thread.id)),
+    ],
+  }));
+  for (const thread of accepted) void saveConversation(thread);
+  return accepted.length;
 }
 
 export function clearActiveConversation(): void {
@@ -240,6 +366,41 @@ export async function retryLastReply(): Promise<void> {
     updatedAt: Date.now(),
   }));
 
+  await generateReply(conversationId);
+}
+
+/**
+ * Rewrites one of the person's messages and regenerates from there: everything
+ * after it is discarded, as it answered a question that no longer exists. The
+ * thread is retitled when its first message is the one edited.
+ */
+export async function editMessage(messageId: string, text: string): Promise<void> {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return;
+
+  engine.stop();
+  const conversationId = getState().activeId;
+  const messages = selectActiveConversation(getState()).messages;
+  const index = messages.findIndex(
+    (message) => message.id === messageId && message.role === "user",
+  );
+  const original = messages[index];
+  if (!original || original.role !== "user") return;
+
+  updateConversation(conversationId, (conversation) => {
+    const kept = [
+      ...conversation.messages.slice(0, index),
+      { ...original, text: trimmed },
+    ];
+    return {
+      ...conversation,
+      messages: kept,
+      title: index === 0 ? deriveTitle(kept) : conversation.title,
+      updatedAt: Date.now(),
+    };
+  });
+
+  setState({ isGenerating: false });
   await generateReply(conversationId);
 }
 
@@ -305,7 +466,7 @@ async function resolveProvider(): Promise<ChatProvider> {
 
   await providersReady;
 
-  return getState().activeProvider ?? FALLBACK_PROVIDER;
+  return getState().activeProvider ?? RULE_PROVIDER;
 }
 
 /*
@@ -332,6 +493,7 @@ export async function hydrate(): Promise<void> {
 /** Probes providers and activates the preferred one, or the best default. */
 export function initialiseProviders(): Promise<void> {
   providersReady = (async () => {
+    WEBLLM_PROVIDER.selectModel(useConfig.getState().localModelId);
     try {
       const statuses = await probeProviders();
       const preferred = useConfig.getState().preferredProviderId;
@@ -339,19 +501,26 @@ export function initialiseProviders(): Promise<void> {
         (status) => status.provider.id === preferred,
       );
 
+      const isReady = preferredStatus?.availability.state === "ready";
+
       setState({
         providerStatuses: statuses,
-        // Only honour a stored choice if it is still usable without a download —
-        // otherwise enabling WebLLM once would re-trigger the download on every
-        // visit before the UI appeared.
+        // A stored choice that needs a download is not honoured — enabling WebLLM
+        // once must not re-trigger a 950 MB download on every visit.
         activeProvider:
-          preferredStatus?.availability.state === "ready"
+          isReady && preferredStatus
             ? preferredStatus.provider
             : selectDefaultProvider(statuses),
       });
+
+      // Weights already on the device: answer with the default meanwhile, and load
+      // the chosen model in the background (seconds, no network), then switch.
+      if (preferred && preferredStatus?.availability.state === "downloaded") {
+        void activateProvider(preferred);
+      }
     } catch {
       // Probing is best-effort; the baseline provider needs nothing probed.
-      setState({ activeProvider: FALLBACK_PROVIDER });
+      setState({ activeProvider: RULE_PROVIDER });
     }
   })();
 
@@ -362,6 +531,21 @@ export function initialiseProviders(): Promise<void> {
  * Switches provider, downloading weights first if required. Reports progress and
  * leaves the previous provider active on failure.
  */
+const LOADING_LABEL = "Loading model…";
+
+/**
+ * Turns raw provider progress into what the person should see. A download that
+ * has reached 100% is not finished: the weights still have to be compiled onto
+ * the GPU, which takes seconds and reports no ratio. Showing a frozen "100%"
+ * there read as a hang, so that phase becomes an indeterminate "Loading model…".
+ */
+function phase(progress: DownloadProgress): DownloadProgress {
+  if (progress.ratio === undefined || progress.ratio >= 0.999) {
+    return { label: LOADING_LABEL };
+  }
+  return progress;
+}
+
 export async function activateProvider(id: ReplySource): Promise<void> {
   const provider = getProvider(id);
   const previous = getState().activeProvider;
@@ -372,13 +556,18 @@ export async function activateProvider(id: ReplySource): Promise<void> {
     const availability = await provider.availability();
 
     if (availability.state === "unavailable") {
-      setState({ providerError: describeUnavailable(availability.reason) });
+      setState({ providerError: UNAVAILABLE_COPY[availability.reason].long });
       return;
     }
 
-    if (availability.state === "needs-download") {
-      setState({ downloadProgress: { label: "Starting download" } });
-      await provider.prepare((progress) => setState({ downloadProgress: progress }));
+    if (
+      availability.state === "needs-download" ||
+      availability.state === "downloaded"
+    ) {
+      setState({ downloadProgress: { label: LOADING_LABEL }, preparingId: id });
+      await provider.prepare((progress) =>
+        setState({ downloadProgress: phase(progress) }),
+      );
     }
 
     useConfig.getState().setPreferredProvider(id);
@@ -390,19 +579,27 @@ export async function activateProvider(id: ReplySource): Promise<void> {
         error instanceof Error ? error.message : "Could not start that model.",
     });
   } finally {
-    setState({ downloadProgress: undefined });
+    setState({ downloadProgress: undefined, preparingId: undefined });
   }
 }
 
-function describeUnavailable(reason: string): string {
-  switch (reason) {
-    case "no-webgpu":
-      return "This browser has no WebGPU support, which the local model needs.";
-    case "unsupported-browser":
-      return "This browser does not ship a built-in AI model.";
-    case "insufficient-resources":
-      return "This device does not have the free storage or memory the model needs.";
-    default:
-      return "That model is not available on this device.";
-  }
+/**
+ * Stops using the local model — after its weights were deleted, say — and falls
+ * back to the best provider that needs nothing downloaded.
+ */
+export async function releaseLocalModel(): Promise<void> {
+  await WEBLLM_PROVIDER.dispose();
+  const statuses = await probeProviders();
+  setState((state) => ({
+    providerStatuses: statuses,
+    activeProvider:
+      state.activeProvider?.id === "web-llm"
+        ? selectDefaultProvider(statuses)
+        : state.activeProvider,
+  }));
+}
+
+/** Re-reads every provider's availability, e.g. after a download finishes. */
+export async function refreshProviders(): Promise<void> {
+  setState({ providerStatuses: await probeProviders() });
 }
