@@ -28,6 +28,14 @@ button, the typing indicator and the batching all work identically regardless of
 which backend answered. The alternative, a `generate` that sometimes returns a
 string and sometimes an iterable, pushes a branch into every consumer.
 
+**The rule provider paces itself like typing.** Its answer exists in microseconds,
+and an instant wall of text reads as canned. So it pauses to "think" first (350 ms
+plus a little per character, capped at 1.2 s; the typing dots show meanwhile), then
+sends each word after a short jittered gap, longer after commas and full stops. Two
+guards: pauses are skipped while the tab is hidden, because background tabs throttle
+timers to a second or more, and every wait is abortable through
+[`sleep`](../src/lib/sleep.ts), so stop is immediate.
+
 **`availability()` is separate from `prepare()`.** Asking whether a provider _could_
 work must not download 950 MB to find out. Availability is a cheap probe; preparing
 is the expensive commitment. Splitting them is what lets the UI show download sizes

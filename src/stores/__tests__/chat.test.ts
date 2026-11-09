@@ -4,8 +4,8 @@ import type { Conversation } from "@/domain/conversation.ts";
 
 /*
  * The store is tested through its own interface: the exported actions and
- * selectors. Only persistence is replaced, at its seam — IndexedDB is the one
- * dependency jsdom cannot provide. Replies come from the real built-in rules
+ * selectors. Only persistence and the typing pace are replaced, each at its seam —
+ * IndexedDB is absent in jsdom, and real pauses would only slow the suite. Replies come from the real built-in rules
  * provider, which needs nothing from the device.
  */
 const db = vi.hoisted(() => ({
@@ -18,6 +18,9 @@ const db = vi.hoisted(() => ({
 }));
 
 vi.mock("@/db/conversations.ts", () => db);
+
+// The rules provider paces its replies like typing; tests do not need to wait.
+vi.mock("@/lib/sleep.ts", () => ({ sleep: () => Promise.resolve() }));
 
 const {
   deleteConversation,

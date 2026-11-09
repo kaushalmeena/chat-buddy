@@ -4,6 +4,7 @@ import type {
   ProviderAvailability,
 } from "@/domain/provider.ts";
 import { reply } from "@/engine/rules/reply.ts";
+import { sleep } from "@/lib/sleep.ts";
 
 /**
  * The always-available baseline provider, backed by the built-in conversation
@@ -16,7 +17,7 @@ import { reply } from "@/engine/rules/reply.ts";
 export class LocalRuleProvider implements ChatProvider {
   readonly id = "rules" as const;
   readonly label = "Built-in rules";
-  readonly description = "Instant, remembers this chat. Works offline on any device.";
+  readonly description = "Remembers this chat. Works offline on any device.";
   readonly isLocal = true;
 
   availability(): Promise<ProviderAvailability> {
@@ -28,29 +29,62 @@ export class LocalRuleProvider implements ChatProvider {
   }
 
   /*
-   * Yields the reply a word at a time, with no artificial delay.
+   * Yields the reply a word at a time, paced like someone typing.
    *
-   * Chunking keeps the output shape identical to the model providers, so the
-   * caret, the stop button and the store's frame-coalescing all behave the same
-   * way regardless of which provider answered.
+   * The engine answers in microseconds, and an instant wall of text reads as
+   * canned. So there is a short "thinking" pause first — the typing dots show
+   * during it — scaled to the reply's length, then each word arrives after a
+   * small jittered gap. Chunking word by word also keeps the output shape the
+   * same as the model providers', so stop, the batcher and the reveal behave
+   * identically whichever provider answered.
    *
-   * An earlier version paced the chunks with a 16 ms `setTimeout` to imitate
-   * typing. That was a mistake twice over: it invented latency in the one
-   * provider whose entire selling point is being instant, and background tabs
-   * clamp timers to a second or more, which stretched a 68-character reply into
-   * a 20-second crawl. Real streaming latency should come from a real model.
+   * Two guards from a previous attempt at this. Pauses are skipped while the tab
+   * is hidden, because background tabs clamp timers to a second or more, which
+   * once stretched a short reply into a 20-second crawl. And every wait is
+   * abortable, so stop is immediate rather than waiting out the current pause.
    */
   async *generate({ turns, signal }: GenerateOptions): AsyncIterable<string> {
     const text = reply(turns);
+    const words = text.split(/(?<= )/u);
 
-    // Split after each space so whitespace is preserved in the chunks.
-    for (const chunk of text.split(/(?<= )/u)) {
+    await pause(thinkingTime(text), signal);
+
+    for (const [index, word] of words.entries()) {
       signal.throwIfAborted();
-      yield chunk;
+      const previous = words[index - 1];
+      // Sequential on purpose: each pause is the gap before this word.
+      // oxlint-disable-next-line no-await-in-loop
+      if (previous !== undefined) await pause(wordGap(previous), signal);
+      yield word;
     }
   }
 
   dispose(): Promise<void> {
     return Promise.resolve();
   }
+}
+
+/** Before the first word: longer replies take a moment longer to "think" up. */
+function thinkingTime(text: string): number {
+  return jitter(Math.min(350 + text.length * 6, 1200));
+}
+
+/** Between words: a little longer after the end of a sentence or clause. */
+function wordGap(previousWord: string): number {
+  const base = /[.!?]\s*$/.test(previousWord)
+    ? 140
+    : /[,;:—]\s*$/.test(previousWord)
+      ? 80
+      : 32;
+  return jitter(base);
+}
+
+/** ±25%, so the rhythm never sounds mechanical. */
+function jitter(ms: number): number {
+  return Math.round(ms * (0.75 + Math.random() * 0.5));
+}
+
+function pause(ms: number, signal: AbortSignal): Promise<void> {
+  if (typeof document !== "undefined" && document.hidden) return Promise.resolve();
+  return sleep(ms, signal);
 }
