@@ -155,6 +155,15 @@ function patchMessage(
  */
 
 export function newConversation(): void {
+  // Reuse an untouched thread rather than stacking blank ones on every click.
+  const blank = getState().conversations.find(
+    (conversation) => conversation.messages.length === 0,
+  );
+  if (blank) {
+    if (blank.id !== getState().activeId) selectConversation(blank.id);
+    return;
+  }
+
   const conversation = createConversation();
   setState((state) => ({
     conversations: [conversation, ...state.conversations],
