@@ -152,9 +152,60 @@
     border-radius: 0.375rem;
   }
 
+  /*
+   * Dialog enter and exit, in CSS alone.
+   *
+   * `allow-discrete` lets `display` and `overlay` (the top layer) flip at the end of
+   * the exit instead of the start, so the fade-out is actually seen; `@starting-style`
+   * gives the entrance its first frame. The closed state's timing governs the exit,
+   * the open state's the entrance — so the exit is quicker, as it should be.
+   */
+  dialog {
+    opacity: 0;
+    scale: 0.97;
+    translate: 0 0.375rem;
+    transition:
+      opacity 0.15s ease-in,
+      scale 0.15s ease-in,
+      translate 0.15s ease-in,
+      overlay 0.15s ease-in allow-discrete,
+      display 0.15s ease-in allow-discrete;
+  }
+
+  dialog[open] {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+    transition-duration: 0.22s;
+    transition-timing-function: var(--ease-out-soft);
+  }
+
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      scale: 0.97;
+      translate: 0 0.375rem;
+    }
+  }
+
   dialog::backdrop {
+    background-color: oklch(0.12 0.015 210 / 0);
+    transition:
+      background-color 0.15s ease-in,
+      overlay 0.15s ease-in allow-discrete,
+      display 0.15s ease-in allow-discrete;
+  }
+
+  dialog[open]::backdrop {
     background-color: oklch(0.12 0.015 210 / 0.5);
-  }}
+    transition-duration: 0.22s;
+  }
+
+  @starting-style {
+    dialog[open]::backdrop {
+      background-color: oklch(0.12 0.015 210 / 0);
+    }
+  }
 
   ::selection {
     background-color: var(--color-brand-600);

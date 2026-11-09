@@ -15,6 +15,7 @@ import { closeSettings, useUi } from "@/stores/ui.ts";
  */
 function SettingsDialog() {
   const isOpen = useUi((state) => state.isSettingsOpen);
+  const hasOpened = useUi((state) => state.hasOpenedSettings);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -38,10 +39,13 @@ function SettingsDialog() {
       onClose={closeSettings}
       onClick={handleClick}
       aria-labelledby="settings-title"
-      className="m-auto max-h-[min(44rem,calc(100dvh-2rem))] w-[min(30rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border-subtle bg-canvas p-0 text-content shadow-float open:animate-pop"
+      className="m-auto max-h-[min(44rem,calc(100dvh-2rem))] w-[min(30rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border-subtle bg-canvas p-0 text-content shadow-float"
     >
-      {/* Only mounted while open, so voice lists and probes are not paid for upfront. */}
-      {isOpen && (
+      {/*
+       * Mounted on first open, so voice lists are not paid for upfront, then kept, so
+       * the contents stay visible through the close transition.
+       */}
+      {hasOpened && (
         <div className="flex max-h-[inherit] flex-col">
           <div className="flex items-center justify-between border-b border-border-subtle px-5 py-3.5">
             <h2 id="settings-title" className="text-base font-semibold tracking-tight">
