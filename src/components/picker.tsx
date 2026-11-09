@@ -11,7 +11,7 @@ import { useConfig } from "@/stores/config.ts";
 import { ModelList } from "./models.tsx";
 
 const SHORT_LABELS: Record<Exclude<ReplySource, "web-llm">, string> = {
-  "prompt-api": "Gemini Nano",
+  "prompt-api": "Chrome built-in AI",
   rules: "Offline Buddy",
 };
 
