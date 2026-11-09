@@ -3,6 +3,8 @@ import { Check, Download, TriangleAlert } from "lucide-react";
 import type { ProviderAvailability } from "@/domain/provider.ts";
 import { type ProviderStatus, UNAVAILABLE_COPY } from "@/engine/providers/registry.ts";
 import { activateProvider, useChat } from "@/stores/chat.ts";
+import { useConfig } from "@/stores/config.ts";
+import { chooseLocalModel } from "@/stores/downloads.ts";
 
 /** Renders bytes as a rounded figure; only used for coarse sizes. */
 function formatBytes(bytes: number): string {
@@ -77,6 +79,12 @@ function ProviderOption({ status }: { readonly status: ProviderStatus }) {
   const note = availabilityNote(availability);
 
   const handleSelect = () => {
+    // The local provider goes through the download manager, which downloads the
+    // chosen model first if needed (pausably) and switches when it is ready.
+    if (provider.id === "web-llm") {
+      void chooseLocalModel(useConfig.getState().localModelId);
+      return;
+    }
     void activateProvider(provider.id);
   };
 

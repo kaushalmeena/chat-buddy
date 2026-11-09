@@ -6,6 +6,7 @@ import { Transcript } from "@/components/messages.tsx";
 import { SettingsDialog } from "@/components/settings.tsx";
 import { Sidebar } from "@/components/sidebar.tsx";
 import { UndoToast } from "@/components/toast.tsx";
+import { DownloadCard } from "@/components/transfer.tsx";
 import { newConversation } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 import { closeDrawer, COMPOSER_ID, focusComposer, useUi } from "@/stores/ui.ts";
@@ -72,7 +73,8 @@ function App() {
       <div className="flex min-w-0 flex-1 flex-col">
         <Header />
 
-        <main className="flex min-h-0 flex-1 flex-col">
+        <main className="relative flex min-h-0 flex-1 flex-col">
+          <DownloadCard />
           <Transcript />
 
           <div className="shrink-0 px-3 pt-2 pb-3 sm:px-4 sm:pb-4">

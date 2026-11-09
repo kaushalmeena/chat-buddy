@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import { hydrate, initialiseProviders } from "@/stores/chat.ts";
 import { startThemeSync } from "@/stores/config.ts";
+import { scanDownloads } from "@/stores/downloads.ts";
 
 import "./styles/global.css";
 import { App } from "./app.tsx";
@@ -40,6 +41,9 @@ void preloadRichText();
 const whenIdle =
   globalThis.requestIdleCallback ?? ((callback: () => void) => setTimeout(callback, 1));
 whenIdle(() => void import("@/engine/rules/reply.ts"));
+
+// Which local models are on the device, and any download paused last time.
+whenIdle(() => void scanDownloads());
 
 createRoot(container).render(
   <StrictMode>

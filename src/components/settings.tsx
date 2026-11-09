@@ -4,8 +4,10 @@ import { type MouseEvent, type ReactNode, useEffect, useRef } from "react";
 import { AccentPicker } from "@/components/accent.tsx";
 import { BackupTools } from "@/components/backup.tsx";
 import { ProviderPicker } from "@/components/engines.tsx";
+import { ModelList } from "@/components/models.tsx";
 import { ThemeToggle } from "@/components/theme.tsx";
 import { VoicePicker } from "@/components/voice.tsx";
+import { useChat } from "@/stores/chat.ts";
 import { closeSettings, useUi } from "@/stores/ui.ts";
 
 /**
@@ -69,6 +71,13 @@ function SettingsDialog() {
             </Section>
 
             <Section
+              title="Local models"
+              description="Download once, then they run on your GPU — even offline. Pause or stop any time."
+            >
+              <LocalModels />
+            </Section>
+
+            <Section
               title="Voice"
               description="Have replies read aloud on this device."
             >
@@ -100,6 +109,25 @@ function SettingsDialog() {
         </div>
       )}
     </dialog>
+  );
+}
+
+/** The model list with delete, disabled (with the reason) where WebGPU is missing. */
+function LocalModels() {
+  const local = useChat((state) =>
+    state.providerStatuses.find((status) => status.provider.id === "web-llm"),
+  );
+  const isUnavailable = local?.availability.state === "unavailable";
+
+  return (
+    <div className="flex flex-col gap-2">
+      {isUnavailable && (
+        <p className="text-xs text-content-muted">
+          This browser has no WebGPU, which local models need.
+        </p>
+      )}
+      <ModelList canDelete isDisabled={isUnavailable} />
+    </div>
   );
 }
 

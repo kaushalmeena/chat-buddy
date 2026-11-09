@@ -15,6 +15,8 @@ import { sendMessage, stopGenerating, useChat } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 import { COMPOSER_ID } from "@/stores/ui.ts";
 
+import { ModelPicker } from "./picker.tsx";
+
 /** Cap on textarea auto-growth before it starts scrolling internally. */
 const MAX_TEXTAREA_HEIGHT_PX = 200;
 
@@ -191,6 +193,7 @@ function Composer() {
         />
 
         <div className="flex items-center gap-1 px-2 pb-2">
+          <ModelPicker />
           <SpeakToggle />
 
           {speech.isSupported && (
