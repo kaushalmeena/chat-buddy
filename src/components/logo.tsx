@@ -12,10 +12,6 @@ type BrandMarkProps = {
  * alongside the theme. The same artwork lives in `src/assets/brand-icon.svg`,
  * which is the source `scripts/build-icons.mjs` renders the PWA icons from.
  */
-const STOP_LIGHT = { stopColor: "var(--accent-400)" };
-const STOP_MID = { stopColor: "var(--accent-500)" };
-const STOP_DEEP = { stopColor: "var(--accent-700)" };
-
 function BrandMark({ size = 32, className }: BrandMarkProps) {
   /*
    * The gradient id must be unique per instance.
@@ -39,10 +35,9 @@ function BrandMark({ size = 32, className }: BrandMarkProps) {
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-          {/* Accent-driven, so the mark always matches the chosen palette. */}
-          <stop offset="0" style={STOP_LIGHT} />
-          <stop offset="0.55" style={STOP_MID} />
-          <stop offset="1" style={STOP_DEEP} />
+          {/* Two accent stops, so the mark always matches the chosen palette. */}
+          <stop offset="0" className="[stop-color:var(--accent-400)]" />
+          <stop offset="1" className="[stop-color:var(--accent-600)]" />
         </linearGradient>
       </defs>
 
