@@ -25,7 +25,7 @@ src/
 ├── domain/        Types only. No imports from anywhere else in src
 ├── engine/        Inference and capabilities
 │   ├── providers/   One ChatProvider per backend, plus tiering
-│   └── rules/       The built-in knowledge base and its matcher
+│   └── rules/       The built-in conversation engine: memory, intents, skills
 ├── hooks/         React hooks
 ├── lib/           Small shared utilities with no app knowledge
 ├── stores/        Zustand stores

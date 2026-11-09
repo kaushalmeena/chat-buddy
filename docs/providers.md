@@ -47,11 +47,11 @@ Adding a fourth backend means writing one class and adding it to
 Providers are ordered by preference in
 [`registry.ts`](../src/engine/providers/registry.ts):
 
-| Order | Provider                                      | Cost                                | Reach                                           |
-| ----- | --------------------------------------------- | ----------------------------------- | ----------------------------------------------- |
-| 1     | `PromptApiProvider` — Chrome's Gemini Nano    | Free; weights ship with the browser | Chrome 148+ desktop, with disk and RAM headroom |
-| 2     | `WebLlmProvider` — Llama 3.2 1B on WebGPU     | ~950 MB one-time download           | Any browser with WebGPU                         |
-| 3     | `LocalRuleProvider` — the built-in rule table | Free                                | Everywhere, including offline                   |
+| Order | Provider                                               | Cost                                | Reach                                           |
+| ----- | ------------------------------------------------------ | ----------------------------------- | ----------------------------------------------- |
+| 1     | `PromptApiProvider` — Chrome's Gemini Nano             | Free; weights ship with the browser | Chrome 148+ desktop, with disk and RAM headroom |
+| 2     | `WebLlmProvider` — Llama 3.2 1B on WebGPU              | ~950 MB one-time download           | Any browser with WebGPU                         |
+| 3     | `LocalRuleProvider` — the built-in conversation engine | Free                                | Everywhere, including offline                   |
 
 **The rule provider is the floor, not a fallback of last resort.** No in-browser
 language model has reach you can rely on, so something has to answer on a phone, in
