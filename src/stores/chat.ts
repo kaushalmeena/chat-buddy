@@ -317,6 +317,41 @@ export async function retryLastReply(): Promise<void> {
   await generateReply(conversationId);
 }
 
+/**
+ * Rewrites one of the person's messages and regenerates from there: everything
+ * after it is discarded, as it answered a question that no longer exists. The
+ * thread is retitled when its first message is the one edited.
+ */
+export async function editMessage(messageId: string, text: string): Promise<void> {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return;
+
+  engine.stop();
+  const conversationId = getState().activeId;
+  const messages = selectActiveConversation(getState()).messages;
+  const index = messages.findIndex(
+    (message) => message.id === messageId && message.role === "user",
+  );
+  const original = messages[index];
+  if (!original || original.role !== "user") return;
+
+  updateConversation(conversationId, (conversation) => {
+    const kept = [
+      ...conversation.messages.slice(0, index),
+      { ...original, text: trimmed },
+    ];
+    return {
+      ...conversation,
+      messages: kept,
+      title: index === 0 ? deriveTitle(kept) : conversation.title,
+      updatedAt: Date.now(),
+    };
+  });
+
+  setState({ isGenerating: false });
+  await generateReply(conversationId);
+}
+
 async function generateReply(conversationId: string): Promise<void> {
   const provider = await resolveProvider();
   const replyId = createId();

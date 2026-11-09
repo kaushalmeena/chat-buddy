@@ -1,8 +1,14 @@
-import { Check, Copy, RefreshCw, TriangleAlert } from "lucide-react";
-import { memo, type ReactNode, useState } from "react";
+import { Check, Copy, Pencil, RefreshCw, TriangleAlert } from "lucide-react";
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  memo,
+  type ReactNode,
+  useState,
+} from "react";
 
-import type { AssistantMessage, Message } from "@/domain/message.ts";
-import { retryLastReply } from "@/stores/chat.ts";
+import type { AssistantMessage, Message, UserMessage } from "@/domain/message.ts";
+import { editMessage, retryLastReply, useChat } from "@/stores/chat.ts";
 
 import { BrandMark } from "./logo.tsx";
 import { RichText } from "./prose.tsx";
@@ -31,19 +37,117 @@ const MessageBubble = memo(function MessageBubble({
   isLast,
 }: MessageBubbleProps) {
   return message.role === "user" ? (
-    <UserBubble text={message.text} />
+    <UserBubble message={message} />
   ) : (
     <AssistantMessageRow message={message} isLast={isLast} />
   );
 });
 
-function UserBubble({ text }: { readonly text: string }) {
+function UserBubble({ message }: { readonly message: UserMessage }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const isGenerating = useChat((state) => state.isGenerating);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleDone = () => {
+    setIsEditing(false);
+  };
+
+  if (isEditing) return <EditForm message={message} onDone={handleDone} />;
+
   return (
-    <li className="flex animate-enter justify-end">
+    <li className="group flex animate-enter flex-col items-end gap-1">
       <div className="max-w-[min(36rem,85%)] rounded-bubble rounded-br-md bg-brand-500/12 px-4 py-2.5 text-content">
         <p className="text-base leading-relaxed wrap-break-word whitespace-pre-wrap">
-          {text}
+          {message.text}
         </p>
+      </div>
+      {/* Hover-revealed on pointers, always shown on touch; space is reserved either way. */}
+      <div className="flex h-7 items-center text-xs text-content-faint transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:h-10 pointer-fine:opacity-0">
+        <ActionButton
+          label="Edit message"
+          onClick={handleEdit}
+          isDisabled={isGenerating}
+        >
+          <Pencil size={13} aria-hidden />
+        </ActionButton>
+      </div>
+    </li>
+  );
+}
+
+/**
+ * Edits a sent message in place. Saving rewrites it and regenerates the reply;
+ * everything after it in the thread is replaced.
+ */
+function EditForm({
+  message,
+  onDone,
+}: {
+  readonly message: UserMessage;
+  readonly onDone: () => void;
+}) {
+  const [draft, setDraft] = useState(message.text);
+  const canSave = draft.trim().length > 0 && draft.trim() !== message.text;
+
+  const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setDraft(event.target.value);
+  };
+
+  const handleSave = () => {
+    if (!canSave) return;
+    onDone();
+    void editMessage(message.id, draft);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onDone();
+    }
+    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      handleSave();
+    }
+  };
+
+  return (
+    <li className="flex justify-end">
+      <div className="flex w-full max-w-[min(36rem,100%)] flex-col gap-2 rounded-bubble border border-brand-400 bg-surface p-3 shadow-card">
+        <label className="sr-only" htmlFor={`edit-${message.id}`}>
+          Edit message
+        </label>
+        <textarea
+          id={`edit-${message.id}`}
+          value={draft}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          rows={Math.min(8, draft.split("\n").length + 1)}
+          autoFocus
+          className="scrollbar-slim w-full resize-none bg-transparent text-base leading-relaxed text-content outline-none"
+        />
+        <div className="flex items-center justify-end gap-2">
+          <span className="mr-auto text-xs text-content-faint">
+            Replies after this message will be replaced.
+          </span>
+          <button
+            type="button"
+            onClick={onDone}
+            className="h-8 rounded-lg px-3 text-sm text-content-muted transition-colors hover:bg-surface-raised hover:text-content pointer-coarse:h-11"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!canSave}
+            className="h-8 rounded-lg bg-brand-600 px-3 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-11"
+          >
+            Save & send
+          </button>
+        </div>
       </div>
     </li>
   );
@@ -153,19 +257,22 @@ function MessageActions({
 function ActionButton({
   label,
   onClick,
+  isDisabled = false,
   children,
 }: {
   readonly label: string;
   readonly onClick: () => void;
+  readonly isDisabled?: boolean;
   readonly children: ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={isDisabled}
       aria-label={label}
       title={label}
-      className="grid size-7 place-items-center rounded-md transition-colors hover:bg-surface-raised hover:text-content pointer-coarse:size-10"
+      className="grid size-7 place-items-center rounded-md transition-colors hover:bg-surface-raised hover:text-content disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:size-10"
     >
       {children}
     </button>

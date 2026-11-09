@@ -24,6 +24,7 @@ vi.mock("@/lib/sleep.ts", () => ({ sleep: () => Promise.resolve() }));
 
 const {
   deleteConversation,
+  editMessage,
   newConversation,
   restoreConversation,
   retryLastReply,
@@ -90,6 +91,33 @@ describe("retryLastReply", () => {
 
     expect(active().messages).toHaveLength(2);
     expect(active().messages[1]?.id).not.toBe(firstReplyId);
+  });
+});
+
+describe("editMessage", () => {
+  it("rewrites the message, drops what followed, and regenerates", async () => {
+    await sendMessage("hello");
+    await sendMessage("tell me a joke");
+    const first = active().messages[0];
+    if (!first) throw new Error("expected a first message");
+
+    await editMessage(first.id, "my name is Ana");
+
+    const messages = active().messages;
+    expect(messages).toHaveLength(2);
+    expect(messages[0]).toMatchObject({ id: first.id, text: "my name is Ana" });
+    expect(messages[1]).toMatchObject({ role: "assistant", status: "complete" });
+    expect(messages[1]?.text).toContain("Ana");
+  });
+
+  it("retitles the thread when its first message changes", async () => {
+    await sendMessage("hello");
+    const first = active().messages[0];
+    if (!first) throw new Error("expected a first message");
+
+    await editMessage(first.id, "plans for the weekend");
+
+    expect(active().title).toBe("plans for the weekend");
   });
 });
 
