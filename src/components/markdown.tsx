@@ -1,6 +1,8 @@
-import { memo } from "react";
+import { Children, isValidElement, memo, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+import { CodeBlock } from "./code.tsx";
 
 /**
  * Renders assistant output as markdown.
@@ -33,6 +35,18 @@ const COMPONENTS: Components = {
       {children}
     </a>
   ),
+
+  // Fenced code gets a header, a copy button and lazy syntax highlighting.
+  pre: ({ children }) => {
+    const child = Children.toArray(children)[0];
+    if (!isValidElement<{ className?: string; children?: ReactNode }>(child)) {
+      return <pre>{children}</pre>;
+    }
+    const language = /language-([\w+-]+)/.exec(child.props.className ?? "")?.[1];
+    const text = child.props.children;
+    const code = (typeof text === "string" ? text : "").replace(/\n$/, "");
+    return <CodeBlock code={code} language={language} />;
+  },
 
   // Tables need to scroll on their own rather than widening the bubble.
   table: ({ children }) => (

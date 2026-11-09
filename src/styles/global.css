@@ -318,14 +318,11 @@
     padding: 0.1em 0.35em;
   }
 
+  /* The frame (border, header, scroll) is drawn by the CodeBlock component. */
   .message-prose pre {
     font-family: var(--font-mono);
     font-size: 0.8125rem;
-    background-color: var(--color-surface-raised);
-    border: 1px solid var(--color-border-subtle);
-    border-radius: 0.6rem;
-    padding: 0.75rem 0.9rem;
-    overflow-x: auto;
+    line-height: 1.6;
   }
 
   .message-prose pre code {
@@ -333,6 +330,49 @@
     border: none;
     padding: 0;
     font-size: inherit;
+  }
+
+  /*
+   * Syntax colours, mapped onto the theme rather than a highlight.js theme file,
+   * so code follows the accent and both light and dark modes.
+   */
+  .message-prose .hljs-keyword,
+  .message-prose .hljs-selector-tag,
+  .message-prose .hljs-built_in,
+  .message-prose .hljs-type {
+    color: var(--accent-600);
+  }
+
+  .message-prose .hljs-string,
+  .message-prose .hljs-attr,
+  .message-prose .hljs-template-variable {
+    color: var(--color-success);
+  }
+
+  .message-prose .hljs-number,
+  .message-prose .hljs-literal,
+  .message-prose .hljs-symbol {
+    color: var(--color-danger);
+  }
+
+  .message-prose .hljs-comment,
+  .message-prose .hljs-quote {
+    color: var(--color-content-faint);
+    font-style: italic;
+  }
+
+  .message-prose .hljs-title,
+  .message-prose .hljs-section,
+  .message-prose .hljs-name {
+    color: var(--color-content);
+    font-weight: 600;
+  }
+
+  :root.dark .message-prose .hljs-keyword,
+  :root.dark .message-prose .hljs-selector-tag,
+  :root.dark .message-prose .hljs-built_in,
+  :root.dark .message-prose .hljs-type {
+    color: var(--accent-400);
   }
 
   .message-prose ul,
