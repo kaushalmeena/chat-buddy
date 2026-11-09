@@ -1,5 +1,9 @@
 import type { ReplySource } from "@/domain/message.ts";
-import type { ChatProvider, ProviderAvailability } from "@/domain/provider.ts";
+import type {
+  ChatProvider,
+  ProviderAvailability,
+  UnavailableReason,
+} from "@/domain/provider.ts";
 
 import { PromptApiProvider } from "./chrome.ts";
 import { LocalRuleProvider } from "./rules.ts";
@@ -60,3 +64,30 @@ export function selectDefaultProvider(
   const ready = statuses.find((status) => status.availability.state === "ready");
   return ready?.provider ?? FALLBACK_PROVIDER;
 }
+
+/**
+ * Why a provider cannot be used, worded once: `short` for the chip in the engine
+ * list, `long` for the error shown after trying to switch. A `Record` rather than a
+ * `switch`, so a new reason without copy is a type error, not a silent default.
+ */
+export const UNAVAILABLE_COPY: Record<
+  UnavailableReason,
+  { readonly short: string; readonly long: string }
+> = {
+  "no-webgpu": {
+    short: "Needs WebGPU",
+    long: "This browser has no WebGPU support, which the local model needs.",
+  },
+  "unsupported-browser": {
+    short: "Needs Chrome 148+ on desktop",
+    long: "This browser does not ship a built-in AI model.",
+  },
+  "insufficient-resources": {
+    short: "Not enough free storage or memory",
+    long: "This device does not have the free storage or memory the model needs.",
+  },
+  "module-missing": {
+    short: "Unavailable on this device",
+    long: "That model is not available on this device.",
+  },
+};

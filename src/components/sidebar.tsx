@@ -3,7 +3,7 @@ import { ExternalLink, Settings, SquarePen, X } from "lucide-react";
 import { BrandMark } from "@/components/logo.tsx";
 import { ThreadList } from "@/components/threads.tsx";
 import { newConversation } from "@/stores/chat.ts";
-import { closeDrawer, openSettings } from "@/stores/ui.ts";
+import { closeDrawer, focusComposer, openSettings } from "@/stores/ui.ts";
 
 const REPO_URL = "https://github.com/kaushalmeena/chat-buddy";
 
@@ -19,7 +19,7 @@ type SidebarProps = {
 function handleNewChat() {
   newConversation();
   closeDrawer();
-  document.querySelector<HTMLTextAreaElement>("#composer-input")?.focus();
+  focusComposer();
 }
 
 function Sidebar({ isDrawer = false }: SidebarProps) {

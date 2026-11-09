@@ -8,7 +8,7 @@ import { Sidebar } from "@/components/sidebar.tsx";
 import { UndoToast } from "@/components/toast.tsx";
 import { newConversation } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
-import { closeDrawer, useUi } from "@/stores/ui.ts";
+import { closeDrawer, COMPOSER_ID, focusComposer, useUi } from "@/stores/ui.ts";
 
 function App() {
   const isCollapsed = useConfig((state) => state.isSidebarCollapsed);
@@ -19,7 +19,7 @@ function App() {
   return (
     <div className="flex h-dvh overflow-hidden bg-canvas">
       <a
-        href="#composer-input"
+        href={`#${COMPOSER_ID}`}
         // Parked above the viewport until focused; the first Tab stop on the page.
         className="fixed top-2 left-2 z-50 -translate-y-16 rounded-lg bg-surface px-3 py-2 text-sm font-medium text-content shadow-float focus:translate-y-0"
       >
@@ -108,7 +108,7 @@ function useGlobalShortcuts(): void {
       if (isModifier && event.shiftKey && event.key.toLowerCase() === "o") {
         event.preventDefault();
         newConversation();
-        document.querySelector<HTMLTextAreaElement>("#composer-input")?.focus();
+        focusComposer();
       }
     };
 

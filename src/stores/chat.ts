@@ -20,6 +20,7 @@ import {
   type ProviderStatus,
   probeProviders,
   selectDefaultProvider,
+  UNAVAILABLE_COPY,
 } from "@/engine/providers/registry.ts";
 import { createChunkBatcher } from "@/lib/batch.ts";
 import { createId } from "@/lib/id.ts";
@@ -445,7 +446,7 @@ export async function activateProvider(id: ReplySource): Promise<void> {
     const availability = await provider.availability();
 
     if (availability.state === "unavailable") {
-      setState({ providerError: describeUnavailable(availability.reason) });
+      setState({ providerError: UNAVAILABLE_COPY[availability.reason].long });
       return;
     }
 
@@ -464,18 +465,5 @@ export async function activateProvider(id: ReplySource): Promise<void> {
     });
   } finally {
     setState({ downloadProgress: undefined });
-  }
-}
-
-function describeUnavailable(reason: string): string {
-  switch (reason) {
-    case "no-webgpu":
-      return "This browser has no WebGPU support, which the local model needs.";
-    case "unsupported-browser":
-      return "This browser does not ship a built-in AI model.";
-    case "insufficient-resources":
-      return "This device does not have the free storage or memory the model needs.";
-    default:
-      return "That model is not available on this device.";
   }
 }

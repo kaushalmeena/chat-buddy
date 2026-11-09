@@ -12,6 +12,7 @@ import { type Command, matchCommands, resolveCommand } from "@/commands.ts";
 import { useSpeechRecognition } from "@/hooks/use-listen.ts";
 import { sendMessage, stopGenerating, useChat } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
+import { COMPOSER_ID } from "@/stores/ui.ts";
 
 /** Cap on textarea auto-growth before it starts scrolling internally. */
 const MAX_TEXTAREA_HEIGHT_PX = 200;
@@ -150,11 +151,11 @@ function Composer() {
       </p>
 
       <div className="rounded-2xl border border-border-subtle bg-surface shadow-card transition-[border-color,box-shadow] focus-within:border-brand-400 focus-within:ring-4 focus-within:ring-brand-500/10">
-        <label className="sr-only" htmlFor="composer-input">
+        <label className="sr-only" htmlFor={COMPOSER_ID}>
           Message Chat Buddy
         </label>
         <textarea
-          id="composer-input"
+          id={COMPOSER_ID}
           ref={textareaRef}
           rows={1}
           value={draft}

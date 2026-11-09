@@ -1,7 +1,7 @@
 import { Check, Download, TriangleAlert } from "lucide-react";
 
 import type { ProviderAvailability } from "@/domain/provider.ts";
-import type { ProviderStatus } from "@/engine/providers/registry.ts";
+import { type ProviderStatus, UNAVAILABLE_COPY } from "@/engine/providers/registry.ts";
 import { activateProvider, useChat } from "@/stores/chat.ts";
 
 /** Renders bytes as a rounded figure; only used for coarse sizes. */
@@ -20,16 +20,7 @@ function availabilityNote(availability: ProviderAvailability): string | undefine
         ? `${formatBytes(availability.bytes)} download`
         : "Downloads on first use";
     case "unavailable":
-      switch (availability.reason) {
-        case "no-webgpu":
-          return "Needs WebGPU";
-        case "unsupported-browser":
-          return "Needs Chrome 148+ on desktop";
-        case "insufficient-resources":
-          return "Not enough free storage or memory";
-        default:
-          return "Unavailable on this device";
-      }
+      return UNAVAILABLE_COPY[availability.reason].short;
     default:
       return undefined;
   }

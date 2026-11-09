@@ -55,3 +55,11 @@ export function offerUndo(conversation: Conversation): void {
 export function dismissUndo(): void {
   useUi.setState({ deleted: undefined });
 }
+
+/** The composer's element id: the skip link targets it too. */
+export const COMPOSER_ID = "composer-input";
+
+/** Moves focus to the message box, e.g. after starting a new chat. */
+export function focusComposer(): void {
+  document.getElementById(COMPOSER_ID)?.focus();
+}
