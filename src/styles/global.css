@@ -290,7 +290,8 @@
   .message-prose {
     /* A comfortable reading measure; the column itself is wider. */
     max-width: 70ch;
-    line-height: 1.65;
+    /* Line-height comes from the `text-base/relaxed` utility on the element, so
+       there is one source for it — and the typing dots can match it with 1lh. */
     overflow-wrap: anywhere;
   }
 

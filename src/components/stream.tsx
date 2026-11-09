@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 
 import { useRevealedText } from "@/hooks/use-reveal.ts";
 import { toRenderableMarkdown } from "@/lib/stream.ts";
@@ -24,13 +24,17 @@ import { RichText } from "./prose.tsx";
 type StreamingMarkdownProps = {
   readonly text: string;
   readonly isStreaming: boolean;
+  /** Shown until there is visible text, so the slot is never empty mid-stream. */
+  readonly placeholder?: ReactNode;
 };
 
-function StreamingMarkdown({ text, isStreaming }: StreamingMarkdownProps) {
+function StreamingMarkdown({ text, isStreaming, placeholder }: StreamingMarkdownProps) {
   const revealed = useRevealedText(text, isStreaming);
 
   // Sanitising walks the string, so only redo it when the visible prefix changes.
   const safe = useMemo(() => toRenderableMarkdown(revealed), [revealed]);
+
+  if (safe.trim().length === 0 && placeholder !== undefined) return placeholder;
 
   return <RichText text={safe} />;
 }

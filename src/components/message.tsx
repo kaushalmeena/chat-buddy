@@ -63,7 +63,6 @@ function AssistantMessageRow({
 }) {
   const isStreaming = message.status === "streaming";
   const hasFailed = message.status === "failed";
-  const isEmpty = message.text.trim().length === 0;
 
   return (
     <li className="group flex animate-enter gap-3">
@@ -77,18 +76,26 @@ function AssistantMessageRow({
               {message.error ?? "Couldn't finish this reply. Use Retry to try again."}
             </span>
           </p>
-        ) : isStreaming && isEmpty ? (
-          <TypingDots />
         ) : (
           /*
            * No caret: text arriving at a steady pace is itself the signal that
            * generation is in progress. Streaming replies are paced at frame rate by
            * StreamingMarkdown; settled ones render directly, so history never
            * re-animates on mount.
+           *
+           * The typing dots live inside the same container as the text and are one
+           * line tall, and they stay until there is *visible* text — not merely text
+           * in the store, which the reveal holds back for a few frames. Swapping on
+           * the store's text left an empty, zero-height reply for a frame or two,
+           * and the whole transcript jumped.
            */
-          <div className="message-prose pt-0.5 text-base text-content">
+          <div className="message-prose min-h-[calc(1lh+0.125rem)] pt-0.5 text-base/relaxed text-content">
             {isStreaming ? (
-              <StreamingMarkdown text={message.text} isStreaming />
+              <StreamingMarkdown
+                text={message.text}
+                isStreaming
+                placeholder={<TypingDots />}
+              />
             ) : (
               <RichText text={message.text} />
             )}
@@ -198,7 +205,9 @@ const DOT_DELAYS = ["0s", "0.16s", "0.32s"] as const;
 function TypingDots() {
   return (
     // The dots are decorative; the status text is what a screen reader announces.
-    <div className="flex h-7 items-center gap-1" role="status">
+    // Exactly one line of message text (`1lh` is the computed line-height), so the
+    // first line replaces it without changing the row's height.
+    <div className="flex h-lh items-center gap-1" role="status">
       <span className="sr-only">Chat Buddy is typing</span>
       {DOT_DELAYS.map((delay) => (
         <span
