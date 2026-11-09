@@ -45,9 +45,9 @@ picked in order of preference:
 | ---------------------- | --------------------------------------------- | ------------------------------------------- | ----------------------------- |
 | **Chrome built-in AI** | Gemini Nano                                   | Nothing — the weights ship with the browser | Chrome 148+ on desktop        |
 | **Local model**        | 7 models via [WebLLM](https://webllm.mlc.ai/) | One-time 194 MB–2 GB download, then offline | Any browser with WebGPU       |
-| **Offline Buddy**      | A small hand-written knowledge base           | Nothing                                     | Everywhere, including offline |
+| **Buddy Lite**         | A small hand-written knowledge base           | Nothing                                     | Everywhere, including offline |
 
-Offline Buddy, the rule engine, is the floor, not a fallback of last resort — no in-browser language
+Buddy Lite, the rule engine, is the floor, not a fallback of last resort — no in-browser language
 model has reach you can rely on, so something has to answer on a phone, in Safari,
 and with no network. WebLLM is never enabled for you: a several-hundred-megabyte
 download is a decision for the person using the app, so it sits behind an explicit

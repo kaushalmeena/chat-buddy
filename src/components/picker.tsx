@@ -12,7 +12,7 @@ import { ModelList } from "./models.tsx";
 
 const SHORT_LABELS: Record<Exclude<ReplySource, "web-llm">, string> = {
   "prompt-api": "Chrome built-in AI",
-  rules: "Offline Buddy",
+  rules: "Buddy Lite",
 };
 
 /**

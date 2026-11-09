@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { findModel, LOCAL_MODELS } from "@/engine/providers/models.ts";
-import { LOCAL_PROVIDER } from "@/engine/providers/registry.ts";
+import { WEBLLM_PROVIDER } from "@/engine/providers/registry.ts";
 import {
   deleteWeights,
   downloadWeights,
@@ -124,7 +124,7 @@ export async function chooseLocalModel(id: string): Promise<void> {
 
 async function switchTo(id: string): Promise<void> {
   useConfig.getState().setLocalModel(id);
-  LOCAL_PROVIDER.selectModel(id);
+  WEBLLM_PROVIDER.selectModel(id);
   await activateProvider("web-llm");
 }
 

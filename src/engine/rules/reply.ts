@@ -242,7 +242,7 @@ function continueFlow(context: Context): string | undefined {
     if (topic?.more) return choose(topic.more, context);
     return choose(
       [
-        "Honestly, that's about as deep as Offline Buddy goes. What do you think?",
+        "Honestly, that's about as deep as Buddy Lite goes. What do you think?",
         "It's just how I see it! What's your take?",
       ],
       context,

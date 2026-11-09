@@ -19,7 +19,7 @@ import { StreamingMarkdown } from "./stream.tsx";
 const SOURCE_LABELS: Record<AssistantMessage["source"], string> = {
   "prompt-api": "Chrome built-in AI",
   "web-llm": "Local model",
-  rules: "Offline Buddy",
+  rules: "Buddy Lite",
 };
 
 const COPY_FEEDBACK_MS = 1600;
