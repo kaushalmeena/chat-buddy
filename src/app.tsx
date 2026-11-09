@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 
-import { Composer } from "@/components/Composer.tsx";
-import { Header } from "@/components/Header.tsx";
-import { SettingsDialog } from "@/components/SettingsDialog.tsx";
-import { Sidebar } from "@/components/Sidebar.tsx";
-import { Transcript } from "@/components/Transcript.tsx";
-import { UndoToast } from "@/components/UndoToast.tsx";
+import { Composer } from "@/components/composer.tsx";
+import { Header } from "@/components/header.tsx";
+import { Transcript } from "@/components/messages.tsx";
+import { SettingsDialog } from "@/components/settings.tsx";
+import { Sidebar } from "@/components/sidebar.tsx";
+import { UndoToast } from "@/components/toast.tsx";
 import { initialiseProviders, newConversation } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 import { closeDrawer, useUi } from "@/stores/ui.ts";

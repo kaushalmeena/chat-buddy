@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 
-import { useRevealedText } from "@/hooks/useRevealedText.ts";
-import { toRenderableMarkdown } from "@/lib/markdown-stream.ts";
+import { useRevealedText } from "@/hooks/use-reveal.ts";
+import { toRenderableMarkdown } from "@/lib/stream.ts";
 
-import { RichText } from "./RichText.tsx";
+import { RichText } from "./prose.tsx";
 
 /**
  * Renders streaming assistant output smoothly.

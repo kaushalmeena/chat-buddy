@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toSpeakableText, toUtteranceChunks } from "@/lib/speech-text.ts";
+import { toSpeakableText, toUtteranceChunks } from "@/lib/speech.ts";
 
 describe("toSpeakableText", () => {
   it("leaves plain prose alone", () => {

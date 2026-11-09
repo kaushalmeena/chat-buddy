@@ -13,7 +13,7 @@ Two rules follow from that:
 **Selectors must not allocate.** A selector returning a fresh array or object every
 call re-renders on every store write, defeating the point. Sorting and filtering
 happen in `useMemo` inside components (see
-[`ThreadList.tsx`](../src/components/ThreadList.tsx)), not in selectors.
+[`threads.tsx`](../src/components/threads.tsx)), not in selectors.
 
 **Shared selectors are exported.** `selectActiveConversation` and `selectMessages`
 live in the store so no component inlines a slice expression and accidentally

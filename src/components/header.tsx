@@ -1,7 +1,7 @@
 import { PanelLeftClose, PanelLeftOpen, SquarePen } from "lucide-react";
 
-import { BrandMark } from "@/components/BrandMark.tsx";
-import { EngineBadge } from "@/components/EngineBadge.tsx";
+import { BrandMark } from "@/components/logo.tsx";
+import { EngineBadge } from "@/components/status.tsx";
 import { newConversation, selectActiveConversation, useChat } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 import { openDrawer, useUi } from "@/stores/ui.ts";

@@ -35,17 +35,17 @@ and hardware requirements _before_ someone opts in.
 
 **`AbortSignal` is the only cancellation mechanism.** Implementations must treat it
 as authoritative and stop yielding promptly. Some providers throw on abort, some
-return cleanly — [`ChatEngine`](../src/engine/chat-engine.ts) handles both by
+return cleanly — [`ChatEngine`](../src/engine/chat.ts) handles both by
 checking the signal rather than relying on an exception.
 
 Adding a fourth backend means writing one class and adding it to
-[`provider-registry.ts`](../src/engine/providers/provider-registry.ts). Nothing in
+[`registry.ts`](../src/engine/providers/registry.ts). Nothing in
 `components/` or `stores/` changes.
 
 ## Provider tiering
 
 Providers are ordered by preference in
-[`provider-registry.ts`](../src/engine/providers/provider-registry.ts):
+[`registry.ts`](../src/engine/providers/registry.ts):
 
 | Order | Provider                                      | Cost                                | Reach                                           |
 | ----- | --------------------------------------------- | ----------------------------------- | ----------------------------------------------- |
@@ -80,7 +80,7 @@ neither gets solved properly.
 
 **Job one: not melting React.** A model emitting 60 tokens a second would drive 60
 store writes and 60 re-renders a second if each chunk committed immediately.
-[`chunk-batcher.ts`](../src/lib/chunk-batcher.ts) buffers arriving text _outside_
+[`batch.ts`](../src/lib/batch.ts) buffers arriving text _outside_
 React entirely and commits once per animation frame. Cost becomes one render per
 frame regardless of token rate. It never withholds text — it only batches writes.
 
@@ -88,7 +88,7 @@ frame regardless of token rate. It never withholds text — it only batches writ
 in clumps as batches finish; Chrome's Prompt API can hand over a whole sentence at
 once after a pause. Committing each chunk the moment it lands makes text lurch — a
 paragraph appears, nothing happens, three words appear.
-[`useRevealedText`](../src/hooks/useRevealedText.ts) solves this by keeping a buffer
+[`useRevealedText`](../src/hooks/use-reveal.ts) solves this by keeping a buffer
 and releasing a slice of it per animation frame, sized from how much is waiting. A
 small read-ahead reserve is held back so a pause between batches does not stall the
 reveal, and a very large burst is shown at once rather than paced for seconds.
@@ -99,7 +99,7 @@ it look smoother, and the renderer never has to reason about network timing.
 **Job three: not rendering broken markdown.** Revealing a raw prefix flashes
 half-written syntax — a lone `**` before its closing pair, a stray `[`, an open code
 fence swallowing the rest of the message.
-[`toRenderableMarkdown`](../src/lib/markdown-stream.ts) fixes each construct one of
+[`toRenderableMarkdown`](../src/lib/stream.ts) fixes each construct one of
 two ways: an open fence gets a synthetic closing fence, so code streams line by line;
 short constructs like emphasis and links are truncated at their opening marker and
 reappear a frame later, already formatted.
@@ -111,5 +111,5 @@ including one that walks every prefix length of a realistic reply and asserts no
 unpaired marker ever escapes.
 
 Settled messages bypass all of it and render through
-[`Markdown.tsx`](../src/components/Markdown.tsx) directly. There is nothing left to
+[`markdown.tsx`](../src/components/markdown.tsx) directly. There is nothing left to
 pace, and routing history through the hook would re-animate old replies on mount.

@@ -13,15 +13,15 @@ import {
 } from "@/domain/conversation.ts";
 import type { AssistantMessage, Message, ReplySource } from "@/domain/message.ts";
 import type { ChatProvider, DownloadProgress } from "@/domain/provider.ts";
-import { ChatEngine } from "@/engine/chat-engine.ts";
+import { ChatEngine } from "@/engine/chat.ts";
 import {
   FALLBACK_PROVIDER,
   getProvider,
   type ProviderStatus,
   probeProviders,
   selectDefaultProvider,
-} from "@/engine/providers/provider-registry.ts";
-import { createChunkBatcher } from "@/lib/chunk-batcher.ts";
+} from "@/engine/providers/registry.ts";
+import { createChunkBatcher } from "@/lib/batch.ts";
 import { createId } from "@/lib/id.ts";
 
 import { useConfig } from "./config.ts";

@@ -1,7 +1,7 @@
 import { ExternalLink, Settings, SquarePen, X } from "lucide-react";
 
-import { BrandMark } from "@/components/BrandMark.tsx";
-import { ThreadList } from "@/components/ThreadList.tsx";
+import { BrandMark } from "@/components/logo.tsx";
+import { ThreadList } from "@/components/threads.tsx";
 import { newConversation } from "@/stores/chat.ts";
 import { closeDrawer, openSettings } from "@/stores/ui.ts";
 

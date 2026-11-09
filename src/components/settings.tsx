@@ -1,9 +1,9 @@
 import { ShieldCheck, X } from "lucide-react";
 import { type MouseEvent, type ReactNode, useEffect, useRef } from "react";
 
-import { ProviderPicker } from "@/components/ProviderPicker.tsx";
-import { ThemeToggle } from "@/components/ThemeToggle.tsx";
-import { VoicePicker } from "@/components/VoicePicker.tsx";
+import { ProviderPicker } from "@/components/engines.tsx";
+import { ThemeToggle } from "@/components/theme.tsx";
+import { VoicePicker } from "@/components/voice.tsx";
 import { closeSettings, useUi } from "@/stores/ui.ts";
 
 /**

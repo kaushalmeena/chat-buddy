@@ -4,9 +4,9 @@ import { memo, type ReactNode, useState } from "react";
 import type { AssistantMessage, Message } from "@/domain/message.ts";
 import { retryLastReply } from "@/stores/chat.ts";
 
-import { BrandMark } from "./BrandMark.tsx";
-import { RichText } from "./RichText.tsx";
-import { StreamingMarkdown } from "./StreamingMarkdown.tsx";
+import { BrandMark } from "./logo.tsx";
+import { RichText } from "./prose.tsx";
+import { StreamingMarkdown } from "./stream.tsx";
 
 const SOURCE_LABELS: Record<AssistantMessage["source"], string> = {
   "prompt-api": "Chrome built-in AI",

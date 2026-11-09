@@ -2,13 +2,13 @@ import { ArrowDown } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { isAssistantMessage } from "@/domain/message.ts";
-import { useChatAutoScroll } from "@/hooks/useChatAutoScroll.ts";
-import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis.ts";
+import { useChatAutoScroll } from "@/hooks/use-scroll.ts";
+import { useSpeechSynthesis } from "@/hooks/use-speak.ts";
 import { selectMessages, useChat } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 
-import { EmptyState } from "./EmptyState.tsx";
-import { MessageBubble } from "./MessageBubble.tsx";
+import { MessageBubble } from "./message.tsx";
+import { EmptyState } from "./welcome.tsx";
 
 function Transcript() {
   const messages = useChat(selectMessages);

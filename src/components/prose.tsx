@@ -12,7 +12,7 @@ import { lazy, Suspense } from "react";
  * Until it loads, text renders as plain pre-wrapped prose — readable, and close
  * enough in shape that the swap does not jump.
  */
-const loadMarkdown = () => import("./Markdown.tsx");
+const loadMarkdown = () => import("./markdown.tsx");
 
 const Markdown = lazy(async () => {
   const module = await loadMarkdown();

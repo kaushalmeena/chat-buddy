@@ -2,7 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 
 import { sendMessage, useChat } from "@/stores/chat.ts";
 
-import { BrandMark } from "./BrandMark.tsx";
+import { BrandMark } from "./logo.tsx";
 
 /**
  * Prompts offered on an empty thread. Concrete starters replace guesswork, and

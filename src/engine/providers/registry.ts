@@ -1,9 +1,9 @@
 import type { ReplySource } from "@/domain/message.ts";
 import type { ChatProvider, ProviderAvailability } from "@/domain/provider.ts";
 
-import { LocalRuleProvider } from "./local-rule-provider.ts";
-import { PromptApiProvider } from "./prompt-api-provider.ts";
-import { WebLlmProvider } from "./web-llm-provider.ts";
+import { PromptApiProvider } from "./chrome.ts";
+import { LocalRuleProvider } from "./rules.ts";
+import { WebLlmProvider } from "./webllm.ts";
 
 /**
  * Providers in preference order: free and instant first, expensive-but-capable

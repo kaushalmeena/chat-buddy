@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { nextLength } from "../useRevealedText.ts";
+import { nextLength } from "../use-reveal.ts";
 
 /**
  * Tests the pacing policy directly. The hook around it is a thin

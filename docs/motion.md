@@ -71,7 +71,7 @@ One source of truth: [`brand-icon.svg`](../src/assets/brand-icon.svg).
 `scripts/build-icons.mjs` renders every PWA and favicon asset from it. The outputs
 are committed, so run `npm run icons` after editing the SVG — nothing checks this for
 you. The React component
-[`BrandMark.tsx`](../src/components/BrandMark.tsx) inlines the same artwork —
+[`logo.tsx`](../src/components/logo.tsx) inlines the same artwork —
 inline means no request, no layout shift, and gradient stops that can be tuned
 alongside the theme.
 

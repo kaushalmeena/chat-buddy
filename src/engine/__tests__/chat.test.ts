@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Message } from "@/domain/message.ts";
 import type { ChatProvider, GenerateOptions } from "@/domain/provider.ts";
 import { ProviderError } from "@/domain/provider.ts";
-import { ChatEngine, type TurnObserver } from "@/engine/chat-engine.ts";
+import { ChatEngine, type TurnObserver } from "@/engine/chat.ts";
 
 function observer() {
   const chunks: string[] = [];

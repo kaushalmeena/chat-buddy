@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toRenderableMarkdown } from "../markdown-stream.ts";
+import { toRenderableMarkdown } from "../stream.ts";
 
 describe("toRenderableMarkdown", () => {
   it("passes complete markdown through untouched", () => {

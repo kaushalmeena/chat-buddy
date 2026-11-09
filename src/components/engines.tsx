@@ -1,7 +1,7 @@
 import { Check, Download, TriangleAlert } from "lucide-react";
 
 import type { ProviderAvailability } from "@/domain/provider.ts";
-import type { ProviderStatus } from "@/engine/providers/provider-registry.ts";
+import type { ProviderStatus } from "@/engine/providers/registry.ts";
 import { activateProvider, useChat } from "@/stores/chat.ts";
 
 /** Renders bytes as a rounded figure; only used for coarse sizes. */

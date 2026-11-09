@@ -5,9 +5,9 @@ import { hydrate } from "@/stores/chat.ts";
 import { startThemeSync } from "@/stores/config.ts";
 
 import "./styles/global.css";
-import { App } from "./App.tsx";
-import { preloadRichText } from "./components/RichText.tsx";
-import { registerServiceWorker } from "./register-sw.ts";
+import { App } from "./app.tsx";
+import { preloadRichText } from "./components/prose.tsx";
+import { registerServiceWorker } from "./pwa.ts";
 
 /**
  * Entry point. Starts the side-effecting subscriptions, mounts the app, and does

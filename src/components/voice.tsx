@@ -1,7 +1,7 @@
 import { ChevronDown, Play } from "lucide-react";
 import { type ChangeEvent, useMemo } from "react";
 
-import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis.ts";
+import { useSpeechSynthesis } from "@/hooks/use-speak.ts";
 import { useConfig } from "@/stores/config.ts";
 
 const PREVIEW_TEXT = "Hello — this is how I sound.";

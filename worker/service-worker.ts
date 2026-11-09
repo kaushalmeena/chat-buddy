@@ -67,7 +67,7 @@ worker.addEventListener("install", (event) => {
    * Deliberately no `skipWaiting()`.
    *
    * A new worker waits until the page asks for it, so an update can never swap the
-   * app out from under a reply that is mid-generation. `register-sw.ts` prompts, and
+   * app out from under a reply that is mid-generation. `pwa.ts` prompts, and
    * only then posts the message handled below.
    */
   event.waitUntil(

@@ -42,7 +42,7 @@ an npm override to install `@vitejs/plugin-react`. Removing it took the project 
 The caching is deliberately simple: precache a content-hashed shell, serve navigations
 network-first with the cached shell as fallback, serve precached assets cache-first,
 and leave everything else to the HTTP cache. Updates install but wait — a new worker
-never takes over until [`register-sw.ts`](../src/register-sw.ts) asks, so an update
+never takes over until [`pwa.ts`](../src/pwa.ts) asks, so an update
 cannot replace the app mid-reply.
 
 Three traps found by actually testing with the server stopped, all of which produce
@@ -64,7 +64,7 @@ deleted the cache `install` had just filled.
 ## Conventions
 
 - **Filenames** follow what the file exports: `PascalCase.tsx` for components,
-  `camelCase.ts` for hooks (so `useChatAutoScroll.ts`), `kebab-case.ts` everywhere
+  `camelCase.ts` for hooks (so `use-scroll.ts`), `kebab-case.ts` everywhere
   else. Oxlint enforces the first two per-directory via `unicorn/filename-case`.
 - **Tests** live in `__tests__/` beside the code they cover.
 - **Components** declare functions normally and `export { … }` once at the bottom of
@@ -93,7 +93,7 @@ published from a branch.
 | Asset URLs in `index.html`        | Vite rebases these from `base` automatically                                                                       |
 | The worker's precache list        | `plugins/service-worker.ts` prefixes every entry with the resolved `base`                                          |
 | The worker's app-shell URL        | Resolved at runtime from `worker.location`, so it needs no injection                                               |
-| The worker's script URL and scope | `register-sw.ts` derives both from `import.meta.env.BASE_URL`                                                      |
+| The worker's script URL and scope | `pwa.ts` derives both from `import.meta.env.BASE_URL`                                                              |
 | `manifest.webmanifest`            | Copied verbatim from `public/`, so its paths are _relative_ (`./`) and resolve against wherever the manifest lands |
 
 `base` comes from `BASE_PATH`, which the workflow fills from

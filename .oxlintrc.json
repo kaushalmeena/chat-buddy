@@ -79,7 +79,13 @@
     "unicorn/require-post-message-target-origin": "off",
     "promise/always-return": "off",
     "react/refs": "warn",
-    "react/set-state-in-effect": "warn"
+    "react/set-state-in-effect": "warn",
+    "unicorn/filename-case": [
+      "error",
+      {
+        "case": "kebabCase"
+      }
+    ]
   },
   "overrides": [
     {

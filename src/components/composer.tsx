@@ -9,7 +9,7 @@ import {
 } from "react";
 
 import { type Command, matchCommands, resolveCommand } from "@/commands.ts";
-import { useSpeechRecognition } from "@/hooks/useSpeechRecognition.ts";
+import { useSpeechRecognition } from "@/hooks/use-listen.ts";
 import { sendMessage, stopGenerating, useChat } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 
