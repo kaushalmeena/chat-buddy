@@ -1,8 +1,11 @@
+import { fileName, toMarkdown } from "@/db/transfer.ts";
+import { download } from "@/lib/download.ts";
 import {
   clearActiveConversation,
   newConversation,
   retryLastReply,
 } from "@/stores/chat.ts";
+import { selectActiveConversation, useChat } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 import { openSettings } from "@/stores/ui.ts";
 
@@ -41,6 +44,18 @@ export const COMMANDS: readonly Command[] = [
     name: "settings",
     description: "Open settings (engine, voice, theme)",
     run: openSettings,
+  },
+  {
+    name: "export",
+    description: "Download this chat as Markdown",
+    run: () => {
+      const conversation = selectActiveConversation(useChat.getState());
+      download(
+        fileName(conversation.title, "md"),
+        toMarkdown(conversation),
+        "text/markdown",
+      );
+    },
   },
   {
     name: "speak",

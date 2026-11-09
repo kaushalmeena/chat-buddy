@@ -25,6 +25,7 @@ vi.mock("@/lib/sleep.ts", () => ({ sleep: () => Promise.resolve() }));
 const {
   deleteConversation,
   editMessage,
+  importConversations,
   newConversation,
   renameConversation,
   restoreConversation,
@@ -200,6 +201,35 @@ describe("rename and pin", () => {
 
     togglePinned(id);
     expect("pinned" in active()).toBe(false);
+  });
+});
+
+describe("importConversations", () => {
+  const imported = (id: string, updatedAt: number): Conversation => ({
+    ...blank(id),
+    title: id,
+    updatedAt,
+    messages: [message(`${id}-m`)],
+  });
+
+  it("adds new threads and saves them", () => {
+    expect(importConversations([imported("a", 5), imported("b", 6)])).toBe(2);
+    expect(useChat.getState().conversations.map((thread) => thread.id)).toEqual([
+      "a",
+      "b",
+      "start",
+    ]);
+    expect(db.saveConversation).toHaveBeenCalledTimes(2);
+  });
+
+  it("only replaces an existing thread with a newer copy", () => {
+    importConversations([imported("a", 5)]);
+
+    expect(importConversations([imported("a", 5)])).toBe(0);
+    expect(importConversations([imported("a", 9)])).toBe(1);
+    expect(
+      useChat.getState().conversations.filter((thread) => thread.id === "a"),
+    ).toHaveLength(1);
   });
 });
 

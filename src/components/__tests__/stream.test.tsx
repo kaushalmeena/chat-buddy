@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { StreamingMarkdown } from "../stream.tsx";
 
 // Lets React know this environment supports `act`.
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
 
 describe("StreamingMarkdown", () => {
   let container: HTMLDivElement | undefined;

@@ -285,6 +285,32 @@ export function togglePinned(id: string): void {
   );
 }
 
+/**
+ * Adds imported threads. A thread already present is replaced only when the
+ * imported copy is newer, so importing the same backup twice changes nothing.
+ * Returns how many were added or updated.
+ */
+export function importConversations(incoming: readonly Conversation[]): number {
+  const existing = new Map(
+    getState().conversations.map((thread) => [thread.id, thread]),
+  );
+  const accepted = incoming.filter((thread) => {
+    const current = existing.get(thread.id);
+    return current === undefined || thread.updatedAt > current.updatedAt;
+  });
+  if (accepted.length === 0) return 0;
+
+  const acceptedIds = new Set(accepted.map((thread) => thread.id));
+  setState((state) => ({
+    conversations: [
+      ...accepted,
+      ...state.conversations.filter((thread) => !acceptedIds.has(thread.id)),
+    ],
+  }));
+  for (const thread of accepted) void saveConversation(thread);
+  return accepted.length;
+}
+
 export function clearActiveConversation(): void {
   engine.stop();
   setState({ isGenerating: false });
