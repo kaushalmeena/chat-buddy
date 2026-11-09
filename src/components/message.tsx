@@ -4,6 +4,8 @@ import {
   type KeyboardEvent,
   memo,
   type ReactNode,
+  useLayoutEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -43,69 +45,73 @@ const MessageBubble = memo(function MessageBubble({
   );
 });
 
+/** Most lines an edited message grows to before it scrolls. */
+const MAX_EDIT_HEIGHT_PX = 260;
+
+/**
+ * The person's message, editable in place.
+ *
+ * Editing never moves anything: the same `<li>` and the same bubble stay mounted;
+ * the bubble keeps its measured width, and the textarea shares the text's font,
+ * line-height and wrapping, so it lays out to exactly the same height. The focus
+ * ring is a box-shadow, which takes no space, and Cancel/Save replace the pencil in
+ * the action row, whose height is reserved either way. Only typing changes the size
+ * — which is the person's doing, not the interface's.
+ */
 function UserBubble({ message }: { readonly message: UserMessage }) {
-  const [isEditing, setIsEditing] = useState(false);
   const isGenerating = useChat((state) => state.isGenerating);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(message.text);
+  const [width, setWidth] = useState<number | undefined>(undefined);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const canSave = draft.trim().length > 0 && draft.trim() !== message.text;
+
+  // Size the textarea to its content before paint, so entering edit mode and every
+  // keystroke render at the final height in one frame.
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_EDIT_HEIGHT_PX)}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > MAX_EDIT_HEIGHT_PX ? "auto" : "hidden";
+  }, [isEditing, draft]);
+
+  // Caret at the end on entering edit mode, as when clicking into text.
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    if (!isEditing || !textarea) return;
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  }, [isEditing]);
 
   const handleEdit = () => {
+    // Sub-pixel exact: offsetWidth rounds, and even 0.2px would nudge the text.
+    setWidth(bubbleRef.current?.getBoundingClientRect().width);
+    setDraft(message.text);
     setIsEditing(true);
   };
 
-  const handleDone = () => {
+  const handleCancel = () => {
     setIsEditing(false);
   };
 
-  if (isEditing) return <EditForm message={message} onDone={handleDone} />;
-
-  return (
-    <li className="group flex animate-enter flex-col items-end gap-1">
-      <div className="max-w-[min(36rem,85%)] rounded-bubble rounded-br-md bg-brand-500/12 px-4 py-2.5 text-content">
-        <p className="text-base leading-relaxed wrap-break-word whitespace-pre-wrap">
-          {message.text}
-        </p>
-      </div>
-      {/* Hover-revealed on pointers, always shown on touch; space is reserved either way. */}
-      <div className="flex h-7 items-center text-xs text-content-faint transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:h-10 pointer-fine:opacity-0">
-        <ActionButton
-          label="Edit message"
-          onClick={handleEdit}
-          isDisabled={isGenerating}
-        >
-          <Pencil size={13} aria-hidden />
-        </ActionButton>
-      </div>
-    </li>
-  );
-}
-
-/**
- * Edits a sent message in place. Saving rewrites it and regenerates the reply;
- * everything after it in the thread is replaced.
- */
-function EditForm({
-  message,
-  onDone,
-}: {
-  readonly message: UserMessage;
-  readonly onDone: () => void;
-}) {
-  const [draft, setDraft] = useState(message.text);
-  const canSave = draft.trim().length > 0 && draft.trim() !== message.text;
+  const handleSave = () => {
+    if (!canSave) return;
+    setIsEditing(false);
+    void editMessage(message.id, draft);
+  };
 
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setDraft(event.target.value);
   };
 
-  const handleSave = () => {
-    if (!canSave) return;
-    onDone();
-    void editMessage(message.id, draft);
-  };
-
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Escape") {
       event.preventDefault();
-      onDone();
+      handleCancel();
     }
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
@@ -114,42 +120,93 @@ function EditForm({
   };
 
   return (
-    <li className="flex justify-end">
-      <div className="flex w-full max-w-[min(36rem,100%)] flex-col gap-2 rounded-bubble border border-brand-400 bg-surface p-3 shadow-card">
-        <label className="sr-only" htmlFor={`edit-${message.id}`}>
-          Edit message
-        </label>
-        <textarea
-          id={`edit-${message.id}`}
-          value={draft}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          rows={Math.min(8, draft.split("\n").length + 1)}
-          autoFocus
-          className="scrollbar-slim w-full resize-none bg-transparent text-base leading-relaxed text-content outline-none"
-        />
-        <div className="flex items-center justify-end gap-2">
-          <span className="mr-auto text-xs text-content-faint">
-            Replies after this message will be replaced.
-          </span>
-          <button
-            type="button"
-            onClick={onDone}
-            className="h-8 rounded-lg px-3 text-sm text-content-muted transition-colors hover:bg-surface-raised hover:text-content pointer-coarse:h-11"
+    <li className="group flex animate-enter flex-col items-end gap-1">
+      <div
+        ref={bubbleRef}
+        style={isEditing && width !== undefined ? { width } : undefined}
+        className={`max-w-[min(36rem,85%)] rounded-bubble rounded-br-md bg-brand-500/12 px-4 py-2.5 text-content transition-shadow ${
+          isEditing ? "ring-2 ring-brand-400" : ""
+        }`}
+      >
+        {isEditing ? (
+          <>
+            <label className="sr-only" htmlFor={`edit-${message.id}`}>
+              Edit message. Enter to save, Escape to cancel.
+            </label>
+            <textarea
+              id={`edit-${message.id}`}
+              ref={textareaRef}
+              rows={1}
+              value={draft}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              className="scrollbar-slim block w-full resize-none bg-transparent p-0 text-base leading-relaxed wrap-break-word text-content outline-none"
+            />
+          </>
+        ) : (
+          <p className="text-base leading-relaxed wrap-break-word whitespace-pre-wrap">
+            {message.text}
+          </p>
+        )}
+      </div>
+
+      {/* Hover-revealed on pointers (always while editing), always on touch. */}
+      <div
+        className={`flex h-7 items-center gap-1 text-xs text-content-faint transition-opacity pointer-coarse:h-10 ${
+          isEditing
+            ? ""
+            : "group-hover:opacity-100 focus-within:opacity-100 pointer-fine:opacity-0"
+        }`}
+      >
+        {isEditing ? (
+          <>
+            <span className="mr-1 hidden sm:inline">
+              Later replies will be replaced
+            </span>
+            <RowButton onClick={handleCancel}>Cancel</RowButton>
+            <RowButton onClick={handleSave} isDisabled={!canSave} isPrimary>
+              Save
+            </RowButton>
+          </>
+        ) : (
+          <ActionButton
+            label="Edit message"
+            onClick={handleEdit}
+            isDisabled={isGenerating}
           >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!canSave}
-            className="h-8 rounded-lg bg-brand-600 px-3 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-11"
-          >
-            Save & send
-          </button>
-        </div>
+            <Pencil size={13} aria-hidden />
+          </ActionButton>
+        )}
       </div>
     </li>
+  );
+}
+
+/** A text button sized to the action row (h-7, h-10 on touch), so it never grows it. */
+function RowButton({
+  onClick,
+  isDisabled = false,
+  isPrimary = false,
+  children,
+}: {
+  readonly onClick: () => void;
+  readonly isDisabled?: boolean;
+  readonly isPrimary?: boolean;
+  readonly children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isDisabled}
+      className={`h-7 rounded-md px-2.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-10 ${
+        isPrimary
+          ? "bg-brand-600 text-white hover:bg-brand-700"
+          : "text-content-muted hover:bg-surface-raised hover:text-content"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
