@@ -90,6 +90,7 @@ function searchThreads(
 
 function ThreadList() {
   const threads = useChat(selectThreadList);
+  const isHydrated = useChat((state) => state.isHydrated);
   const [query, setQuery] = useState("");
   // Captured once per mount: grouping only needs day precision.
   const [now] = useState(Date.now);
@@ -127,7 +128,7 @@ function ThreadList() {
         aria-label="Conversations"
         className="scrollbar-slim -mx-1 flex-1 overflow-y-auto px-1"
       >
-        {groups.length === 0 ? (
+        {!isHydrated ? null : groups.length === 0 ? (
           <EmptyList isSearching={deferredQuery !== ""} />
         ) : (
           groups.map((group) => <ThreadSection key={group.label} group={group} />)

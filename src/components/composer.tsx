@@ -149,7 +149,12 @@ function Composer() {
       )}
 
       {speech.error && (
-        <p className="mb-2 px-1 text-xs text-danger" role="status">
+        // Floats above the card, like the command menu, so it never pushes the
+        // composer (and the transcript above it) when it appears.
+        <p
+          className="absolute bottom-full left-0 mb-2 animate-fade rounded-lg border border-danger/30 bg-surface px-2.5 py-1.5 text-xs text-danger shadow-card"
+          role="status"
+        >
           {speech.error}
         </p>
       )}

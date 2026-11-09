@@ -8,11 +8,13 @@ import { selectMessages, useChat } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 
 import { MessageBubble } from "./message.tsx";
+import { useRichTextReady } from "./prose.tsx";
 import { EmptyState } from "./welcome.tsx";
 
 function Transcript() {
   const messages = useChat(selectMessages);
   const isHydrated = useChat((state) => state.isHydrated);
+  const isRichTextReady = useRichTextReady();
 
   // The streamed length of the final message is the scroll trigger: new text grows
   // the container without changing the message count.
@@ -31,8 +33,10 @@ function Transcript() {
    * Until IndexedDB has answered, render an empty canvas rather than the empty
    * state: otherwise a returning visitor sees "How can I help?" flash and then be
    * replaced by their history — the largest layout shift the app could produce.
+   * The markdown renderer is awaited too (both load in parallel), so history
+   * appears once, already formatted, instead of reflowing from plain text.
    */
-  if (!isHydrated) {
+  if (!isHydrated || !isRichTextReady) {
     return <div className="flex-1" />;
   }
 

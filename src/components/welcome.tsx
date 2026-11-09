@@ -30,7 +30,8 @@ function EmptyState() {
           <h2 className="text-2xl font-semibold tracking-tight text-content">
             How can I help?
           </h2>
-          <p className="mx-auto max-w-sm text-sm text-content-muted">
+          {/* Two lines reserved, so the engine name arriving never re-centres the block. */}
+          <p className="mx-auto min-h-[2lh] max-w-sm text-sm text-content-muted">
             {provider
               ? `Answering with ${provider.label}. Nothing you type leaves this device.`
               : "Getting the engine ready…"}

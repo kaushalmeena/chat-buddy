@@ -33,7 +33,7 @@ void initialiseProviders();
 
 // Fetch the markdown chunk in parallel with the IndexedDB read, so stored replies
 // render formatted on first paint rather than reflowing from plain text.
-preloadRichText();
+void preloadRichText();
 
 // The built-in conversation engine is loaded on first use; warm it once the
 // browser is idle so even the first reply pays nothing for it.
