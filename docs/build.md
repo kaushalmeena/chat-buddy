@@ -75,7 +75,7 @@ deleted the cache `install` had just filled.
   the members actually used. `LanguageModel.params()` is documented but absent from
   some shipping Chrome builds, so it is deliberately not declared — declaring an API
   that may not exist invites a call that type-checks and then crashes.
-- **`npm run check`** (`vp check`) formats, lints and type-checks in one pass. It and
+- **`npm run check`** runs `tsc`, Oxlint (with `oxlint-tailwindcss`) and an Oxfmt check. It and
   the test run are the gate in `.github/workflows/deploy.yml`; nothing is built for
   Pages until both pass.
 

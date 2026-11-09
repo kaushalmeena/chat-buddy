@@ -55,16 +55,16 @@ opt-in and lives in its own lazily-imported chunk.
 
 ## Tech Stack
 
-| Area           | Tools                                                                                                                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Framework**  | [React 19](https://react.dev/) · [TypeScript 7](https://www.typescriptlang.org/)                                                                                                    |
-| **Build**      | [Vite+](https://viteplus.dev/) on Rolldown · a hand-written service worker, no PWA plugin                                                                                           |
-| **Styling**    | [Tailwind CSS 4](https://tailwindcss.com/) via its Vite plugin · [Motion](https://motion.dev/) · [Lucide](https://lucide.dev/) icons                                                |
-| **State**      | [Zustand 5](https://zustand.docs.pmnd.rs/) · [Dexie 4](https://dexie.org/) over IndexedDB                                                                                           |
-| **Inference**  | [Chrome built-in AI](https://developer.chrome.com/docs/ai/built-in) · [WebLLM](https://webllm.mlc.ai/) as an optional dependency · a built-in rule engine                           |
-| **Rendering**  | [react-markdown](https://github.com/remarkjs/react-markdown) · [remark-gfm](https://github.com/remarkjs/remark-gfm)                                                                 |
-| **Tooling**    | [Vite+](https://viteplus.dev/) — Oxlint, Oxfmt and [Vitest](https://vitest.dev/) with [jsdom](https://github.com/jsdom/jsdom) · [sharp](https://sharp.pixelplumbing.com/) for icons |
-| **Deployment** | [GitHub Pages](https://pages.github.com/) via [GitHub Actions](https://github.com/features/actions)                                                                                 |
+| Area           | Tools                                                                                                                                                                                                                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Framework**  | [React 19](https://react.dev/) · [TypeScript 7](https://www.typescriptlang.org/)                                                                                                                                                                                                                     |
+| **Build**      | [Vite 8](https://vite.dev/) on Rolldown · a hand-written service worker, no PWA plugin                                                                                                                                                                                                               |
+| **Styling**    | [Tailwind CSS 4](https://tailwindcss.com/) via its Vite plugin · [Motion](https://motion.dev/) · [Lucide](https://lucide.dev/) icons                                                                                                                                                                 |
+| **State**      | [Zustand 5](https://zustand.docs.pmnd.rs/) · [Dexie 4](https://dexie.org/) over IndexedDB                                                                                                                                                                                                            |
+| **Inference**  | [Chrome built-in AI](https://developer.chrome.com/docs/ai/built-in) · [WebLLM](https://webllm.mlc.ai/) as an optional dependency · a built-in rule engine                                                                                                                                            |
+| **Rendering**  | [react-markdown](https://github.com/remarkjs/react-markdown) · [remark-gfm](https://github.com/remarkjs/remark-gfm)                                                                                                                                                                                  |
+| **Tooling**    | [Oxlint](https://oxc.rs/docs/guide/usage/linter) + [oxlint-tailwindcss](https://oxlint-tailwindcss.pages.dev/), [Oxfmt](https://oxc.rs/docs/guide/usage/formatter), [Vitest](https://vitest.dev/) with [jsdom](https://github.com/jsdom/jsdom) · [sharp](https://sharp.pixelplumbing.com/) for icons |
+| **Deployment** | [GitHub Pages](https://pages.github.com/) via [GitHub Actions](https://github.com/features/actions)                                                                                                                                                                                                  |
 
 ## Getting Started
 
@@ -82,15 +82,12 @@ The app runs at [localhost:5173](http://localhost:5173/).
 
 ### Scripts
 
-Every task runs through [Vite+](https://viteplus.dev/)'s `vp` CLI. The scripts below
-wrap it, so `npm run <name>` and `vp <name>` do the same thing.
-
 | Command            | What it does                                   |
 | ------------------ | ---------------------------------------------- |
 | `npm run dev`      | Start the dev server                           |
 | `npm run build`    | Build to `dist/`                               |
 | `npm run preview`  | Serve the production build                     |
-| `npm run check`    | Format, lint and typecheck — the CI gate       |
+| `npm run check`    | Typecheck, lint and format check — the CI gate |
 | `npm run lint:fix` | Apply lint fixes                               |
 | `npm run format`   | Format in place                                |
 | `npm run test`     | Run the test suite                             |
