@@ -86,6 +86,32 @@ bailing out, and falls back to the rule provider if probing failed. This was a r
 bug: sending a message before probing finished appended the message and then
 silently answered nothing.
 
+## Local models and downloads
+
+[`models.ts`](../src/engine/providers/models.ts) lists the WebLLM models offered, with
+exact download sizes (summed from each model's `tensor-cache.json`) and WebLLM's GPU
+memory figures — stated before anyone commits to a 2 GB download.
+
+**Downloads do not go through WebLLM.** [`weights.ts`](../src/engine/providers/weights.ts)
+fetches the manifest and weight shards itself, into the same Cache Storage keys
+WebLLM reads (`webllm/model`, keyed by URL). When WebLLM later loads the model it
+finds every file cached and only reads. Owning the fetch is what makes downloads
+controllable:
+
+- **Pause** aborts in-flight shards but keeps their bytes in memory; **resume**
+  continues each from its byte offset with an HTTP `Range` request. A server that
+  ignores the range gets that shard restarted cleanly — never a corrupt join.
+- **Stop** aborts and deletes everything fetched for that model.
+- Progress is exact: bytes against the manifest's total, smoothed speed, time left.
+- Finished shards persist across reloads; in-memory partials do not, so a reload
+  resumes from the last whole shard.
+
+[`downloads.ts`](../src/stores/downloads.ts) runs one download at a time and is
+rebuilt from Cache Storage at startup. `chooseLocalModel` is the single entry point:
+switch if the model is on the device, otherwise download it and switch when done.
+The composer's model picker, the top-left download card and Settings → Local models
+are all views over that store.
+
 ## Streaming is three separate jobs
 
 This is the least obvious part of the codebase and the most worth understanding.
