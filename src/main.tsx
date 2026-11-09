@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import { hydrate } from "@/stores/chat.ts";
+import { hydrate, initialiseProviders } from "@/stores/chat.ts";
 import { startThemeSync } from "@/stores/config.ts";
 
 import "./styles/global.css";
@@ -26,6 +26,10 @@ startThemeSync();
 // awaited: the app renders immediately with an empty thread and swaps in the
 // stored history when it arrives, rather than holding first paint on a disk read.
 void hydrate();
+
+// Once per page load, here rather than in a component effect: StrictMode (and any
+// remount) would otherwise probe every provider twice.
+void initialiseProviders();
 
 // Fetch the markdown chunk in parallel with the IndexedDB read, so stored replies
 // render formatted on first paint rather than reflowing from plain text.

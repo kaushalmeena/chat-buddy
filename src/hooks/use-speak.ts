@@ -20,15 +20,11 @@ function useSpeechSynthesis() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
-  const preferredVoiceUri = useConfig((state) => state.voiceUri);
-
   const isSupported = typeof window !== "undefined" && "speechSynthesis" in window;
 
   // Held in a ref so `speak` does not need to change identity when the voice list
   // arrives, which would otherwise re-run every effect that depends on it.
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
-  const preferredVoiceUriRef = useRef(preferredVoiceUri);
-  preferredVoiceUriRef.current = preferredVoiceUri;
 
   /*
    * Load the voice list once.
@@ -75,7 +71,8 @@ function useSpeechSynthesis() {
 
       const language = navigator.language || "en-US";
       const available = voicesRef.current;
-      const chosenUri = preferredVoiceUriRef.current;
+      // Read at call time: nothing renders from the preference here.
+      const chosenUri = useConfig.getState().voiceUri;
 
       const voice =
         available.find((candidate) => candidate.voiceURI === chosenUri) ??

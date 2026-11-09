@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 
 function getConstructor(): SpeechRecognitionConstructor | undefined {
   if (typeof window === "undefined") return undefined;
@@ -40,8 +40,10 @@ function useSpeechRecognition(options: Options = {}): SpeechRecognitionState {
   const recognitionRef = useRef<SpeechRecognitionInstance | undefined>(undefined);
 
   // Held in a ref so re-creating the callback does not tear down recognition.
-  const onFinalResultRef = useRef(onFinalResult);
-  onFinalResultRef.current = onFinalResult;
+  // Latest callback, callable from the recognition handlers without re-creating them.
+  const handleFinal = useEffectEvent((text: string) => {
+    onFinalResult?.(text);
+  });
 
   const isSupported = getConstructor() !== undefined;
 
@@ -73,7 +75,7 @@ function useSpeechRecognition(options: Options = {}): SpeechRecognitionState {
       setTranscript(final || interim);
 
       if (final) {
-        onFinalResultRef.current?.(final.trim());
+        handleFinal(final.trim());
       }
     };
 

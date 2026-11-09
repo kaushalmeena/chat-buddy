@@ -6,17 +6,13 @@ import { Transcript } from "@/components/messages.tsx";
 import { SettingsDialog } from "@/components/settings.tsx";
 import { Sidebar } from "@/components/sidebar.tsx";
 import { UndoToast } from "@/components/toast.tsx";
-import { initialiseProviders, newConversation } from "@/stores/chat.ts";
+import { newConversation } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 import { closeDrawer, useUi } from "@/stores/ui.ts";
 
 function App() {
   const isCollapsed = useConfig((state) => state.isSidebarCollapsed);
   const isDrawerOpen = useUi((state) => state.isDrawerOpen);
-
-  useEffect(() => {
-    void initialiseProviders();
-  }, []);
 
   useGlobalShortcuts();
 

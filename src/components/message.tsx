@@ -105,6 +105,10 @@ function AssistantMessageRow({
   );
 }
 
+function handleRetry() {
+  void retryLastReply();
+}
+
 function MessageActions({
   message,
   isLast,
@@ -115,10 +119,6 @@ function MessageActions({
   readonly isHidden: boolean;
 }) {
   const canCopy = message.text.trim().length > 0;
-
-  const handleRetry = () => {
-    void retryLastReply();
-  };
 
   return (
     <div

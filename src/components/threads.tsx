@@ -1,21 +1,26 @@
 import { MessageSquare, Search, Trash2 } from "lucide-react";
 import { type ChangeEvent, useDeferredValue, useMemo, useState } from "react";
 
-import type { Conversation } from "@/domain/conversation.ts";
-import { deleteConversation, selectConversation, useChat } from "@/stores/chat.ts";
+import {
+  deleteConversation,
+  selectConversation,
+  selectThreadList,
+  type ThreadSummary,
+  useChat,
+} from "@/stores/chat.ts";
 import { closeDrawer, offerUndo } from "@/stores/ui.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type ThreadGroup = {
   readonly label: string;
-  readonly threads: readonly Conversation[];
+  readonly threads: readonly ThreadSummary[];
 };
 
 /** Buckets threads the way people remember them: by how long ago they were used. */
-function groupByRecency(threads: readonly Conversation[], now: number): ThreadGroup[] {
+function groupByRecency(threads: readonly ThreadSummary[], now: number): ThreadGroup[] {
   const startOfToday = new Date(now).setHours(0, 0, 0, 0);
-  const buckets: { label: string; since: number; threads: Conversation[] }[] = [
+  const buckets: { label: string; since: number; threads: ThreadSummary[] }[] = [
     { label: "Today", since: startOfToday, threads: [] },
     { label: "Yesterday", since: startOfToday - DAY_MS, threads: [] },
     { label: "Previous 7 days", since: startOfToday - 7 * DAY_MS, threads: [] },
@@ -31,29 +36,41 @@ function groupByRecency(threads: readonly Conversation[], now: number): ThreadGr
   return buckets.filter((bucket) => bucket.threads.length > 0);
 }
 
-function matchesQuery(thread: Conversation, query: string): boolean {
-  if (thread.title.toLowerCase().includes(query)) return true;
-  return thread.messages.some((message) => message.text.toLowerCase().includes(query));
+/**
+ * Threads whose title or any message contains the query. Message text is read from
+ * the store at search time rather than subscribed to, so streaming never re-runs it.
+ */
+function searchThreads(
+  threads: readonly ThreadSummary[],
+  query: string,
+): readonly ThreadSummary[] {
+  if (query === "") return threads;
+
+  const byId = new Map(
+    useChat
+      .getState()
+      .conversations.map((conversation) => [conversation.id, conversation]),
+  );
+
+  return threads.filter((thread) => {
+    if (thread.title.toLowerCase().includes(query)) return true;
+    const messages = byId.get(thread.id)?.messages ?? [];
+    return messages.some((message) => message.text.toLowerCase().includes(query));
+  });
 }
 
 function ThreadList() {
-  const conversations = useChat((state) => state.conversations);
+  const threads = useChat(selectThreadList);
   const [query, setQuery] = useState("");
   // Captured once per mount: grouping only needs day precision.
   const [now] = useState(Date.now);
   // Searching walks every message; deferring keeps typing responsive on long histories.
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
 
-  // Sorting allocates, so memoise it rather than doing it inside the selector — a
-  // selector returning a new array every call would re-render on every store write,
-  // including each committed slice of a streaming reply.
-  const groups = useMemo(() => {
-    const sorted = conversations
-      .filter((thread) => thread.messages.length > 0)
-      .filter((thread) => deferredQuery === "" || matchesQuery(thread, deferredQuery))
-      .toSorted((a, b) => b.updatedAt - a.updatedAt);
-    return groupByRecency(sorted, now);
-  }, [conversations, deferredQuery, now]);
+  const groups = useMemo(
+    () => groupByRecency(searchThreads(threads, deferredQuery), now),
+    [threads, deferredQuery, now],
+  );
 
   const handleQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);
@@ -106,7 +123,7 @@ function ThreadSection({ group }: { readonly group: ThreadGroup }) {
   );
 }
 
-function ThreadItem({ thread }: { readonly thread: Conversation }) {
+function ThreadItem({ thread }: { readonly thread: ThreadSummary }) {
   const isActive = useChat((state) => state.activeId === thread.id);
 
   const handleSelect = () => {

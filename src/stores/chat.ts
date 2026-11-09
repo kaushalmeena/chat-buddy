@@ -88,6 +88,44 @@ export const selectActiveConversation = (state: ChatState): Conversation =>
 export const selectMessages = (state: ChatState): readonly Message[] =>
   selectActiveConversation(state).messages;
 
+/** What the thread list needs to render a row: no messages. */
+export type ThreadSummary = {
+  readonly id: string;
+  readonly title: string;
+  readonly updatedAt: number;
+};
+
+let threadList: readonly ThreadSummary[] = [];
+
+/**
+ * Non-empty threads, most recent first, as a referentially stable list.
+ *
+ * Streaming rewrites a conversation many times a second, but changes none of
+ * these fields (`updatedAt` moves only when the turn settles), so the cached list
+ * is returned and the sidebar does not re-render while a reply streams.
+ */
+export function selectThreadList(state: ChatState): readonly ThreadSummary[] {
+  const next = state.conversations
+    .filter((conversation) => conversation.messages.length > 0)
+    .toSorted((a, b) => b.updatedAt - a.updatedAt);
+
+  const isSame =
+    next.length === threadList.length &&
+    next.every((conversation, index) => {
+      const previous = threadList[index];
+      return (
+        previous?.id === conversation.id &&
+        previous.title === conversation.title &&
+        previous.updatedAt === conversation.updatedAt
+      );
+    });
+
+  if (!isSame) {
+    threadList = next.map(({ id, title, updatedAt }) => ({ id, title, updatedAt }));
+  }
+  return threadList;
+}
+
 /*
  * Thread mutation.
  */
@@ -144,7 +182,8 @@ function patchMessage(
           ? patch(message)
           : message,
       ),
-      updatedAt: Date.now(),
+      // Streaming slices leave recency alone; the settled write moves it once.
+      updatedAt: options.persist === false ? conversation.updatedAt : Date.now(),
     }),
     options,
   );

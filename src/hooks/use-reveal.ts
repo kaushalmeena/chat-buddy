@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 
 /**
  * Reveals text at the display's frame rate instead of the model's.
@@ -85,58 +85,43 @@ export function nextLength(
 export function useRevealedText(text: string, isStreaming: boolean): string {
   const [revealed, setRevealed] = useState(() => (isStreaming ? 0 : text.length));
 
-  // Read inside the frame loop without making it a dependency, so the loop is
-  // started once per stream rather than restarted on every arriving chunk.
-  const textRef = useRef(text);
-  const streamingRef = useRef(isStreaming);
-  textRef.current = text;
-  streamingRef.current = isStreaming;
-
-  const revealedRef = useRef(revealed);
-  revealedRef.current = revealed;
+  /*
+   * Reset when the text shrinks: a different message is now shown in this position
+   * (a retry discarding a reply, or a thread switch). Adjusting state during render
+   * is React's documented pattern for this; it re-renders before committing.
+   */
+  if (revealed > text.length) setRevealed(text.length);
 
   /*
-   * Reset when the text shrinks.
-   *
-   * That means a different message is being shown in this position — a retry
-   * discarding a reply, or a thread switch. Without this the revealed length would
-   * stay past the new end and the message would appear complete instantly.
+   * One frame of the reveal, reading the latest `text` and `isStreaming` without
+   * making them effect dependencies — so arriving chunks do not tear the loop down.
+   * Returns whether another frame is needed. `revealed` may be a frame stale here,
+   * which costs at most one extra frame before the loop settles.
    */
-  if (revealed > text.length) {
-    revealedRef.current = text.length;
+  const tick = useEffectEvent((): boolean => {
+    const total = text.length;
+    setRevealed((current) => nextLength(current, total, isStreaming));
+    return isStreaming || revealed < total;
+  });
+
+  const revealAll = useEffectEvent(() => {
     setRevealed(text.length);
-  }
+  });
 
-  /*
-   * `isStreaming` is the loop's restart trigger, not a value the body reads — the body
-   * reads `streamingRef` so that arriving text does not tear the loop down and rebuild
-   * it. Restarting when streaming *stops* is what lets the tail drain and the effect
-   * settle, instead of polling every frame forever.
-   */
-  // The restart trigger is listed as a dependency; its value is read via a ref.
+  // Restarted when streaming stops, so the tail drains and the loop can settle
+  // rather than polling every frame forever.
   useEffect(() => {
     // Frames do not run in a background tab. Revealing progressively there would
     // stall until the tab is looked at again, so show everything instead.
     if (typeof document !== "undefined" && document.hidden) {
-      setRevealed(textRef.current.length);
+      revealAll();
       return;
     }
 
     let frame: number | undefined;
 
     const step = () => {
-      const total = textRef.current.length;
-      const current = revealedRef.current;
-      const next = nextLength(current, total, streamingRef.current);
-
-      if (next !== current) {
-        revealedRef.current = next;
-        setRevealed(next);
-      }
-
-      // Keep going while there is anything left, or while more may still arrive.
-      frame =
-        next < total || streamingRef.current ? requestAnimationFrame(step) : undefined;
+      frame = tick() ? requestAnimationFrame(step) : undefined;
     };
 
     frame = requestAnimationFrame(step);
@@ -144,11 +129,7 @@ export function useRevealedText(text: string, isStreaming: boolean): string {
     return () => {
       if (frame !== undefined) cancelAnimationFrame(frame);
     };
-  }, [
-    // Restart the loop when streaming stops, so the tail drains and the effect can
-    // settle rather than polling forever.
-    isStreaming,
-  ]);
+  }, [isStreaming]);
 
   // A settled message must never render short, whatever the loop has managed.
   if (!isStreaming && revealed >= text.length) return text;

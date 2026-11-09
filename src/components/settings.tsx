@@ -14,6 +14,11 @@ import { closeSettings, useUi } from "@/stores/ui.ts";
  * trap, Escape handling, the backdrop and inertness of everything behind it, so
  * none of that is reimplemented here.
  */
+// Clicks on the backdrop land on the dialog element itself.
+function handleBackdropClick(event: MouseEvent<HTMLDialogElement>) {
+  if (event.target === event.currentTarget) closeSettings();
+}
+
 function SettingsDialog() {
   const isOpen = useUi((state) => state.isSettingsOpen);
   const hasOpened = useUi((state) => state.hasOpenedSettings);
@@ -26,11 +31,6 @@ function SettingsDialog() {
     if (!isOpen && dialog.open) dialog.close();
   }, [isOpen]);
 
-  // Clicks on the backdrop land on the dialog element itself.
-  const handleClick = (event: MouseEvent<HTMLDialogElement>) => {
-    if (event.target === event.currentTarget) closeSettings();
-  };
-
   return (
     // Backdrop clicks are a pointer convenience; keyboard users close with Escape,
     // which the native dialog already handles.
@@ -38,7 +38,7 @@ function SettingsDialog() {
     <dialog
       ref={dialogRef}
       onClose={closeSettings}
-      onClick={handleClick}
+      onClick={handleBackdropClick}
       aria-labelledby="settings-title"
       className="m-auto max-h-[min(44rem,calc(100dvh-2rem))] w-[min(30rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border-subtle bg-canvas p-0 text-content shadow-float"
     >
