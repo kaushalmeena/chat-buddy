@@ -6,56 +6,50 @@ import {
   ProviderError,
 } from "@/domain/provider.ts";
 
+import { findModel, type LocalModel } from "./models.ts";
 import { HISTORY_TURN_LIMIT, SYSTEM_PROMPT } from "./prompt.ts";
-
-/**
- * The model served to opt-in users.
- *
- * Chosen for size over capability: at roughly 950 MB it is a download a person
- * might actually accept, and it runs on 4 GB of VRAM. Larger entries from
- * WebLLM's `prebuiltAppConfig` are far more capable and far less likely to
- * finish downloading.
- */
-const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-const MODEL_BYTES = 950 * 1024 * 1024;
+import { weightsOnDisk } from "./weights.ts";
 
 /**
  * WebLLM: a full open-weights model compiled to WebGPU, running in a worker.
  *
  * The most capable provider and the most expensive one — the weights are a
  * multi-hundred-megabyte download, so it is never prepared without an explicit
- * opt-in. The `@mlc-ai/web-llm` import is dynamic and code-split into its own
- * chunk, so visitors who never enable it pay nothing for it.
+ * opt-in. Which model it runs is chosen from `LOCAL_MODELS`; downloading is done
+ * by `weights.ts` (pausable, resumable), so by the time this provider loads a
+ * model its weights are already cached and WebLLM only reads them. The
+ * `@mlc-ai/web-llm` import is dynamic and code-split into its own chunk, so
+ * visitors who never enable it pay nothing for it.
  *
  * @see https://webllm.mlc.ai/
  */
-/** WebLLM's Cache Storage bucket for model weights. */
-const WEIGHTS_CACHE = "webllm/model";
-
-/**
- * Whether this model's weights are already on the device. Read straight from Cache
- * Storage, because asking WebLLM would mean loading its 6 MB engine just to probe.
- */
-async function hasCachedWeights(): Promise<boolean> {
-  try {
-    if (typeof caches === "undefined" || !(await caches.has(WEIGHTS_CACHE)))
-      return false;
-    const requests = await (await caches.open(WEIGHTS_CACHE)).keys();
-    return requests.some((request) => request.url.includes(MODEL_ID));
-  } catch {
-    return false;
-  }
-}
-
 export class WebLlmProvider implements ChatProvider {
   readonly id = "web-llm" as const;
-  readonly label = "Local model (Llama 3.2 1B)";
-  readonly description = "Runs on your GPU. One-time ~950 MB download, then offline.";
   readonly isLocal = true;
 
+  #model: LocalModel = findModel(undefined);
   #engine: WebLlmEngine | undefined;
+  /** The model the loaded engine holds, which may lag a just-changed selection. */
+  #engineModelId: string | undefined;
   /** In-flight `prepare` call, so concurrent callers share one download. */
   #preparing: Promise<void> | undefined;
+
+  get label(): string {
+    return `Local · ${this.#model.label}`;
+  }
+
+  get description(): string {
+    return `${this.#model.note} Runs on your GPU, then works offline.`;
+  }
+
+  get model(): LocalModel {
+    return this.#model;
+  }
+
+  /** Chooses which model to run. Takes effect on the next `prepare`. */
+  selectModel(id: string): void {
+    this.#model = findModel(id);
+  }
 
   async availability(): Promise<ProviderAvailability> {
     if (!hasWebGpu(navigator)) {
@@ -71,13 +65,19 @@ export class WebLlmProvider implements ChatProvider {
       return { state: "unavailable", reason: "no-webgpu" };
     }
 
-    if (this.#engine) return { state: "ready" };
-    if (await hasCachedWeights()) return { state: "downloaded" };
-    return { state: "needs-download", bytes: MODEL_BYTES };
+    if (this.#engine && this.#engineModelId === this.#model.id)
+      return { state: "ready" };
+
+    const onDisk = await weightsOnDisk(this.#model);
+    if (onDisk.received > 0 && onDisk.received === onDisk.total) {
+      return { state: "downloaded" };
+    }
+    return { state: "needs-download", bytes: onDisk.total - onDisk.received };
   }
 
   prepare(onProgress?: (progress: DownloadProgress) => void): Promise<void> {
-    if (this.#engine) return Promise.resolve();
+    if (this.#engine && this.#engineModelId === this.#model.id)
+      return Promise.resolve();
     this.#preparing ??= this.#load(onProgress).finally(() => {
       this.#preparing = undefined;
     });
@@ -96,8 +96,16 @@ export class WebLlmProvider implements ChatProvider {
       });
     }
 
+    // One model on the GPU at a time: free the previous one before loading.
+    if (this.#engine) {
+      await this.#engine.unload();
+      this.#engine = undefined;
+      this.#engineModelId = undefined;
+    }
+
+    const model = this.#model;
     try {
-      this.#engine = await webllm.CreateMLCEngine(MODEL_ID, {
+      this.#engine = await webllm.CreateMLCEngine(model.id, {
         initProgressCallback(report) {
           onProgress?.({
             ratio: report.progress,
@@ -105,6 +113,7 @@ export class WebLlmProvider implements ChatProvider {
           });
         },
       });
+      this.#engineModelId = model.id;
     } catch (cause) {
       throw new ProviderError(this.id, "The local model failed to initialise.", {
         cause,
@@ -153,6 +162,7 @@ export class WebLlmProvider implements ChatProvider {
   async dispose(): Promise<void> {
     await this.#engine?.unload();
     this.#engine = undefined;
+    this.#engineModelId = undefined;
   }
 }
 

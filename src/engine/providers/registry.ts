@@ -23,9 +23,12 @@ import { WebLlmProvider } from "./webllm.ts";
  */
 export const FALLBACK_PROVIDER: ChatProvider = new LocalRuleProvider();
 
+/** The WebLLM provider, exported typed so callers can choose which model it runs. */
+export const LOCAL_PROVIDER = new WebLlmProvider();
+
 export const PROVIDERS: readonly ChatProvider[] = [
   new PromptApiProvider(),
-  new WebLlmProvider(),
+  LOCAL_PROVIDER,
   FALLBACK_PROVIDER,
 ];
 
