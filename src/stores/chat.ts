@@ -15,9 +15,9 @@ import type { AssistantMessage, Message, ReplySource } from "@/domain/message.ts
 import type { ChatProvider, DownloadProgress } from "@/domain/provider.ts";
 import { ChatEngine } from "@/engine/chat.ts";
 import {
-  FALLBACK_PROVIDER,
+  RULE_PROVIDER,
   getProvider,
-  LOCAL_PROVIDER,
+  WEBLLM_PROVIDER,
   type ProviderStatus,
   probeProviders,
   selectDefaultProvider,
@@ -466,7 +466,7 @@ async function resolveProvider(): Promise<ChatProvider> {
 
   await providersReady;
 
-  return getState().activeProvider ?? FALLBACK_PROVIDER;
+  return getState().activeProvider ?? RULE_PROVIDER;
 }
 
 /*
@@ -493,7 +493,7 @@ export async function hydrate(): Promise<void> {
 /** Probes providers and activates the preferred one, or the best default. */
 export function initialiseProviders(): Promise<void> {
   providersReady = (async () => {
-    LOCAL_PROVIDER.selectModel(useConfig.getState().localModelId);
+    WEBLLM_PROVIDER.selectModel(useConfig.getState().localModelId);
     try {
       const statuses = await probeProviders();
       const preferred = useConfig.getState().preferredProviderId;
@@ -520,7 +520,7 @@ export function initialiseProviders(): Promise<void> {
       }
     } catch {
       // Probing is best-effort; the baseline provider needs nothing probed.
-      setState({ activeProvider: FALLBACK_PROVIDER });
+      setState({ activeProvider: RULE_PROVIDER });
     }
   })();
 
@@ -588,7 +588,7 @@ export async function activateProvider(id: ReplySource): Promise<void> {
  * back to the best provider that needs nothing downloaded.
  */
 export async function releaseLocalModel(): Promise<void> {
-  await LOCAL_PROVIDER.dispose();
+  await WEBLLM_PROVIDER.dispose();
   const statuses = await probeProviders();
   setState((state) => ({
     providerStatuses: statuses,

@@ -406,7 +406,7 @@ export const INTENTS: readonly Intent[] = [
       "Not human, I'm afraid. Just a friendly program running on your device.",
     ],
     more: [
-      "Right now I'm Offline Buddy: no model, no internet. Switch on an on-device model in Settings and I get a lot smarter.",
+      "Right now I'm Buddy Lite: no model, no internet. Switch on an on-device model in Settings and I get a lot smarter.",
     ],
   },
   {
@@ -551,7 +551,7 @@ export const INTENTS: readonly Intent[] = [
       /\byou are (?:so |really |very )?(?:stupid|dumb|useless|bad|boring|annoying|the worst)\b|\bbad bot\b|\bi hate you\b|\byou suck\b/,
     ],
     respond: () => [
-      "Fair — I'm only Offline Buddy right now. An on-device model in Settings would do a lot better.",
+      "Fair — I'm only Buddy Lite right now. An on-device model in Settings would do a lot better.",
       "Ouch. I'm a pretty simple bot without a model switched on. What were you hoping I'd do?",
     ],
   },
@@ -603,8 +603,8 @@ export const INTENTS: readonly Intent[] = [
     respond: (_context, match) => {
       const topic = clean(match[1] ?? "");
       return [
-        `I don't have an answer for "${topic}" as Offline Buddy. Switch on an on-device model in Settings and I can actually think it through.`,
-        `Good question about ${topic} — but it's beyond Offline Buddy. What do you think?`,
+        `I don't have an answer for "${topic}" as Buddy Lite. Switch on an on-device model in Settings and I can actually think it through.`,
+        `Good question about ${topic} — but it's beyond Buddy Lite. What do you think?`,
       ];
     },
   },
@@ -682,7 +682,7 @@ export const REFLECTIONS: readonly Intent[] = [
 export const FALLBACKS: readonly string[] = [
   "Hmm, I'm not sure I follow. Could you put it another way?",
   "I don't have a good answer for that one. Want a joke, a riddle or a fun fact instead?",
-  "That's past what Offline Buddy knows. Tell me more about you — or turn on an on-device model in Settings for open-ended chat.",
+  "That's past what Buddy Lite knows. Tell me more about you — or turn on an on-device model in Settings for open-ended chat.",
   "Interesting! I'm a simple bot, though. Ask me to do some maths, roll dice, or tell you something interesting.",
   "I'm not sure what to say to that. What else is on your mind?",
 ];

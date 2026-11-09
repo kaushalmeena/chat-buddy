@@ -15,8 +15,8 @@ import { sleep } from "@/lib/sleep.ts";
  */
 export class LocalRuleProvider implements ChatProvider {
   readonly id = "rules" as const;
-  readonly label = "Offline Buddy";
-  readonly description = "Instant replies. No download, works offline.";
+  readonly label = "Buddy Lite";
+  readonly description = "Instant replies on any device. No download, no AI model.";
   readonly isLocal = true;
 
   availability(): Promise<ProviderAvailability> {

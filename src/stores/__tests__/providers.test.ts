@@ -41,8 +41,8 @@ vi.mock("@/engine/providers/registry.ts", () => {
   fallback.availability = () => Promise.resolve({ state: "ready" });
 
   return {
-    FALLBACK_PROVIDER: fallback,
-    LOCAL_PROVIDER: {
+    RULE_PROVIDER: fallback,
+    WEBLLM_PROVIDER: {
       ...model,
       selectModel: () => {},
       dispose: () => Promise.resolve(),

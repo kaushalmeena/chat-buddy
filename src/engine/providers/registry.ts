@@ -21,15 +21,15 @@ import { WebLlmProvider } from "./webllm.ts";
  * The baseline provider, held as a singleton so callers that need a guaranteed
  * answer share one instance instead of constructing throwaway ones.
  */
-export const FALLBACK_PROVIDER: ChatProvider = new LocalRuleProvider();
+export const RULE_PROVIDER: ChatProvider = new LocalRuleProvider();
 
 /** The WebLLM provider, exported typed so callers can choose which model it runs. */
-export const LOCAL_PROVIDER = new WebLlmProvider();
+export const WEBLLM_PROVIDER = new WebLlmProvider();
 
 export const PROVIDERS: readonly ChatProvider[] = [
   new PromptApiProvider(),
-  LOCAL_PROVIDER,
-  FALLBACK_PROVIDER,
+  WEBLLM_PROVIDER,
+  RULE_PROVIDER,
 ];
 
 export type ProviderStatus = {
@@ -65,7 +65,7 @@ export function selectDefaultProvider(
   statuses: readonly ProviderStatus[],
 ): ChatProvider {
   const ready = statuses.find((status) => status.availability.state === "ready");
-  return ready?.provider ?? FALLBACK_PROVIDER;
+  return ready?.provider ?? RULE_PROVIDER;
 }
 
 /**
