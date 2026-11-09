@@ -94,6 +94,7 @@ export type ThreadSummary = {
   readonly id: string;
   readonly title: string;
   readonly updatedAt: number;
+  readonly pinned: boolean;
 };
 
 let threadList: readonly ThreadSummary[] = [];
@@ -117,12 +118,18 @@ export function selectThreadList(state: ChatState): readonly ThreadSummary[] {
       return (
         previous?.id === conversation.id &&
         previous.title === conversation.title &&
-        previous.updatedAt === conversation.updatedAt
+        previous.updatedAt === conversation.updatedAt &&
+        previous.pinned === (conversation.pinned ?? false)
       );
     });
 
   if (!isSame) {
-    threadList = next.map(({ id, title, updatedAt }) => ({ id, title, updatedAt }));
+    threadList = next.map(({ id, title, updatedAt, pinned }) => ({
+      id,
+      title,
+      updatedAt,
+      pinned: pinned ?? false,
+    }));
   }
   return threadList;
 }
@@ -261,6 +268,21 @@ export function restoreConversation(conversation: Conversation): void {
     activeId: conversation.id,
   }));
   void saveConversation(conversation);
+}
+
+/** Renames a thread. A blank name is ignored rather than saved. */
+export function renameConversation(id: string, title: string): void {
+  const trimmed = title.trim().slice(0, 80);
+  if (trimmed.length === 0) return;
+  // Not a content change, so recency (and the thread's place in the list) stays.
+  updateConversation(id, (conversation) => ({ ...conversation, title: trimmed }));
+}
+
+/** Pins a thread to the top of the list, or unpins it. */
+export function togglePinned(id: string): void {
+  updateConversation(id, ({ pinned, ...conversation }) =>
+    pinned ? conversation : { ...conversation, pinned: true },
+  );
 }
 
 export function clearActiveConversation(): void {

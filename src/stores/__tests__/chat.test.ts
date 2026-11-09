@@ -26,11 +26,13 @@ const {
   deleteConversation,
   editMessage,
   newConversation,
+  renameConversation,
   restoreConversation,
   retryLastReply,
   selectActiveConversation,
   selectThreadList,
   sendMessage,
+  togglePinned,
   useChat,
 } = await import("../chat.ts");
 
@@ -168,6 +170,36 @@ describe("delete and restore", () => {
     restoreConversation(removed);
 
     expect(useChat.getState().conversations).toEqual([removed]);
+  });
+});
+
+describe("rename and pin", () => {
+  it("renames without moving the thread in the list", async () => {
+    await sendMessage("hello");
+    const { id, updatedAt } = active();
+
+    renameConversation(id, "  Greetings  ");
+
+    expect(active()).toMatchObject({ title: "Greetings", updatedAt });
+  });
+
+  it("ignores a blank name", async () => {
+    await sendMessage("hello");
+    renameConversation(active().id, "   ");
+
+    expect(active().title).toBe("hello");
+  });
+
+  it("pins and unpins, omitting the flag when off", async () => {
+    await sendMessage("hello");
+    const { id } = active();
+
+    togglePinned(id);
+    expect(active().pinned).toBe(true);
+    expect(selectThreadList(useChat.getState())[0]?.pinned).toBe(true);
+
+    togglePinned(id);
+    expect("pinned" in active()).toBe(false);
   });
 });
 
