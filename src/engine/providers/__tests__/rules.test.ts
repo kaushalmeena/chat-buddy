@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LocalRuleProvider } from "../rules.ts";
 
@@ -21,6 +21,12 @@ async function collect(signal = new AbortController().signal) {
 }
 
 describe("LocalRuleProvider pacing", () => {
+  // The provider imports the engine on first use; load it before the fake clock
+  // starts, as it would already be cached in the app after the first reply.
+  beforeAll(async () => {
+    await import("@/engine/rules/reply.ts");
+  });
+
   beforeEach(() => {
     vi.useFakeTimers();
     setHidden(false);

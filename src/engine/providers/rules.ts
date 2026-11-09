@@ -3,7 +3,6 @@ import type {
   GenerateOptions,
   ProviderAvailability,
 } from "@/domain/provider.ts";
-import { reply } from "@/engine/rules/reply.ts";
 import { sleep } from "@/lib/sleep.ts";
 
 /**
@@ -44,6 +43,9 @@ export class LocalRuleProvider implements ChatProvider {
    * abortable, so stop is immediate rather than waiting out the current pause.
    */
   async *generate({ turns, signal }: GenerateOptions): AsyncIterable<string> {
+    // Loaded on first use: the engine and its corpus are not needed to open the
+    // app, only to answer — and the thinking pause below covers the fetch.
+    const { reply } = await import("@/engine/rules/reply.ts");
     const text = reply(turns);
     const words = text.split(/(?<= )/u);
 

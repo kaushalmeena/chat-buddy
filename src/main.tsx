@@ -35,6 +35,12 @@ void initialiseProviders();
 // render formatted on first paint rather than reflowing from plain text.
 preloadRichText();
 
+// The built-in conversation engine is loaded on first use; warm it once the
+// browser is idle so even the first reply pays nothing for it.
+const whenIdle =
+  globalThis.requestIdleCallback ?? ((callback: () => void) => setTimeout(callback, 1));
+whenIdle(() => void import("@/engine/rules/reply.ts"));
+
 createRoot(container).render(
   <StrictMode>
     <App />
