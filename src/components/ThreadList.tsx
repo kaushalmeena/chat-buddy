@@ -67,7 +67,7 @@ function ThreadList({ onNavigate }: ThreadListProps) {
                       onNavigate?.();
                     }}
                     aria-current={isActive ? "page" : undefined}
-                    className={`w-full truncate rounded-lg py-2 pl-3 pr-9 text-left text-sm transition-colors ${
+                    className={`w-full truncate rounded-lg py-2 pr-9 pl-3 text-left text-sm transition-colors ${
                       isActive
                         ? "bg-surface-raised font-medium text-content"
                         : "text-content-muted hover:bg-surface-raised/60 hover:text-content"
@@ -82,7 +82,7 @@ function ThreadList({ onNavigate }: ThreadListProps) {
                     aria-label={`Delete "${thread.title}"`}
                     // Hidden until hover or keyboard focus, so the list stays calm
                     // without making deletion keyboard-inaccessible.
-                    className="absolute right-1.5 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md text-content-faint opacity-0 transition-opacity hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
+                    className="absolute top-1/2 right-1.5 grid size-7 -translate-y-1/2 place-items-center rounded-md text-content-faint opacity-0 transition-opacity group-hover:opacity-100 hover:text-danger focus-visible:opacity-100"
                   >
                     <Trash2 size={14} aria-hidden />
                   </button>

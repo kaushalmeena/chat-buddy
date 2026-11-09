@@ -149,7 +149,7 @@ function App() {
         <main className="flex min-h-0 flex-1 flex-col">
           <Transcript />
 
-          <div className="shrink-0 px-3 pb-4 pt-2">
+          <div className="shrink-0 px-3 pt-2 pb-4">
             <div className="mx-auto max-w-3xl">
               <Composer />
             </div>

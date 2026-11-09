@@ -52,7 +52,7 @@ function ProviderPicker() {
     <section aria-labelledby="engine-heading" className="flex flex-col gap-2">
       <h2
         id="engine-heading"
-        className="flex items-center gap-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-content-faint"
+        className="flex items-center gap-1.5 px-1 text-xs font-semibold tracking-wide text-content-faint uppercase"
       >
         <Cpu size={13} aria-hidden />
         Engine

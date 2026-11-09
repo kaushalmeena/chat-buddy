@@ -48,7 +48,7 @@ function UserBubble({ text }: { readonly text: string }) {
   return (
     <motion.li {...ENTRY} className="flex justify-end">
       <div className="max-w-[min(42rem,85%)] rounded-bubble rounded-br-md bg-brand-600 px-4 py-2.5 text-white shadow-sm">
-        <p className="whitespace-pre-wrap wrap-break-word text-[0.9375rem] leading-relaxed">
+        <p className="text-[0.9375rem] leading-relaxed wrap-break-word whitespace-pre-wrap">
           {text}
         </p>
       </div>

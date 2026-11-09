@@ -80,7 +80,7 @@ function VoicePicker() {
           <div className="flex flex-col gap-1.5 pt-1">
             <label
               htmlFor="voice-select"
-              className="px-1 text-xs font-semibold uppercase tracking-wide text-content-faint"
+              className="px-1 text-xs font-semibold tracking-wide text-content-faint uppercase"
             >
               Voice
             </label>
@@ -105,7 +105,7 @@ function VoicePicker() {
                       event.target.value === "" ? undefined : event.target.value,
                     )
                   }
-                  className="w-full appearance-none truncate rounded-lg border border-border-subtle bg-surface py-1.5 pl-2 pr-8 text-xs text-content transition-colors hover:border-border-strong"
+                  className="w-full appearance-none truncate rounded-lg border border-border-subtle bg-surface py-1.5 pr-8 pl-2 text-xs text-content transition-colors hover:border-border-strong"
                 >
                   <option value="">Automatic</option>
                   {grouped.map(({ lang, items }) => (
@@ -122,7 +122,7 @@ function VoicePicker() {
                 <ChevronDown
                   size={14}
                   aria-hidden
-                  className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-content-faint"
+                  className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-content-faint"
                 />
               </div>
 
