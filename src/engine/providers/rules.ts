@@ -3,11 +3,12 @@ import type {
   GenerateOptions,
   ProviderAvailability,
 } from "@/domain/provider.ts";
-import { matchRule } from "@/engine/rules/matcher.ts";
-import { COMPILED_RULES } from "@/engine/rules/rules.ts";
+import { reply } from "@/engine/rules/reply.ts";
 
 /**
- * The always-available baseline provider, backed by the built-in rule table.
+ * The always-available baseline provider, backed by the built-in conversation
+ * engine — which reads the whole transcript, so it remembers what the person said
+ * and follows the thread, without a model.
  *
  * No download, no WebGPU, no network: this is what answers when nothing else
  * can. It is also what makes the app work offline as a PWA.
@@ -15,7 +16,7 @@ import { COMPILED_RULES } from "@/engine/rules/rules.ts";
 export class LocalRuleProvider implements ChatProvider {
   readonly id = "rules" as const;
   readonly label = "Built-in rules";
-  readonly description = "Instant canned replies. Works offline on any device.";
+  readonly description = "Instant, remembers this chat. Works offline on any device.";
   readonly isLocal = true;
 
   availability(): Promise<ProviderAvailability> {
@@ -40,12 +41,10 @@ export class LocalRuleProvider implements ChatProvider {
    * a 20-second crawl. Real streaming latency should come from a real model.
    */
   async *generate({ turns, signal }: GenerateOptions): AsyncIterable<string> {
-    const lastUserTurn = turns.findLast((turn) => turn.role === "user");
-    const match = matchRule(lastUserTurn?.content ?? "", COMPILED_RULES);
-    const reply = match?.reply ?? "I didn't catch that.";
+    const text = reply(turns);
 
     // Split after each space so whitespace is preserved in the chunks.
-    for (const chunk of reply.split(/(?<= )/u)) {
+    for (const chunk of text.split(/(?<= )/u)) {
       signal.throwIfAborted();
       yield chunk;
     }
