@@ -6,6 +6,7 @@ import { startThemeSync } from "@/stores/config.ts";
 
 import "./styles/global.css";
 import { App } from "./App.tsx";
+import { preloadRichText } from "./components/RichText.tsx";
 import { registerServiceWorker } from "./register-sw.ts";
 
 /**
@@ -25,6 +26,10 @@ startThemeSync();
 // awaited: the app renders immediately with an empty thread and swaps in the
 // stored history when it arrives, rather than holding first paint on a disk read.
 void hydrate();
+
+// Fetch the markdown chunk in parallel with the IndexedDB read, so stored replies
+// render formatted on first paint rather than reflowing from plain text.
+preloadRichText();
 
 createRoot(container).render(
   <StrictMode>

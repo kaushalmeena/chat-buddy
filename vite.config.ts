@@ -9,24 +9,13 @@ import { serviceWorker } from "./plugins/service-worker.ts";
 /*
  * Vendor chunk assignment.
  *
- * Two small explicit sets, and everything else in `node_modules` falls into one
- * `vendor` chunk. Naming what goes *in* a chunk only works for dependencies with few,
- * stable package names, which React and Motion have and the markdown pipeline
- * emphatically does not: react-markdown pulls in around eighty packages across the
- * unified, remark, micromark, mdast and hast families.
- *
- * A hand-maintained list of those was the previous approach, and it had already
- * drifted — `style-to-js`, `dequal`, `is-alphabetical` and several others were absent,
- * so they silently landed in the entry chunk. An allow-list of that shape cannot
- * survive a dependency update. Inverting the rule removes the maintenance entirely.
+ * Only React gets a named chunk: it changes far less often than app code, so it
+ * stays cached across deploys. Everything else is left to Rolldown's own splitting
+ * on purpose. A catch-all `vendor` chunk used to sit here, and it dragged every
+ * lazily imported dependency — the whole react-markdown stack — onto the critical
+ * path, because a chunk is loaded whole the moment anything in it is needed.
  */
 const REACT_PACKAGES = new Set(["react", "react-dom", "scheduler"]);
-const MOTION_PACKAGES = new Set([
-  "motion",
-  "framer-motion",
-  "motion-dom",
-  "motion-utils",
-]);
 
 /**
  * Extracts the installed package name from a module id, handling scopes.
@@ -113,21 +102,13 @@ export default defineConfig({
           if (id.includes("@mlc-ai/web-llm")) return "web-llm";
 
           /*
-           * Vendor splits, so dependencies that change far less often than app code
-           * stay cached across deploys.
-           *
            * Matched on the full package boundary, not a prefix: `react` as a prefix
            * also matches `react-markdown`, which once pulled the whole
            * micromark/mdast parser stack into the chunk labelled "react".
            */
           const vendor = matchPackage(id);
-          if (!vendor) return undefined;
-
-          if (REACT_PACKAGES.has(vendor)) return "react";
-          if (MOTION_PACKAGES.has(vendor)) return "motion";
-
-          // Everything else third-party. No list to keep up to date.
-          return "vendor";
+          if (vendor && REACT_PACKAGES.has(vendor)) return "react";
+          return undefined;
         },
       },
     },

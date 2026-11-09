@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { useRevealedText } from "@/hooks/useRevealedText.ts";
 import { toRenderableMarkdown } from "@/lib/markdown-stream.ts";
 
-import { Markdown } from "./Markdown.tsx";
+import { RichText } from "./RichText.tsx";
 
 /**
  * Renders streaming assistant output smoothly.
@@ -32,7 +32,7 @@ function StreamingMarkdown({ text, isStreaming }: StreamingMarkdownProps) {
   // Sanitising walks the string, so only redo it when the visible prefix changes.
   const safe = useMemo(() => toRenderableMarkdown(revealed), [revealed]);
 
-  return <Markdown text={safe} />;
+  return <RichText text={safe} />;
 }
 
 export { StreamingMarkdown };
