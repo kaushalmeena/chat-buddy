@@ -17,7 +17,6 @@ const SPEECH_RATE = 0.95;
  * recognition it costs nothing in privacy terms.
  */
 function useSpeechSynthesis() {
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   const isSupported = typeof window !== "undefined" && "speechSynthesis" in window;
@@ -81,7 +80,7 @@ function useSpeechSynthesis() {
       const chunks = toUtteranceChunks(text);
       if (chunks.length === 0) return;
 
-      chunks.forEach((chunk, index) => {
+      for (const chunk of chunks) {
         const utterance = new SpeechSynthesisUtterance(chunk);
 
         // Setting `voice` also fixes the language; setting `lang` alone let the
@@ -95,14 +94,8 @@ function useSpeechSynthesis() {
 
         utterance.rate = SPEECH_RATE;
 
-        if (index === 0) utterance.onstart = () => setIsSpeaking(true);
-        if (index === chunks.length - 1) {
-          utterance.onend = () => setIsSpeaking(false);
-        }
-        utterance.onerror = () => setIsSpeaking(false);
-
         synth.speak(utterance);
-      });
+      }
     },
     [isSupported],
   );
@@ -110,10 +103,9 @@ function useSpeechSynthesis() {
   const cancel = useCallback(() => {
     if (!isSupported) return;
     window.speechSynthesis.cancel();
-    setIsSpeaking(false);
   }, [isSupported]);
 
-  return { isSupported, isSpeaking, speak, cancel, voices };
+  return { isSupported, speak, cancel, voices };
 }
 
 export { useSpeechSynthesis };

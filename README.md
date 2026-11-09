@@ -101,7 +101,7 @@ Full documentation is available in the [`/docs`](./docs) directory.
 
 - [How the App Fits Together](./docs/overview.md) — the shape of the app, and the layer boundaries everything else hangs off.
 - [Providers and Streaming](./docs/providers.md) — the seam every model sits behind, how the tiers fall back, and why streaming is three separate jobs.
-- [State and Persistence](./docs/state.md) — what lives in stores versus IndexedDB, plus the rule engine, the skill registry and speech.
+- [State and Persistence](./docs/state.md) — what lives in stores versus IndexedDB, plus the rule engine, attachments and speech.
 
 **Design System:**
 

@@ -84,19 +84,17 @@ used bare substrings, so `cat` also matched "concatenate" and `hi` matched "this
 `matchRule` takes an injectable random source so reply selection is deterministic in
 tests without stubbing globals.
 
-## The skill registry
+## Attachments
 
-[`SkillRegistry`](../src/engine/skills/registry.ts) is where structured capabilities
-plug in. **It ships empty** — it is the seam, not a feature.
+Assistant messages carry an `attachments` list, always empty today. It replaced the
+original numeric action codes (`101`–`108`), where every branch wrote remote strings
+straight into `innerHTML`: structured output is a typed value the UI renders, never
+markup.
 
-It replaced numeric action codes (`101`–`108`) where the meaning of a reply lived in
-a `switch` statement and every branch wrote remote strings straight into
-`innerHTML`. Skills return a typed `Attachment` instead, so the UI decides how to
-render and a skill cannot inject markup.
-
-To add one: implement `Skill`, add its `Attachment` variant in
-[`message.ts`](../src/domain/message.ts), render that variant in the attachment
-renderer, and register it.
+There was a `SkillRegistry` here, shipped empty as an extension point. It was removed:
+a seam with no adapter is hypothetical, and nothing called it. When the first
+structured capability arrives, add its `Attachment` variant in
+[`message.ts`](../src/domain/message.ts) and build the seam around the real case.
 
 ## Speech
 

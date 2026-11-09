@@ -5,14 +5,9 @@ function getConstructor(): SpeechRecognitionConstructor | undefined {
   return window.SpeechRecognition ?? window.webkitSpeechRecognition;
 }
 
-/** True when this browser can transcribe speech at all. */
-const isSpeechRecognitionSupported = (): boolean => getConstructor() !== undefined;
-
 export type SpeechRecognitionState = {
   readonly isSupported: boolean;
   readonly isListening: boolean;
-  /** The best-guess transcript so far, including interim words. */
-  readonly transcript: string;
   readonly error: string | undefined;
   start(): void;
   stop(): void;
@@ -34,7 +29,6 @@ function useSpeechRecognition(options: Options = {}): SpeechRecognitionState {
   const { onFinalResult } = options;
 
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | undefined>(undefined);
@@ -54,29 +48,19 @@ function useSpeechRecognition(options: Options = {}): SpeechRecognitionState {
     const recognition = new Constructor();
     recognition.lang = navigator.language || "en-US";
     recognition.continuous = false;
-    recognition.interimResults = true;
+    // Only finished phrases are used, so interim guesses would be wasted work.
+    recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event) => {
-      let interim = "";
       let final = "";
 
       for (let index = event.resultIndex; index < event.results.length; index += 1) {
         const result = event.results[index];
-        if (!result) continue;
-        const text = result[0]?.transcript ?? "";
-        if (result.isFinal) {
-          final += text;
-        } else {
-          interim += text;
-        }
+        if (result?.isFinal) final += result[0]?.transcript ?? "";
       }
 
-      setTranscript(final || interim);
-
-      if (final) {
-        handleFinal(final.trim());
-      }
+      if (final) handleFinal(final.trim());
     };
 
     recognition.onerror = (event) => {
@@ -102,7 +86,6 @@ function useSpeechRecognition(options: Options = {}): SpeechRecognitionState {
     if (!recognition) return;
 
     setError(undefined);
-    setTranscript("");
 
     try {
       recognition.start();
@@ -117,7 +100,7 @@ function useSpeechRecognition(options: Options = {}): SpeechRecognitionState {
     setIsListening(false);
   }, []);
 
-  return { isSupported, isListening, transcript, error, start, stop };
+  return { isSupported, isListening, error, start, stop };
 }
 
 function describeRecognitionError(error: SpeechRecognitionErrorEvent["error"]): string {
@@ -136,4 +119,4 @@ function describeRecognitionError(error: SpeechRecognitionErrorEvent["error"]): 
   }
 }
 
-export { isSpeechRecognitionSupported, useSpeechRecognition };
+export { useSpeechRecognition };

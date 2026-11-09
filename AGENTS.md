@@ -18,14 +18,14 @@ Commands live in `package.json`.
 Start with [`docs/overview.md`](docs/overview.md) for the layer map and what each
 folder owns. Then follow the work:
 
-| Working on                                           | Read                                  |
-| ---------------------------------------------------- | ------------------------------------- |
-| Inference backends, streaming, token batching        | [providers.md](docs/providers.md)     |
-| Stores, persistence, the rule engine, skills, speech | [state.md](docs/state.md)             |
-| Components, layout, accessibility                    | [components.md](docs/components.md)   |
-| Colour, theming, typography, spacing                 | [foundations.md](docs/foundations.md) |
-| Animation, iconography, the brand mark               | [motion.md](docs/motion.md)           |
-| Bundling, the service worker, deployment             | [build.md](docs/build.md)             |
+| Working on                                    | Read                                  |
+| --------------------------------------------- | ------------------------------------- |
+| Inference backends, streaming, token batching | [providers.md](docs/providers.md)     |
+| Stores, persistence, the rule engine, speech  | [state.md](docs/state.md)             |
+| Components, layout, accessibility             | [components.md](docs/components.md)   |
+| Colour, theming, typography, spacing          | [foundations.md](docs/foundations.md) |
+| Animation, iconography, the brand mark        | [motion.md](docs/motion.md)           |
+| Bundling, the service worker, deployment      | [build.md](docs/build.md)             |
 
 ## Conventions
 
