@@ -297,7 +297,13 @@ function ThreadMenu({
   };
 
   return (
-    <div ref={rootRef} className="absolute top-1/2 right-1 -translate-y-1/2">
+    // The transform makes this a stacking context, so without a z-index the rows
+    // after it paint over the open menu. Lifting it only while open keeps the
+    // closed buttons in normal order.
+    <div
+      ref={rootRef}
+      className={`absolute top-1/2 right-1 -translate-y-1/2 ${isOpen ? "z-30" : ""}`}
+    >
       <button
         type="button"
         onClick={handleToggle}
