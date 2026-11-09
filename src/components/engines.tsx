@@ -15,6 +15,8 @@ function availabilityNote(availability: ProviderAvailability): string | undefine
   switch (availability.state) {
     case "ready":
       return undefined;
+    case "downloaded":
+      return "Downloaded";
     case "needs-download":
       return availability.bytes > 0
         ? `${formatBytes(availability.bytes)} download`

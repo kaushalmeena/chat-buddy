@@ -38,7 +38,7 @@ function EngineBadge() {
             aria-hidden
           />
           <span className="max-w-36 truncate">
-            Downloading{percent === undefined ? "…" : ` ${percent}%`}
+            {percent === undefined ? "Loading model…" : `Downloading ${percent}%`}
           </span>
         </>
       ) : (

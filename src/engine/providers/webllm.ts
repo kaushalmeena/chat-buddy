@@ -29,6 +29,24 @@ const MODEL_BYTES = 950 * 1024 * 1024;
  *
  * @see https://webllm.mlc.ai/
  */
+/** WebLLM's Cache Storage bucket for model weights. */
+const WEIGHTS_CACHE = "webllm/model";
+
+/**
+ * Whether this model's weights are already on the device. Read straight from Cache
+ * Storage, because asking WebLLM would mean loading its 6 MB engine just to probe.
+ */
+async function hasCachedWeights(): Promise<boolean> {
+  try {
+    if (typeof caches === "undefined" || !(await caches.has(WEIGHTS_CACHE)))
+      return false;
+    const requests = await (await caches.open(WEIGHTS_CACHE)).keys();
+    return requests.some((request) => request.url.includes(MODEL_ID));
+  } catch {
+    return false;
+  }
+}
+
 export class WebLlmProvider implements ChatProvider {
   readonly id = "web-llm" as const;
   readonly label = "Local model (Llama 3.2 1B)";
@@ -54,6 +72,7 @@ export class WebLlmProvider implements ChatProvider {
     }
 
     if (this.#engine) return { state: "ready" };
+    if (await hasCachedWeights()) return { state: "downloaded" };
     return { state: "needs-download", bytes: MODEL_BYTES };
   }
 

@@ -496,16 +496,23 @@ export function initialiseProviders(): Promise<void> {
         (status) => status.provider.id === preferred,
       );
 
+      const isReady = preferredStatus?.availability.state === "ready";
+
       setState({
         providerStatuses: statuses,
-        // Only honour a stored choice if it is still usable without a download —
-        // otherwise enabling WebLLM once would re-trigger the download on every
-        // visit before the UI appeared.
+        // A stored choice that needs a download is not honoured — enabling WebLLM
+        // once must not re-trigger a 950 MB download on every visit.
         activeProvider:
-          preferredStatus?.availability.state === "ready"
+          isReady && preferredStatus
             ? preferredStatus.provider
             : selectDefaultProvider(statuses),
       });
+
+      // Weights already on the device: answer with the default meanwhile, and load
+      // the chosen model in the background (seconds, no network), then switch.
+      if (preferred && preferredStatus?.availability.state === "downloaded") {
+        void activateProvider(preferred);
+      }
     } catch {
       // Probing is best-effort; the baseline provider needs nothing probed.
       setState({ activeProvider: FALLBACK_PROVIDER });
@@ -519,6 +526,21 @@ export function initialiseProviders(): Promise<void> {
  * Switches provider, downloading weights first if required. Reports progress and
  * leaves the previous provider active on failure.
  */
+const LOADING_LABEL = "Loading model…";
+
+/**
+ * Turns raw provider progress into what the person should see. A download that
+ * has reached 100% is not finished: the weights still have to be compiled onto
+ * the GPU, which takes seconds and reports no ratio. Showing a frozen "100%"
+ * there read as a hang, so that phase becomes an indeterminate "Loading model…".
+ */
+function phase(progress: DownloadProgress): DownloadProgress {
+  if (progress.ratio === undefined || progress.ratio >= 0.999) {
+    return { label: LOADING_LABEL };
+  }
+  return progress;
+}
+
 export async function activateProvider(id: ReplySource): Promise<void> {
   const provider = getProvider(id);
   const previous = getState().activeProvider;
@@ -533,9 +555,14 @@ export async function activateProvider(id: ReplySource): Promise<void> {
       return;
     }
 
-    if (availability.state === "needs-download") {
-      setState({ downloadProgress: { label: "Starting download" } });
-      await provider.prepare((progress) => setState({ downloadProgress: progress }));
+    if (
+      availability.state === "needs-download" ||
+      availability.state === "downloaded"
+    ) {
+      setState({ downloadProgress: { label: LOADING_LABEL } });
+      await provider.prepare((progress) =>
+        setState({ downloadProgress: phase(progress) }),
+      );
     }
 
     useConfig.getState().setPreferredProvider(id);
