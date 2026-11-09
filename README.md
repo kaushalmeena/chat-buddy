@@ -41,13 +41,13 @@ No API keys, no accounts, no server. Nothing you type leaves your device.
 Chat Buddy talks to whichever inference engine your browser can actually offer,
 picked in order of preference:
 
-| Engine                 | Model                                             | Cost                                          | Availability                  |
-| ---------------------- | ------------------------------------------------- | --------------------------------------------- | ----------------------------- |
-| **Chrome built-in AI** | Gemini Nano                                       | Nothing — the weights ship with the browser   | Chrome 148+ on desktop        |
-| **Local model**        | Llama 3.2 1B via [WebLLM](https://webllm.mlc.ai/) | One-time ~950 MB download, then fully offline | Any browser with WebGPU       |
-| **Built-in rules**     | A small hand-written knowledge base               | Nothing                                       | Everywhere, including offline |
+| Engine                 | Model                                         | Cost                                        | Availability                  |
+| ---------------------- | --------------------------------------------- | ------------------------------------------- | ----------------------------- |
+| **Chrome built-in AI** | Gemini Nano                                   | Nothing — the weights ship with the browser | Chrome 148+ on desktop        |
+| **Local model**        | 7 models via [WebLLM](https://webllm.mlc.ai/) | One-time 194 MB–2 GB download, then offline | Any browser with WebGPU       |
+| **Offline Buddy**      | A small hand-written knowledge base           | Nothing                                     | Everywhere, including offline |
 
-The rule engine is the floor, not a fallback of last resort — no in-browser language
+Offline Buddy, the rule engine, is the floor, not a fallback of last resort — no in-browser language
 model has reach you can rely on, so something has to answer on a phone, in Safari,
 and with no network. WebLLM is never enabled for you: a several-hundred-megabyte
 download is a decision for the person using the app, so it sits behind an explicit
