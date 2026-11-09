@@ -163,13 +163,18 @@ export async function startDownload(id: string): Promise<void> {
     });
 
     patch(id, { status: "complete", received: downloadOf(id).total });
-    setState((state) => ({
-      activeId: state.activeId === id ? undefined : state.activeId,
-    }));
-    await refreshProviders();
-    if (getState().useWhenDoneId === id) {
-      setState({ useWhenDoneId: undefined });
-      await switchTo(id);
+    // When the model is about to be switched to, the card stays up through the
+    // switch: it moves from "downloading" straight to "loading onto the GPU"
+    // instead of vanishing and reappearing a moment later.
+    const willSwitch = getState().useWhenDoneId === id;
+    if (willSwitch) setState({ useWhenDoneId: undefined });
+    try {
+      await refreshProviders();
+      if (willSwitch) await switchTo(id);
+    } finally {
+      setState((state) => ({
+        activeId: state.activeId === id ? undefined : state.activeId,
+      }));
     }
   } catch (error) {
     const reason: unknown = ownController.signal.reason;

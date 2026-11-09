@@ -10,6 +10,8 @@ const fake = vi.hoisted(() => ({
   deleted: [] as string[],
   finish: undefined as (() => void) | undefined,
   switched: [] as string[],
+  /** The card's model id, seen while the switch to the new model runs. */
+  activeDuringSwitch: [] as (string | undefined)[],
 }));
 
 vi.mock("@/engine/providers/weights.ts", () => ({
@@ -38,9 +40,10 @@ vi.mock("@/engine/providers/weights.ts", () => ({
 }));
 
 vi.mock("@/stores/chat.ts", () => ({
-  activateProvider: (id: string) => {
+  activateProvider: async (id: string) => {
+    const { useDownloads } = await import("../downloads.ts");
+    fake.activeDuringSwitch.push(useDownloads.getState().activeId);
     fake.switched.push(id);
-    return Promise.resolve();
   },
   refreshProviders: () => Promise.resolve(),
   releaseLocalModel: () => Promise.resolve(),
@@ -66,6 +69,7 @@ beforeEach(() => {
   fake.onDisk.clear();
   fake.deleted = [];
   fake.switched = [];
+  fake.activeDuringSwitch = [];
   fake.finish = undefined;
   useDownloads.setState({ models: {}, activeId: undefined, useWhenDoneId: undefined });
 });
@@ -84,6 +88,27 @@ describe("downloads", () => {
     expect(useDownloads.getState().activeId).toBeUndefined();
     expect(useConfig.getState().localModelId).toBe(SMALL);
     expect(fake.switched).toEqual(["web-llm"]);
+  });
+
+  it("keeps the card up while switching, so loading follows the download without a blink", async () => {
+    const run = chooseLocalModel(SMALL);
+    await settle();
+    fake.finish?.();
+    await run;
+
+    expect(fake.activeDuringSwitch).toEqual([SMALL]);
+    expect(useDownloads.getState().activeId).toBeUndefined();
+  });
+
+  it("clears the card after a download nobody is waiting to use", async () => {
+    const run = chooseLocalModel(SMALL);
+    await settle();
+    useDownloads.setState({ useWhenDoneId: undefined });
+    fake.finish?.();
+    await run;
+
+    expect(fake.switched).toEqual([]);
+    expect(useDownloads.getState().activeId).toBeUndefined();
   });
 
   it("pauses, keeping the bytes, and resumes", async () => {

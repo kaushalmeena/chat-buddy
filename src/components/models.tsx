@@ -71,6 +71,7 @@ function ModelRow({
   const isSelected = useConfig((state) => state.localModelId === model.id);
   const isActive =
     useChat((state) => state.activeProvider?.id === "web-llm") && isSelected;
+  const isLoading = useChat((state) => state.preparingId === "web-llm") && isSelected;
 
   const { status, received, total } = download;
   const ratio = total > 0 ? received / total : 0;
@@ -104,7 +105,7 @@ function ModelRow({
             )}
           </span>
           <span className="truncate text-xs text-content-muted tabular-nums">
-            {statusLine(model, download)}
+            {isLoading ? "Loading onto your GPU…" : statusLine(model, download)}
           </span>
         </button>
 

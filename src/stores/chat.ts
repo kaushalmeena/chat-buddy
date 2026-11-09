@@ -48,6 +48,8 @@ type ChatState = {
   readonly providerStatuses: readonly ProviderStatus[];
   readonly activeProvider: ChatProvider | undefined;
   readonly downloadProgress: DownloadProgress | undefined;
+  /** The engine `downloadProgress` belongs to, while one is being prepared. */
+  readonly preparingId: ReplySource | undefined;
   readonly providerError: string | undefined;
   readonly isGenerating: boolean;
 };
@@ -70,6 +72,7 @@ export const useChat = create<ChatState>(() => ({
   providerStatuses: [],
   activeProvider: undefined,
   downloadProgress: undefined,
+  preparingId: undefined,
   providerError: undefined,
   isGenerating: false,
 }));
@@ -561,7 +564,7 @@ export async function activateProvider(id: ReplySource): Promise<void> {
       availability.state === "needs-download" ||
       availability.state === "downloaded"
     ) {
-      setState({ downloadProgress: { label: LOADING_LABEL } });
+      setState({ downloadProgress: { label: LOADING_LABEL }, preparingId: id });
       await provider.prepare((progress) =>
         setState({ downloadProgress: phase(progress) }),
       );
@@ -576,7 +579,7 @@ export async function activateProvider(id: ReplySource): Promise<void> {
         error instanceof Error ? error.message : "Could not start that model.",
     });
   } finally {
-    setState({ downloadProgress: undefined });
+    setState({ downloadProgress: undefined, preparingId: undefined });
   }
 }
 
