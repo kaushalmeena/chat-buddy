@@ -5,11 +5,15 @@ type BrandMarkProps = {
   readonly className?: string;
 };
 
+/** "Bot" from SVG Repo (CC0), on a 24-unit grid. */
+const BOT_PATH =
+  "M21 10.975V8a2 2 0 0 0-2-2h-6V4.688c.305-.274.5-.668.5-1.11a1.5 1.5 0 0 0-3 0c0 .442.195.836.5 1.11V6H5a2 2 0 0 0-2 2v2.998l-.072.005A.999.999 0 0 0 2 12v2a1 1 0 0 0 1 1v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a1 1 0 0 0 1-1v-1.938a1.004 1.004 0 0 0-.072-.455c-.202-.488-.635-.605-.928-.632zM7 12c0-1.104.672-2 1.5-2s1.5.896 1.5 2-.672 2-1.5 2S7 13.104 7 12zm8.998 6c-1.001-.003-7.997 0-7.998 0v-2s7.001-.002 8.002 0l-.004 2zm-.498-4c-.828 0-1.5-.896-1.5-2s.672-2 1.5-2 1.5.896 1.5 2-.672 2-1.5 2z";
+
 /**
  * The Chat Buddy mark, inlined as SVG rather than loaded as an image.
  *
- * Inline means no request, no layout shift, and gradient stops that can be tuned
- * alongside the theme. The same artwork lives in `src/assets/brand-icon.svg`,
+ * Inline means no request, no layout shift, and a gradient that follows the
+ * chosen accent. The same artwork lives in `src/assets/brand-icon.svg`,
  * which is the source `scripts/build-icons.mjs` renders the PWA icons from.
  */
 function BrandMark({ size = 32, className }: BrandMarkProps) {
@@ -43,18 +47,12 @@ function BrandMark({ size = 32, className }: BrandMarkProps) {
 
       <rect width="512" height="512" rx="116" fill={`url(#${gradientId})`} />
 
-      {/* Speech bubble. */}
-      <path
-        fill="#ffffff"
-        d="M256 116c-79.5 0-144 52.4-144 117 0 36.5 20.6 69 52.9 90.4 2.6 1.7 4 4.7 3.6 7.8l-6.6 48.2c-.8 6 5.8 10.2 10.9 6.9l58.8-37.8a10 10 0 0 1 6.9-1.5c5.7.8 11.6 1.2 17.5 1.2 79.5 0 144-52.4 144-117s-64.5-115.2-144-115.2z"
-      />
-
-      {/* Three dots: a reply in progress. */}
-      <g fill={`url(#${gradientId})`}>
-        <circle cx="198" cy="238" r="21" />
-        <circle cx="256" cy="238" r="21" />
-        <circle cx="314" cy="238" r="21" />
-      </g>
+      {/*
+       * Bot glyph — "Bot" from SVG Repo, CC0 — drawn on a 24-unit grid and scaled to
+       * fill about 60% of the tile. Its eyes and mouth are cut-outs, so the accent
+       * shows through them.
+       */}
+      <path transform="translate(76 76) scale(15)" fill="#ffffff" d={BOT_PATH} />
     </svg>
   );
 }

@@ -64,8 +64,10 @@ none respect `padding-right` consistently, so it cannot be spaced reliably.
 
 ## The brand mark
 
-A speech bubble with three dots — conversation plus a reply in progress — on an
-teal gradient squircle.
+A white bot glyph on a two-stop accent gradient squircle. The glyph is "Bot" from
+[SVG Repo](https://www.svgrepo.com/svg/334455/bot), CC0 (no attribution required);
+its eyes and mouth are cut-outs, so the accent shows through. In the app the gradient
+follows the chosen accent; the favicon and PWA icons are rendered in teal.
 
 One source of truth: [`brand-icon.svg`](../src/assets/brand-icon.svg).
 `scripts/build-icons.mjs` renders every PWA and favicon asset from it. The outputs
