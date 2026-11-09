@@ -4,61 +4,63 @@
 
 A two-column shell: sidebar plus conversation.
 
-**Above `lg` (1024px)** the sidebar is persistent and collapsible. Collapsing animates
-`width` to zero rather than unmounting, so the transcript reflows in step with it and
-the thread list keeps its scroll position across a collapse and expand. `inert` keeps
-the hidden contents out of the tab order and the accessibility tree.
+**The sidebar holds threads only** — New chat, search, and threads grouped by recency
+(Today, Yesterday, Previous 7/30 days, Older). Engine, voice and theme live in the
+**settings dialog**, a native `<dialog>` opened from the sidebar, the engine badge in
+the header, or `/settings`.
 
-**Below `lg`** the same contents become an overlay drawer, dismissed by backdrop click
-or Escape.
+**Above `lg` (1024px)** the sidebar is persistent and collapsible via a `width`
+transition; `inert` keeps hidden contents out of the tab order. **Below `lg`** it is a
+drawer that stays mounted and slides with a transform.
 
-The wordmark moves into the header whenever the sidebar is not showing it, so the app
-is never unlabelled.
+The header shows the active thread's title and an engine badge that doubles as a
+download progress indicator.
 
 Heights use `dvh`, not `vh`, so mobile browser chrome does not crop the composer.
 
+## No layout shift
+
+- The transcript renders nothing until IndexedDB has answered, so a returning visitor
+  never sees the empty state flash before their history.
+- Markdown is lazy-loaded (`RichText`) but its chunk is fetched in parallel with the
+  IndexedDB read from `main.tsx`, so stored replies render formatted on first paint.
+- Message actions are rendered invisibly while a reply streams, reserving their row.
+- The transcript uses `scrollbar-gutter: stable` so a growing reply never nudges the
+  content sideways.
+- Skeletons (engine badge, engine list) match the size of what replaces them.
+
 ## Components
 
-### Message bubbles
+### Messages
 
-User messages are right-aligned on `brand-600`; assistant messages are left-aligned on
-`surface` with a border. Each assistant message carries a footer naming the engine that
-produced it — with three interchangeable backends, which one answered is real
-information.
+User messages are right-aligned bubbles on the brand gradient. Assistant replies sit on
+the canvas at full measure beside the brand mark — long formatted answers read better
+unboxed. Each reply carries copy, retry (last reply only) and the engine that produced
+it; on wide screens the actions on older replies appear on hover or focus.
 
-**There is no streaming caret.** Text arriving at a steady pace is itself the signal
-that generation is in progress, and a blinking block on the last character fights the
-reading eye.
+**There is no streaming caret.** Text arriving at a steady pace is itself the signal.
 
-Failed messages replace the body with the error rather than showing an empty bubble.
-Stopped messages keep their partial text and are labelled `stopped`.
+Failed replies show the error in a danger-tinted panel. Stopped replies keep their
+partial text and are labelled `stopped`.
 
 ### Transcript
 
-`role="log"` with `aria-live="polite"` and `aria-relevant="additions"`, so new replies
-are announced without stealing focus and without re-reading the whole transcript on
-every committed slice.
-
-Auto-scroll follows new content **only while the view is near the bottom**. Scrolling
-up during a long reply is how you read it; a transcript that yanks itself back down
-every frame is unusable. Once disengaged, a "jump to latest" button appears.
+`role="log"` with `aria-live="polite"` and `aria-relevant="additions"`. Auto-scroll
+follows new content only while the view is near the bottom; once disengaged, a "jump to
+latest" button fades in.
 
 ### Composer
 
-Auto-growing textarea capped at 200px. Enter sends, Shift+Enter inserts a newline.
-Typing `/` opens the command menu; arrows move, Tab or Enter accepts, Escape clears.
-
-The menu is a plain list of real buttons, **not** a scripted listbox. Focus stays in
-the textarea so typing keeps working, which rules out the listbox/option pattern — its
-options must be focusable or referenced by `aria-activedescendant`. A visually hidden
-live region announces the menu instead.
+A card: auto-growing textarea (capped at 200px, scrolling only beyond it) above a
+toolbar with read-aloud, dictation and send/stop. Enter sends, Shift+Enter inserts a
+newline, Enter during IME composition is ignored. Typing `/` opens the command menu.
+Ctrl/Cmd+Shift+O starts a new chat from anywhere.
 
 ### Provider picker
 
-Each engine shows label, one-line description, and an availability note: download
-size, WebGPU requirement, or browser requirement. Unavailable engines are visibly
-disabled rather than hidden — knowing _why_ something is unavailable is more useful
-than its absence.
+Each engine shows label, description, and an availability chip: download size, WebGPU
+requirement, or browser requirement. Unavailable engines are visibly disabled rather
+than hidden.
 
 ## Accessibility
 
