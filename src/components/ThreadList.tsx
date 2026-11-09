@@ -3,7 +3,7 @@ import { type ChangeEvent, useDeferredValue, useMemo, useState } from "react";
 
 import type { Conversation } from "@/domain/conversation.ts";
 import { deleteConversation, selectConversation, useChat } from "@/stores/chat.ts";
-import { closeDrawer } from "@/stores/ui.ts";
+import { closeDrawer, offerUndo } from "@/stores/ui.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -94,7 +94,7 @@ function ThreadList() {
 function ThreadSection({ group }: { readonly group: ThreadGroup }) {
   return (
     <section className="pb-3">
-      <h2 className="px-2.5 pt-2 pb-1 text-[0.6875rem] font-medium tracking-wide text-content-faint uppercase">
+      <h2 className="px-2.5 pt-2 pb-1 text-xs font-medium text-content-faint">
         {group.label}
       </h2>
       <ul className="flex flex-col gap-px">
@@ -115,7 +115,8 @@ function ThreadItem({ thread }: { readonly thread: Conversation }) {
   };
 
   const handleDelete = () => {
-    deleteConversation(thread.id);
+    const removed = deleteConversation(thread.id);
+    if (removed) offerUndo(removed);
   };
 
   return (
@@ -124,18 +125,12 @@ function ThreadItem({ thread }: { readonly thread: Conversation }) {
         type="button"
         onClick={handleSelect}
         aria-current={isActive ? "page" : undefined}
-        className={`relative flex h-9 w-full items-center truncate rounded-lg pr-9 pl-2.5 text-left text-sm transition-colors ${
+        className={`relative flex h-9 w-full items-center truncate rounded-lg pr-9 pl-2.5 text-left text-sm transition-colors pointer-coarse:h-11 ${
           isActive
             ? "bg-surface font-medium text-content shadow-card"
             : "text-content-muted hover:bg-surface/70 hover:text-content"
         }`}
       >
-        {isActive && (
-          <span
-            className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-brand-500"
-            aria-hidden
-          />
-        )}
         <span className="truncate">{thread.title}</span>
       </button>
 
@@ -146,7 +141,7 @@ function ThreadItem({ thread }: { readonly thread: Conversation }) {
         title="Delete chat"
         // Hidden until hover or keyboard focus, so the list stays calm without
         // making deletion keyboard-inaccessible.
-        className="absolute top-1/2 right-1 grid size-7 -translate-y-1/2 place-items-center rounded-md text-content-faint opacity-0 transition-opacity group-hover:opacity-100 hover:bg-danger/10 hover:text-danger focus-visible:opacity-100"
+        className="absolute top-1/2 right-1 grid size-7 -translate-y-1/2 place-items-center rounded-md text-content-faint opacity-0 transition-opacity group-hover:opacity-100 hover:bg-danger/10 hover:text-danger focus-visible:opacity-100 pointer-coarse:size-11 pointer-coarse:opacity-100"
       >
         <Trash2 size={14} aria-hidden />
       </button>

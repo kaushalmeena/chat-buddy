@@ -177,7 +177,12 @@ export function selectConversation(id: string): void {
   setState({ activeId: id, isGenerating: false });
 }
 
-export function deleteConversation(id: string): void {
+/** Deletes a thread and returns it, so the caller can offer an undo. */
+export function deleteConversation(id: string): Conversation | undefined {
+  const removed = getState().conversations.find(
+    (conversation) => conversation.id === id,
+  );
+  if (id === getState().activeId) engine.stop();
   void deleteConversationRow(id);
 
   setState((state) => {
@@ -196,6 +201,26 @@ export function deleteConversation(id: string): void {
         state.activeId === id ? (remaining[0]?.id ?? state.activeId) : state.activeId,
     };
   });
+
+  return removed;
+}
+
+/**
+ * Puts a deleted thread back, in place and persisted again. A blank thread created
+ * only because the list had emptied is dropped, so undo restores exactly what was
+ * there before.
+ */
+export function restoreConversation(conversation: Conversation): void {
+  setState((state) => ({
+    conversations: [
+      conversation,
+      ...state.conversations.filter(
+        (existing) => existing.id !== conversation.id && existing.messages.length > 0,
+      ),
+    ],
+    activeId: conversation.id,
+  }));
+  void saveConversation(conversation);
 }
 
 export function clearActiveConversation(): void {

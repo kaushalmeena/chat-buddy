@@ -1,10 +1,14 @@
 import { create } from "zustand";
 
+import type { Conversation } from "@/domain/conversation.ts";
+
 type UiState = {
   /** The settings dialog (engine, voice, theme). */
   readonly isSettingsOpen: boolean;
   /** The thread drawer below `lg`. */
   readonly isDrawerOpen: boolean;
+  /** The most recently deleted thread, while its undo toast is showing. */
+  readonly deleted: Conversation | undefined;
 };
 
 /**
@@ -15,6 +19,7 @@ type UiState = {
 export const useUi = create<UiState>(() => ({
   isSettingsOpen: false,
   isDrawerOpen: false,
+  deleted: undefined,
 }));
 
 export function openSettings(): void {
@@ -31,4 +36,12 @@ export function openDrawer(): void {
 
 export function closeDrawer(): void {
   useUi.setState({ isDrawerOpen: false });
+}
+
+export function offerUndo(conversation: Conversation): void {
+  useUi.setState({ deleted: conversation });
+}
+
+export function dismissUndo(): void {
+  useUi.setState({ deleted: undefined });
 }

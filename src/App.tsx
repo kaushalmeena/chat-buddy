@@ -5,6 +5,7 @@ import { Header } from "@/components/Header.tsx";
 import { SettingsDialog } from "@/components/SettingsDialog.tsx";
 import { Sidebar } from "@/components/Sidebar.tsx";
 import { Transcript } from "@/components/Transcript.tsx";
+import { UndoToast } from "@/components/UndoToast.tsx";
 import { initialiseProviders, newConversation } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
 import { closeDrawer, useUi } from "@/stores/ui.ts";
@@ -21,6 +22,14 @@ function App() {
 
   return (
     <div className="flex h-dvh overflow-hidden bg-canvas">
+      <a
+        href="#composer-input"
+        // Parked above the viewport until focused; the first Tab stop on the page.
+        className="fixed top-2 left-2 z-50 -translate-y-16 rounded-lg bg-surface px-3 py-2 text-sm font-medium text-content shadow-float focus:translate-y-0"
+      >
+        Skip to message box
+      </a>
+
       {/*
        * Desktop sidebar. Collapsing transitions `width` to zero rather than
        * unmounting, so the thread list keeps its scroll position; `inert` keeps the
@@ -79,6 +88,7 @@ function App() {
       </div>
 
       <SettingsDialog />
+      <UndoToast />
     </div>
   );
 }
