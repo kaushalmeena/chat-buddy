@@ -117,6 +117,11 @@ describe("conversation flow", () => {
     expect(reveal).toMatch(/^It's /);
   });
 
+  it("lets a new request through while a riddle or game is open", () => {
+    expect(last("give me a riddle", "tell me a joke")).toMatch(/want another one\?$/i);
+    expect(last("I'm bored", "what is 6 times 7?")).toBe("6 * 7 = 42");
+  });
+
   it("accepts a correct riddle answer", () => {
     // With random fixed at 0 the first riddle is asked: keys but no locks.
     expect(last("riddle", "a piano")).toMatch(/^(?:Yes!|Correct)/);

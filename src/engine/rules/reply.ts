@@ -106,8 +106,24 @@ function previousIntent(context: Context): Intent | undefined {
 const YES =
   /^(?:yes|yeah|yep|yup|sure|ok|okay|go on|go ahead|why not|please|of course|absolutely|definitely|another|one more|more|y)\b/;
 const NO = /^(?:no|nope|nah|not now|no thanks|maybe later|stop|n)\b/;
+// Anchored: "tell me a joke" mid-riddle is a new request, not giving up.
 const GIVE_UP =
-  /\b(?:give up|i do not know|no idea|tell me|what is it|reveal|dunno|idk)\b/;
+  /\b(?:give up|i do not know|no idea|reveal|dunno|idk)\b|^(?:tell me|what is it)\??$|\btell me the answer\b/;
+
+/**
+ * True when the message is a request of its own — a skill or a recognised intent —
+ * so an open riddle or game should step aside rather than read it as an answer.
+ */
+function isRequest(context: Context): boolean {
+  const { text } = context;
+  if (arithmetic(text) ?? clock(text, context.now) ?? chance(text, () => 0))
+    return true;
+  return INTENTS.some(
+    (intent) =>
+      intent.id !== "knowledge" &&
+      intent.patterns.some((pattern) => pattern.test(text)),
+  );
+}
 
 /*
  * Conversation flows: replies that only make sense given what the engine itself
@@ -119,7 +135,7 @@ function continueFlow(context: Context): string | undefined {
 
   // A riddle is open: the last bot message contains its question.
   const riddle = RIDDLES.find((item) => previousBot.includes(item.question));
-  if (riddle) {
+  if (riddle && !isRequest(context)) {
     if (/\bhint\b/.test(text)) {
       const answer = riddle.answers[0] ?? "";
       return `Hint: it starts with "${answer.charAt(0)}" and has ${answer.length} letters. (${riddle.question})`;
@@ -143,7 +159,7 @@ function continueFlow(context: Context): string | undefined {
 
   // A would-you-rather is open: pick a side and play along.
   const dilemma = WOULD_YOU_RATHER.find((question) => previousBot.includes(question));
-  if (dilemma && !YES.test(text) && !NO.test(text)) {
+  if (dilemma && !YES.test(text) && !NO.test(text) && !isRequest(context)) {
     const options = dilemma.match(/rather (.+?) or (.+?)\?/);
     const mine = options?.[context.random() < 0.5 ? 1 : 2];
     return mine
