@@ -65,7 +65,7 @@ none respect `padding-right` consistently, so it cannot be spaced reliably.
 ## The brand mark
 
 A speech bubble with three dots — conversation plus a reply in progress — on an
-indigo/violet gradient squircle.
+teal gradient squircle.
 
 One source of truth: [`brand-icon.svg`](../src/assets/brand-icon.svg).
 `scripts/build-icons.mjs` renders every PWA and favicon asset from it. The outputs

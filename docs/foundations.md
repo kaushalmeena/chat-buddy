@@ -49,9 +49,14 @@ one in the other.
 
 ### Brand ramp
 
-`brand-50` through `brand-700`, indigo/violet at hue 285. In practice only a few are
-used: `brand-500` for accents and focus rings, `brand-600` for the send button and
-user bubbles, `brand-400` for hover borders.
+`brand-50` through `brand-700`, teal at hue 190: calm, and read as private and
+on-device. It replaced indigo/violet, which had become the default look of AI tools.
+Chroma is held to what sRGB can show at each lightness, so the ramp never clips.
+
+The colour is kept rare so it means something: `brand-600` for the send button,
+toggles and text accents in light mode (5.3:1 with white), `brand-400` for text
+accents in dark mode, `brand-500` for focus rings and icons (3:1 suffices), and a
+12% tint for user messages. Neutrals carry a faint cool tint (hue 210).
 
 Brand colours are **theme-independent** — they sit in the shared `@theme` block, not
 the per-theme ones, because an accent that shifts between themes stops reading as a

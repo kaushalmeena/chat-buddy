@@ -28,13 +28,13 @@
     sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  --color-brand-50: oklch(0.97 0.014 285);
-  --color-brand-100: oklch(0.94 0.03 285);
-  --color-brand-300: oklch(0.79 0.09 285);
-  --color-brand-400: oklch(0.7 0.14 285);
-  --color-brand-500: oklch(0.62 0.19 285);
-  --color-brand-600: oklch(0.55 0.21 285);
-  --color-brand-700: oklch(0.48 0.19 285);
+  --color-brand-50: oklch(0.97 0.02 190);
+  --color-brand-100: oklch(0.94 0.04 190);
+  --color-brand-300: oklch(0.82 0.1 190);
+  --color-brand-400: oklch(0.74 0.12 190);
+  --color-brand-500: oklch(0.62 0.106 190);
+  --color-brand-600: oklch(0.52 0.088 190);
+  --color-brand-700: oklch(0.45 0.076 190);
 
   --radius-bubble: 1.125rem;
 
@@ -47,22 +47,22 @@
   --animate-indeterminate: indeterminate 1.4s ease-in-out infinite;
 
   --shadow-card:
-    0 1px 2px oklch(0.2 0.02 285 / 0.06), 0 4px 16px oklch(0.2 0.02 285 / 0.06);
+    0 1px 2px oklch(0.2 0.015 210 / 0.06), 0 4px 16px oklch(0.2 0.015 210 / 0.06);
   --shadow-float:
-    0 2px 6px oklch(0.2 0.02 285 / 0.08), 0 16px 40px oklch(0.2 0.02 285 / 0.14);
+    0 2px 6px oklch(0.2 0.015 210 / 0.08), 0 16px 40px oklch(0.2 0.015 210 / 0.14);
 }
 
 /* Light theme (default). */
 @theme {
-  --color-canvas: oklch(0.985 0.003 285);
+  --color-canvas: oklch(0.985 0.002 210);
   --color-surface: oklch(1 0 0);
-  --color-surface-raised: oklch(0.975 0.004 285);
-  --color-border-subtle: oklch(0.91 0.006 285);
-  --color-border-strong: oklch(0.84 0.01 285);
-  --color-content: oklch(0.24 0.015 285);
-  --color-content-muted: oklch(0.46 0.014 285);
+  --color-surface-raised: oklch(0.975 0.003 210);
+  --color-border-subtle: oklch(0.91 0.005 210);
+  --color-border-strong: oklch(0.84 0.007 210);
+  --color-content: oklch(0.24 0.011 210);
+  --color-content-muted: oklch(0.46 0.011 210);
   /* >= 4.5:1 on every surface: it carries placeholders and metadata. */
-  --color-content-faint: oklch(0.54 0.012 285);
+  --color-content-faint: oklch(0.54 0.009 210);
   --color-danger: oklch(0.58 0.19 25);
   --color-success: oklch(0.62 0.15 152);
 }
@@ -73,14 +73,14 @@
  */
 @layer theme {
   :root.dark {
-    --color-canvas: oklch(0.16 0.014 285);
-    --color-surface: oklch(0.21 0.017 285);
-    --color-surface-raised: oklch(0.25 0.019 285);
-    --color-border-subtle: oklch(0.3 0.02 285);
-    --color-border-strong: oklch(0.38 0.022 285);
-    --color-content: oklch(0.96 0.006 285);
-    --color-content-muted: oklch(0.78 0.014 285);
-    --color-content-faint: oklch(0.66 0.016 285);
+    --color-canvas: oklch(0.16 0.011 210);
+    --color-surface: oklch(0.21 0.013 210);
+    --color-surface-raised: oklch(0.25 0.014 210);
+    --color-border-subtle: oklch(0.3 0.015 210);
+    --color-border-strong: oklch(0.38 0.017 210);
+    --color-content: oklch(0.96 0.005 210);
+    --color-content-muted: oklch(0.78 0.011 210);
+    --color-content-faint: oklch(0.66 0.012 210);
     --color-danger: oklch(0.68 0.17 25);
     --color-success: oklch(0.72 0.14 152);
   }
@@ -153,11 +153,11 @@
   }
 
   dialog::backdrop {
-    background-color: oklch(0.12 0.02 285 / 0.5);
-  }
+    background-color: oklch(0.12 0.015 210 / 0.5);
+  }}
 
   ::selection {
-    background-color: var(--color-brand-500);
+    background-color: var(--color-brand-600);
     color: white;
   }
 }
@@ -229,9 +229,13 @@
   }
 
   .message-prose a {
-    color: var(--color-brand-500);
+    color: var(--color-brand-600);
     text-decoration: underline;
     text-underline-offset: 2px;
+  }
+
+  :root.dark .message-prose a {
+    color: var(--color-brand-400);
   }
 
   /* Headings. Capped in size: a model emitting `#` inside a chat bubble means
