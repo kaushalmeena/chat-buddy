@@ -1,109 +1,73 @@
-import { Cpu, type LucideIcon, Lightbulb, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 import { sendMessage, useChat } from "@/stores/chat.ts";
 
 import { BrandMark } from "./BrandMark.tsx";
 
-type Starter = {
-  readonly icon: LucideIcon;
-  readonly title: string;
-  readonly prompt: string;
-};
-
 /**
  * Prompts offered on an empty thread. Concrete starters replace guesswork, and
  * double as a hint about what a small local model does well.
+ *
+ * Deliberately a plain list rather than a grid of icon cards: these are four
+ * equivalent text options, and a list says so without decoration.
  */
-const STARTERS: readonly Starter[] = [
-  { icon: Sparkles, title: "What can you do?", prompt: "What can you do?" },
-  {
-    icon: Cpu,
-    title: "Explain WebGPU",
-    prompt: "Explain WebGPU in two sentences",
-  },
-  {
-    icon: Lightbulb,
-    title: "Name my pet robot",
-    prompt: "Give me a name for a pet robot",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Is my data private?",
-    prompt: "Is anything I type sent to a server?",
-  },
+const STARTERS: readonly string[] = [
+  "What can you do?",
+  "Explain WebGPU in two sentences",
+  "Give me a name for a pet robot",
+  "Is anything I type sent to a server?",
 ];
 
 function EmptyState() {
   const provider = useChat((state) => state.activeProvider);
 
   return (
-    <div className="scrollbar-slim flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto px-4 py-10">
-      <div className="flex animate-enter flex-col items-center gap-4 text-center">
-        <div className="relative">
-          <div
-            aria-hidden
-            className="absolute -inset-6 rounded-full bg-brand-500/20 blur-2xl"
-          />
-          <BrandMark size={56} className="relative rounded-2xl shadow-float" />
-        </div>
+    <div className="scrollbar-slim flex flex-1 animate-enter flex-col items-center justify-center gap-8 overflow-y-auto px-4 py-10">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <BrandMark size={48} className="rounded-xl shadow-card" />
 
         <div className="space-y-1.5">
-          <h2 className="text-2xl font-semibold tracking-tight text-content sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-tight text-content">
             How can I help?
           </h2>
           <p className="mx-auto max-w-sm text-sm text-content-muted">
             {provider
               ? `Answering with ${provider.label}. Nothing you type leaves this device.`
-              : "Getting ready…"}
+              : "Getting the engine ready…"}
           </p>
         </div>
       </div>
 
-      <ul className="grid w-full max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
-        {STARTERS.map((starter, index) => (
-          <StarterCard key={starter.prompt} starter={starter} index={index} />
+      <ul
+        aria-label="Suggested prompts"
+        className="w-full max-w-md divide-y divide-border-subtle overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-card"
+      >
+        {STARTERS.map((prompt) => (
+          <StarterItem key={prompt} prompt={prompt} />
         ))}
       </ul>
     </div>
   );
 }
 
-// Animation (not transition) delays; the `both` fill mode keeps each card hidden
-// until its turn, so the stagger never flashes the final state first.
-const STAGGER = [
-  "[animation-delay:60ms]",
-  "[animation-delay:100ms]",
-  "[animation-delay:140ms]",
-  "[animation-delay:180ms]",
-] as const;
-
-function StarterCard({
-  starter,
-  index,
-}: {
-  readonly starter: Starter;
-  readonly index: number;
-}) {
-  const Icon = starter.icon;
-
+function StarterItem({ prompt }: { readonly prompt: string }) {
   const handleClick = () => {
-    void sendMessage(starter.prompt);
+    void sendMessage(prompt);
   };
 
   return (
-    <li className={`animate-enter ${STAGGER[index] ?? ""}`}>
+    <li>
       <button
         type="button"
         onClick={handleClick}
-        className="group flex w-full items-start gap-3 rounded-xl border border-border-subtle bg-surface px-3.5 py-3 text-left shadow-card transition-[border-color,transform] hover:-translate-y-px hover:border-brand-400"
+        className="group flex min-h-11 w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-content-muted transition-colors hover:bg-surface-raised hover:text-content"
       >
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-500/10 text-brand-600 transition-colors group-hover:bg-brand-500/15 dark:text-brand-400">
-          <Icon size={16} aria-hidden />
-        </span>
-        <span className="flex min-w-0 flex-col">
-          <span className="text-sm font-medium text-content">{starter.title}</span>
-          <span className="truncate text-xs text-content-muted">{starter.prompt}</span>
-        </span>
+        <span className="flex-1">{prompt}</span>
+        <ArrowUpRight
+          size={15}
+          className="shrink-0 text-content-faint transition-colors group-hover:text-brand-500"
+          aria-hidden
+        />
       </button>
     </li>
   );

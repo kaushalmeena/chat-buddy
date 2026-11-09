@@ -47,7 +47,7 @@ function Sidebar({ isDrawer = false }: SidebarProps) {
         type="button"
         onClick={handleNewChat}
         title="New chat (Ctrl+Shift+O)"
-        className="flex h-9 items-center gap-2 rounded-lg bg-linear-to-br from-brand-500 to-brand-700 px-3 text-sm font-medium text-white shadow-card transition-[filter,transform] hover:brightness-110 active:scale-[0.98]"
+        className="flex h-9 items-center gap-2 rounded-lg border border-border-subtle bg-surface px-3 text-sm font-medium text-content shadow-card transition-[border-color,scale] hover:border-border-strong active:scale-[0.98] pointer-coarse:h-11"
       >
         <SquarePen size={15} aria-hidden />
         New chat
@@ -61,7 +61,7 @@ function Sidebar({ isDrawer = false }: SidebarProps) {
         <button
           type="button"
           onClick={openSettings}
-          className="flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm text-content-muted transition-colors hover:bg-surface-raised hover:text-content"
+          className="flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm text-content-muted transition-colors hover:bg-surface-raised hover:text-content pointer-coarse:h-11"
         >
           <Settings size={16} aria-hidden />
           Settings

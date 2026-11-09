@@ -166,7 +166,7 @@ function Composer() {
           autoFocus
           spellCheck
           aria-describedby={COMMAND_HINT_ID}
-          className="scrollbar-slim block max-h-50 w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-[0.9375rem] leading-relaxed text-content outline-none placeholder:text-content-faint"
+          className="scrollbar-slim block max-h-50 w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-base leading-relaxed text-content outline-none placeholder:text-content-faint"
         />
 
         <div className="flex items-center gap-1 px-2 pb-2">
@@ -181,9 +181,9 @@ function Composer() {
             />
           )}
 
-          <span className="ml-1 hidden text-[0.6875rem] text-content-faint sm:inline">
-            <kbd className="font-mono">/</kbd> for commands ·{" "}
-            <kbd className="font-mono">⇧↵</kbd> new line
+          <span className="ml-1 hidden text-xs text-content-faint sm:inline">
+            Type <kbd className="font-mono">/</kbd> for commands, Shift + Enter for a
+            new line
           </span>
 
           <div className="flex-1" />
@@ -194,7 +194,7 @@ function Composer() {
               onClick={stopGenerating}
               aria-label="Stop generating"
               title="Stop generating"
-              className="grid size-8 shrink-0 place-items-center rounded-full bg-content text-canvas transition-[opacity,transform] hover:opacity-85 active:scale-92"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-content text-canvas transition-[opacity,scale] hover:opacity-85 active:scale-92 pointer-coarse:size-11"
             >
               <Square size={12} fill="currentColor" aria-hidden />
             </button>
@@ -205,7 +205,7 @@ function Composer() {
               disabled={!canSend}
               aria-label="Send message"
               title="Send (Enter)"
-              className="grid size-8 shrink-0 place-items-center rounded-full bg-linear-to-br from-brand-500 to-brand-700 text-white shadow-sm transition-[filter,opacity,transform] hover:brightness-110 active:scale-92 disabled:cursor-not-allowed disabled:opacity-30 active:disabled:scale-100"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-600 text-white transition-[background-color,opacity,scale] hover:bg-brand-700 active:scale-92 disabled:cursor-not-allowed disabled:opacity-30 active:disabled:scale-100 pointer-coarse:size-11"
             >
               <ArrowUp size={17} strokeWidth={2.25} aria-hidden />
             </button>
@@ -249,7 +249,7 @@ function IconButton({ icon: Icon, label, active = false, onClick }: IconButtonPr
       aria-label={label}
       aria-pressed={active}
       title={label}
-      className={`grid size-8 shrink-0 place-items-center rounded-full transition-colors ${
+      className={`grid size-8 shrink-0 place-items-center rounded-full transition-colors pointer-coarse:size-11 ${
         active
           ? "bg-brand-500/15 text-brand-600 dark:text-brand-400"
           : "text-content-muted hover:bg-surface-raised hover:text-content"

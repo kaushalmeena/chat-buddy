@@ -7,7 +7,7 @@ import { useConfig } from "@/stores/config.ts";
 import { openDrawer, useUi } from "@/stores/ui.ts";
 
 const ICON_BUTTON =
-  "grid size-9 shrink-0 place-items-center rounded-lg text-content-muted transition-colors hover:bg-surface-raised hover:text-content";
+  "grid size-9 shrink-0 place-items-center rounded-lg text-content-muted transition-colors hover:bg-surface-raised hover:text-content pointer-coarse:size-11";
 
 /**
  * Top bar of the conversation column: navigation on the left, the active thread's
@@ -25,7 +25,7 @@ function Header() {
   const sidebarLabel = isCollapsed ? "Expand sidebar" : "Collapse sidebar";
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-1.5 border-b border-border-subtle/70 bg-canvas/80 px-2 backdrop-blur-md sm:px-3">
+    <header className="flex h-14 shrink-0 items-center gap-1.5 border-b border-border-subtle bg-canvas px-2 sm:px-3">
       {/* Below `lg` this opens the drawer; above it, it collapses the sidebar. */}
       <button
         type="button"

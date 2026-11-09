@@ -40,8 +40,8 @@ const MessageBubble = memo(function MessageBubble({
 function UserBubble({ text }: { readonly text: string }) {
   return (
     <li className="flex animate-enter justify-end">
-      <div className="max-w-[min(36rem,85%)] rounded-bubble rounded-br-md bg-linear-to-br from-brand-500 to-brand-700 px-4 py-2.5 text-white shadow-card">
-        <p className="text-[0.9375rem] leading-relaxed wrap-break-word whitespace-pre-wrap">
+      <div className="max-w-[min(36rem,85%)] rounded-bubble rounded-br-md bg-brand-500/12 px-4 py-2.5 text-content">
+        <p className="text-base leading-relaxed wrap-break-word whitespace-pre-wrap">
           {text}
         </p>
       </div>
@@ -71,9 +71,11 @@ function AssistantMessageRow({
 
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         {hasFailed ? (
-          <p className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/5 px-3.5 py-2.5 text-[0.9375rem] text-danger">
+          <p className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/5 px-3.5 py-2.5 text-base text-danger">
             <TriangleAlert size={17} className="mt-0.5 shrink-0" aria-hidden />
-            <span>{message.error ?? "Something went wrong."}</span>
+            <span>
+              {message.error ?? "Couldn't finish this reply. Use Retry to try again."}
+            </span>
           </p>
         ) : isStreaming && isEmpty ? (
           <TypingDots />
@@ -84,7 +86,7 @@ function AssistantMessageRow({
            * StreamingMarkdown; settled ones render directly, so history never
            * re-animates on mount.
            */
-          <div className="message-prose pt-0.5 text-[0.9375rem] text-content">
+          <div className="message-prose pt-0.5 text-base text-content">
             {isStreaming ? (
               <StreamingMarkdown text={message.text} isStreaming />
             ) : (
@@ -121,9 +123,9 @@ function MessageActions({
   return (
     <div
       inert={isHidden}
-      className={`flex h-7 items-center gap-0.5 text-xs text-content-faint transition-opacity group-hover:opacity-100 focus-within:opacity-100 ${
+      className={`flex h-7 items-center gap-0.5 text-xs text-content-faint transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:h-10 ${
         isHidden ? "invisible" : ""
-      } ${isLast ? "" : "sm:opacity-0"}`}
+      } ${isLast ? "" : "pointer-fine:opacity-0"}`}
     >
       {canCopy && <CopyButton text={message.text} />}
 
@@ -156,7 +158,7 @@ function ActionButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="grid size-7 place-items-center rounded-md transition-colors hover:bg-surface-raised hover:text-content"
+      className="grid size-7 place-items-center rounded-md transition-colors hover:bg-surface-raised hover:text-content pointer-coarse:size-10"
     >
       {children}
     </button>

@@ -38,10 +38,10 @@
 
   --radius-bubble: 1.125rem;
 
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
 
   --animate-pulse-dot: pulse-dot 1.4s ease-in-out infinite;
-  --animate-enter: enter 0.24s var(--ease-out-soft) both;
+  --animate-enter: enter 0.2s var(--ease-out-soft) both;
   --animate-fade: fade 0.18s ease-out both;
   --animate-pop: pop 0.16s var(--ease-out-soft) both;
   --animate-indeterminate: indeterminate 1.4s ease-in-out infinite;
@@ -60,8 +60,9 @@
   --color-border-subtle: oklch(0.91 0.006 285);
   --color-border-strong: oklch(0.84 0.01 285);
   --color-content: oklch(0.24 0.015 285);
-  --color-content-muted: oklch(0.52 0.014 285);
-  --color-content-faint: oklch(0.66 0.012 285);
+  --color-content-muted: oklch(0.46 0.014 285);
+  /* >= 4.5:1 on every surface: it carries placeholders and metadata. */
+  --color-content-faint: oklch(0.54 0.012 285);
   --color-danger: oklch(0.58 0.19 25);
   --color-success: oklch(0.62 0.15 152);
 }
@@ -78,8 +79,8 @@
     --color-border-subtle: oklch(0.3 0.02 285);
     --color-border-strong: oklch(0.38 0.022 285);
     --color-content: oklch(0.96 0.006 285);
-    --color-content-muted: oklch(0.72 0.014 285);
-    --color-content-faint: oklch(0.56 0.016 285);
+    --color-content-muted: oklch(0.78 0.014 285);
+    --color-content-faint: oklch(0.66 0.016 285);
     --color-danger: oklch(0.68 0.17 25);
     --color-success: oklch(0.72 0.14 152);
   }
@@ -127,6 +128,23 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Balanced headings, no orphaned last word in body copy. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  input,
+  textarea {
+    caret-color: var(--color-brand-500);
+  }
+
   /* A single, consistent focus ring for every interactive element. */
   :focus-visible {
     outline: 2px solid var(--color-brand-500);
@@ -135,8 +153,7 @@
   }
 
   dialog::backdrop {
-    background-color: oklch(0.12 0.02 285 / 0.45);
-    backdrop-filter: blur(2px);
+    background-color: oklch(0.12 0.02 285 / 0.5);
   }
 
   ::selection {
@@ -152,6 +169,8 @@
    * the tokens above should stay authoritative.
    */
   .message-prose {
+    /* A comfortable reading measure; the column itself is wider. */
+    max-width: 70ch;
     line-height: 1.65;
     overflow-wrap: anywhere;
   }
@@ -313,7 +332,7 @@
 @keyframes enter {
   from {
     opacity: 0;
-    transform: translateY(0.5rem);
+    transform: translateY(0.25rem);
   }
 }
 
@@ -353,23 +372,21 @@
 }
 
 /*
- * Respect the OS-level motion preference across every animation above.
- *
- * `!important` is the point of this block, not an accident: someone who has
- * asked their system to reduce motion should not have that overridden by a more
- * specific rule elsewhere in the stylesheet, or by Tailwind's utilities. The
- * universal selector is likewise deliberate — it has to catch animations this
- * file does not know about.
+ * Reduced motion means fewer and gentler animations, not none: spatial movement is
+ * removed, while fades and colour changes that carry state stay (shortened).
+ * `!important` is deliberate — an accessibility preference must win the cascade.
  */
 @media (prefers-reduced-motion: reduce) {
-  /* A deliberate catch-all override, so specificity descends from here. */
+  :root {
+    --animate-enter: fade 0.12s ease-out both;
+    --animate-pop: fade 0.12s ease-out both;
+  }
+
   *,
   *::before,
   *::after {
-    /* An accessibility override must win the cascade, hence `!important`. */
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+    transition-property: color, background-color, border-color, opacity !important;
+    transition-duration: 0.12s !important;
   }
 }
