@@ -40,14 +40,92 @@
             (theme !== "light" &&
               window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.classList.toggle("dark", dark);
+
+          // The static shell below mirrors the sidebar's collapsed state.
+          document.documentElement.dataset.sidebar = state?.isSidebarCollapsed
+            ? "collapsed"
+            : "open";
         } catch {
           /* Storage unavailable, or a shape we don't recognise: light and teal stand. */
         }
       })();
     </script>
+    <style>
+      /* Collapsed-sidebar variants of the static shell, keyed off the pre-paint flag. */
+      @media (min-width: 64rem) {
+        html[data-sidebar="collapsed"] .shell-sidebar {
+          width: 0;
+        }
+        html[data-sidebar="collapsed"] .shell-collapsed {
+          display: block;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <!--
+      A static copy of the app shell, painted before any JavaScript runs, so the
+      first frame is the app's real layout rather than a blank page. React replaces
+      it on mount. It is built from the same utility classes as the components, so
+      every box has the same size and nothing moves when the real app takes over.
+      Keep it in step with app.tsx, header.tsx, sidebar.tsx and composer.tsx.
+    -->
+    <div id="app">
+      <div class="flex h-dvh overflow-hidden bg-canvas" aria-hidden="true">
+        <aside
+          class="shell-sidebar hidden w-72 shrink-0 overflow-hidden border-r border-border-subtle bg-surface-raised/50 lg:block"
+        >
+          <div class="flex h-full w-72 flex-col gap-3 p-3">
+            <div class="flex h-8 items-center gap-2 px-1">
+              <span class="size-6 rounded-md bg-brand-500"></span>
+              <span class="font-semibold tracking-tight text-content">Chat Buddy</span>
+            </div>
+            <div
+              class="h-9 rounded-lg border border-border-subtle bg-surface shadow-card"
+            ></div>
+            <div class="h-8 rounded-lg bg-surface-raised"></div>
+          </div>
+        </aside>
+
+        <div class="flex min-w-0 flex-1 flex-col">
+          <header
+            class="flex h-14 shrink-0 items-center gap-1.5 border-b border-border-subtle bg-canvas px-2 sm:px-3"
+          >
+            <span class="size-9 shrink-0 lg:hidden"></span>
+            <span class="hidden size-9 shrink-0 lg:block"></span>
+            <span class="shell-collapsed size-9 shrink-0 lg:hidden"></span>
+            <span class="flex min-w-0 flex-1 items-center gap-2 px-1">
+              <span
+                class="shell-collapsed size-[22px] shrink-0 rounded-md bg-brand-500 lg:hidden"
+              ></span>
+              <span class="truncate text-sm font-medium text-content">Chat Buddy</span>
+            </span>
+            <span class="h-8 w-32 animate-pulse rounded-full bg-surface-raised"></span>
+          </header>
+
+          <main class="flex min-h-0 flex-1 flex-col">
+            <div class="flex-1"></div>
+            <div class="shrink-0 px-3 pt-2 pb-3 sm:px-4 sm:pb-4">
+              <div class="mx-auto max-w-3xl">
+                <div
+                  class="rounded-2xl border border-border-subtle bg-surface shadow-card"
+                >
+                  <p
+                    class="h-11 px-4 pt-3.5 pb-1 text-base leading-relaxed text-content-faint"
+                  >
+                    Message Chat Buddy…
+                  </p>
+                  <div class="h-10"></div>
+                </div>
+                <p class="mt-2 px-2 text-center text-[0.6875rem] text-content-faint">
+                  Replies are generated on your device and can be wrong.
+                </p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     <noscript>
       <p style="padding: 2rem; font-family: system-ui, sans-serif">
