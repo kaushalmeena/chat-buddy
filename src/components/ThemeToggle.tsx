@@ -1,76 +1,87 @@
 import { type LucideIcon, Monitor, Moon, Sun } from "lucide-react";
-import { motion } from "motion/react";
 
 import { type ThemePreference, useConfig } from "@/stores/config.ts";
 
-const OPTIONS: readonly {
+type ThemeOption = {
   readonly value: ThemePreference;
   readonly label: string;
   readonly icon: LucideIcon;
-}[] = [
+};
+
+const OPTIONS: readonly ThemeOption[] = [
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
   { value: "system", label: "System", icon: Monitor },
 ];
 
+/** Indicator offsets, one per option, so the class names stay static for Tailwind. */
+const INDICATOR_POSITION: Record<ThemePreference, string> = {
+  light: "translate-x-0",
+  dark: "translate-x-full",
+  system: "translate-x-[200%]",
+};
+
 /**
  * Three-way theme control.
  *
- * `system` is a first-class choice rather than just the initial value, so someone
- * who wants the app to track their OS can say so after having pinned it once.
+ * A real fieldset of radio inputs rather than buttons with `role="radio"`: native
+ * radios bring arrow-key navigation and a single tab stop for free. One shared
+ * indicator slides between options with a CSS transform.
  */
 function ThemeToggle() {
   const theme = useConfig((state) => state.theme);
-  const setTheme = useConfig((state) => state.setTheme);
 
   return (
-    // A real fieldset of radio inputs rather than buttons with role="radio":
-    // native radios bring arrow-key navigation and a single tab stop for free.
-    <fieldset className="relative flex gap-0.5 rounded-lg border border-border-subtle bg-surface p-0.5">
+    <fieldset className="relative grid grid-cols-3 rounded-xl border border-border-subtle bg-surface-raised p-1">
       <legend className="sr-only">Theme</legend>
 
-      {OPTIONS.map(({ value, label, icon: Icon }) => {
-        const isSelected = value === theme;
+      <span
+        aria-hidden
+        className={`absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-lg bg-surface shadow-card transition-transform duration-200 ease-out-soft ${INDICATOR_POSITION[theme]}`}
+      />
 
-        return (
-          <label
-            key={value}
-            title={label}
-            className="relative grid flex-1 cursor-pointer place-items-center rounded-md py-1.5 has-focus-visible:outline has-focus-visible:outline-brand-500"
-          >
-            <input
-              type="radio"
-              name="theme"
-              value={value}
-              checked={isSelected}
-              onChange={() => setTheme(value)}
-              className="sr-only"
-            />
-
-            {/*
-             * One shared element that slides between options, rather than three
-             * backgrounds cross-fading. `layoutId` lets motion animate the real
-             * position change, so the indicator tracks the selection.
-             */}
-            {isSelected && (
-              <motion.span
-                layoutId="theme-indicator"
-                transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                className="absolute inset-0 rounded-md bg-surface-raised"
-              />
-            )}
-
-            <span className="sr-only">{label}</span>
-            {/* `relative` keeps the glyph above the sliding indicator. */}
-            <Icon
-              size={15}
-              aria-hidden
-              className={`relative ${isSelected ? "text-content" : "text-content-faint"}`}
-            />
-          </label>
-        );
-      })}
+      {OPTIONS.map((option) => (
+        <ThemeOptionLabel
+          key={option.value}
+          option={option}
+          isSelected={option.value === theme}
+        />
+      ))}
     </fieldset>
+  );
+}
+
+function ThemeOptionLabel({
+  option,
+  isSelected,
+}: {
+  readonly option: ThemeOption;
+  readonly isSelected: boolean;
+}) {
+  const setTheme = useConfig((state) => state.setTheme);
+  const Icon = option.icon;
+
+  const handleChange = () => {
+    setTheme(option.value);
+  };
+
+  return (
+    <label
+      className={`relative flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-xs font-medium transition-colors has-focus-visible:outline-2 has-focus-visible:outline-brand-500 ${
+        isSelected ? "text-content" : "text-content-muted hover:text-content"
+      }`}
+    >
+      <input
+        type="radio"
+        name="theme"
+        value={option.value}
+        checked={isSelected}
+        onChange={handleChange}
+        className="sr-only"
+      />
+      <Icon size={14} aria-hidden />
+      {option.label}
+    </label>
   );
 }
 

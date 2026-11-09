@@ -1,11 +1,11 @@
 import { Check, Copy, RefreshCw, TriangleAlert } from "lucide-react";
-import { motion } from "motion/react";
-import { memo, useState } from "react";
+import { memo, type ReactNode, useState } from "react";
 
 import type { AssistantMessage, Message } from "@/domain/message.ts";
 import { retryLastReply } from "@/stores/chat.ts";
 
-import { Markdown } from "./Markdown.tsx";
+import { BrandMark } from "./BrandMark.tsx";
+import { RichText } from "./RichText.tsx";
 import { StreamingMarkdown } from "./StreamingMarkdown.tsx";
 
 const SOURCE_LABELS: Record<AssistantMessage["source"], string> = {
@@ -16,22 +16,15 @@ const SOURCE_LABELS: Record<AssistantMessage["source"], string> = {
 
 const COPY_FEEDBACK_MS = 1600;
 
-/** Entry animation shared by both bubble kinds. */
-const ENTRY = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.24, ease: [0.22, 1, 0.36, 1] as const },
-};
-
 type MessageBubbleProps = {
   readonly message: Message;
-  /** Enables the retry affordance, shown only on the final message. */
+  /** Enables the retry affordance and keeps the actions visible, on the final reply. */
   readonly isLast: boolean;
 };
 
 /**
- * Memoised so a streaming reply re-renders only its own bubble. Without this,
- * every committed slice would re-render the entire transcript.
+ * Memoised so a streaming reply re-renders only its own bubble. Without this, every
+ * committed slice would re-render the entire transcript.
  */
 const MessageBubble = memo(function MessageBubble({
   message,
@@ -40,23 +33,28 @@ const MessageBubble = memo(function MessageBubble({
   return message.role === "user" ? (
     <UserBubble text={message.text} />
   ) : (
-    <AssistantBubble message={message} isLast={isLast} />
+    <AssistantMessageRow message={message} isLast={isLast} />
   );
 });
 
 function UserBubble({ text }: { readonly text: string }) {
   return (
-    <motion.li {...ENTRY} className="flex justify-end">
-      <div className="max-w-[min(42rem,85%)] rounded-bubble rounded-br-md bg-brand-600 px-4 py-2.5 text-white shadow-sm">
+    <li className="flex animate-enter justify-end">
+      <div className="max-w-[min(36rem,85%)] rounded-bubble rounded-br-md bg-linear-to-br from-brand-500 to-brand-700 px-4 py-2.5 text-white shadow-card">
         <p className="text-[0.9375rem] leading-relaxed wrap-break-word whitespace-pre-wrap">
           {text}
         </p>
       </div>
-    </motion.li>
+    </li>
   );
 }
 
-function AssistantBubble({
+/**
+ * Assistant replies sit on the canvas rather than in a bubble, beside the brand
+ * mark: long, formatted answers read better at full measure than boxed in, and the
+ * avatar is what marks the speaker.
+ */
+function AssistantMessageRow({
   message,
   isLast,
 }: {
@@ -68,14 +66,12 @@ function AssistantBubble({
   const isEmpty = message.text.trim().length === 0;
 
   return (
-    <motion.li {...ENTRY} className="flex flex-col items-start gap-1.5">
-      <div
-        className={`max-w-[min(42rem,85%)] rounded-bubble rounded-bl-md border px-4 py-2.5 shadow-sm ${
-          hasFailed ? "border-danger/40 bg-danger/5" : "border-border-subtle bg-surface"
-        }`}
-      >
+    <li className="group flex animate-enter gap-3">
+      <BrandMark size={28} className="mt-0.5 shrink-0 rounded-lg shadow-card" />
+
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         {hasFailed ? (
-          <p className="flex items-start gap-2 text-[0.9375rem] text-danger">
+          <p className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/5 px-3.5 py-2.5 text-[0.9375rem] text-danger">
             <TriangleAlert size={17} className="mt-0.5 shrink-0" aria-hidden />
             <span>{message.error ?? "Something went wrong."}</span>
           </p>
@@ -83,87 +79,94 @@ function AssistantBubble({
           <TypingDots />
         ) : (
           /*
-           * No caret: the text arriving at a steady pace is itself the signal that
-           * generation is in progress, and a blinking block on the last character
-           * fights the reading eye.
-           *
-           * Streaming replies go through StreamingMarkdown, which paces the reveal at
-           * frame rate. Settled ones render directly — there is nothing left to
-           * pace, and routing them through the hook would re-animate history on
-           * every mount.
+           * No caret: text arriving at a steady pace is itself the signal that
+           * generation is in progress. Streaming replies are paced at frame rate by
+           * StreamingMarkdown; settled ones render directly, so history never
+           * re-animates on mount.
            */
-          <div className="message-prose text-[0.9375rem] text-content">
+          <div className="message-prose pt-0.5 text-[0.9375rem] text-content">
             {isStreaming ? (
               <StreamingMarkdown text={message.text} isStreaming />
             ) : (
-              <Markdown text={message.text} />
+              <RichText text={message.text} />
             )}
           </div>
         )}
-      </div>
 
-      {!isStreaming && <MessageFooter message={message} isLast={isLast} />}
-    </motion.li>
+        {/*
+         * Rendered while streaming too, just invisible, so the row's height is
+         * reserved from the first token and the actions appear without a shift.
+         */}
+        <MessageActions message={message} isLast={isLast} isHidden={isStreaming} />
+      </div>
+    </li>
   );
 }
 
-function MessageFooter({
+function MessageActions({
   message,
   isLast,
+  isHidden,
 }: {
   readonly message: AssistantMessage;
   readonly isLast: boolean;
+  readonly isHidden: boolean;
 }) {
   const canCopy = message.text.trim().length > 0;
 
+  const handleRetry = () => {
+    void retryLastReply();
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2, delay: 0.05 }}
-      className="flex items-center gap-1 pl-1 text-xs text-content-faint"
+    <div
+      inert={isHidden}
+      className={`flex h-7 items-center gap-0.5 text-xs text-content-faint transition-opacity group-hover:opacity-100 focus-within:opacity-100 ${
+        isHidden ? "invisible" : ""
+      } ${isLast ? "" : "sm:opacity-0"}`}
     >
-      <span>{SOURCE_LABELS[message.source]}</span>
-
-      {message.status === "stopped" && (
-        <>
-          <Separator />
-          <span>stopped</span>
-        </>
-      )}
-
-      {canCopy && (
-        <>
-          <Separator />
-          <CopyButton text={message.text} />
-        </>
-      )}
+      {canCopy && <CopyButton text={message.text} />}
 
       {isLast && (
-        <>
-          <Separator />
-          <button
-            type="button"
-            onClick={() => void retryLastReply()}
-            className="flex items-center gap-1 rounded px-1 py-0.5 transition-colors hover:text-content"
-          >
-            <RefreshCw size={12} aria-hidden />
-            Retry
-          </button>
-        </>
+        <ActionButton label="Retry" onClick={handleRetry}>
+          <RefreshCw size={13} aria-hidden />
+        </ActionButton>
       )}
-    </motion.div>
+
+      <span className="ml-1.5">
+        {SOURCE_LABELS[message.source]}
+        {message.status === "stopped" && " · stopped"}
+      </span>
+    </div>
   );
 }
 
-function Separator() {
-  return <span aria-hidden>·</span>;
+function ActionButton({
+  label,
+  onClick,
+  children,
+}: {
+  readonly label: string;
+  readonly onClick: () => void;
+  readonly children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="grid size-7 place-items-center rounded-md transition-colors hover:bg-surface-raised hover:text-content"
+    >
+      {children}
+    </button>
+  );
 }
 
 function CopyButton({ text }: { readonly text: string }) {
   const [copied, setCopied] = useState(false);
 
-  const copy = async () => {
+  const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -173,29 +176,34 @@ function CopyButton({ text }: { readonly text: string }) {
     }
   };
 
+  const handleClick = () => {
+    void handleCopy();
+  };
+
   return (
-    <button
-      type="button"
-      onClick={() => void copy()}
-      className="flex items-center gap-1 rounded px-1 py-0.5 transition-colors hover:text-content"
-    >
-      {copied ? <Check size={12} aria-hidden /> : <Copy size={12} aria-hidden />}
-      {copied ? "Copied" : "Copy"}
-    </button>
+    <ActionButton label={copied ? "Copied" : "Copy"} onClick={handleClick}>
+      {copied ? (
+        <Check size={13} className="text-success" aria-hidden />
+      ) : (
+        <Copy size={13} aria-hidden />
+      )}
+    </ActionButton>
   );
 }
+
+const DOT_DELAYS = ["0s", "0.16s", "0.32s"] as const;
 
 function TypingDots() {
   return (
     // The dots are decorative; the status text is what a screen reader announces.
-    <div className="flex items-center gap-1 py-1" role="status">
+    <div className="flex h-7 items-center gap-1" role="status">
       <span className="sr-only">Chat Buddy is typing</span>
-      {[0, 1, 2].map((index) => (
+      {DOT_DELAYS.map((delay) => (
         <span
-          key={index}
+          key={delay}
           aria-hidden
-          className="size-1.5 animate-pulse-dot rounded-full bg-content-muted"
-          style={{ animationDelay: `${index * 0.16}s` }}
+          className="size-1.5 animate-pulse-dot rounded-full bg-brand-500"
+          style={{ animationDelay: delay }}
         />
       ))}
     </div>

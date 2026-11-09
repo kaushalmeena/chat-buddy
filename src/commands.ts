@@ -4,6 +4,7 @@ import {
   retryLastReply,
 } from "@/stores/chat.ts";
 import { useConfig } from "@/stores/config.ts";
+import { openSettings } from "@/stores/ui.ts";
 
 /**
  * Slash commands.
@@ -35,6 +36,11 @@ export const COMMANDS: readonly Command[] = [
     name: "retry",
     description: "Regenerate the last reply",
     run: () => void retryLastReply(),
+  },
+  {
+    name: "settings",
+    description: "Open settings (engine, voice, theme)",
+    run: openSettings,
   },
   {
     name: "speak",
