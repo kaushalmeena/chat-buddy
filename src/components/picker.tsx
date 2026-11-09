@@ -28,8 +28,13 @@ function ModelPicker() {
   const active = useChat((state) => state.activeProvider);
   const localModelId = useConfig((state) => state.localModelId);
 
-  const label =
-    active?.id === "web-llm"
+  // A local model is not answering until it is on the GPU; until then the
+  // previous engine still is, and the button says what is on its way.
+  const isLoadingLocal = useChat((state) => state.preparingId === "web-llm");
+
+  const label = isLoadingLocal
+    ? `Loading ${findModel(localModelId).label}…`
+    : active?.id === "web-llm"
       ? findModel(localModelId).label
       : active
         ? SHORT_LABELS[active.id]
@@ -70,7 +75,11 @@ function ModelPicker() {
         title="Choose the model"
         className="flex h-8 max-w-44 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-content-muted transition-colors hover:bg-surface-raised hover:text-content pointer-coarse:h-11"
       >
-        <Cpu size={14} className="shrink-0" aria-hidden />
+        <Cpu
+          size={14}
+          className={`shrink-0 ${isLoadingLocal ? "animate-pulse text-brand-500" : ""}`}
+          aria-hidden
+        />
         <span className="truncate">{label}</span>
         <ChevronDown size={13} className="shrink-0 text-content-faint" aria-hidden />
       </button>

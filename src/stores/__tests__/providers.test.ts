@@ -64,7 +64,11 @@ beforeEach(() => {
   state.availability = { state: "downloaded" };
   state.progress = [];
   state.seen = [];
-  useChat.setState({ activeProvider: undefined, downloadProgress: undefined });
+  useChat.setState({
+    activeProvider: undefined,
+    downloadProgress: undefined,
+    preparingId: undefined,
+  });
   useConfig.setState({ preferredProviderId: undefined });
   useChat.subscribe((current) => state.seen.push(current.downloadProgress));
 });
@@ -107,5 +111,16 @@ describe("model loading", () => {
       state.seen.filter((step) => step?.label === "Loading model…").length,
     ).toBeGreaterThan(1);
     expect(useChat.getState().downloadProgress).toBeUndefined();
+  });
+
+  it("names the engine being loaded while it loads, and clears it after", async () => {
+    const preparing: (string | undefined)[] = [];
+    const stop = useChat.subscribe((current) => preparing.push(current.preparingId));
+
+    await activateProvider("web-llm");
+    stop();
+
+    expect(preparing).toContain("web-llm");
+    expect(useChat.getState().preparingId).toBeUndefined();
   });
 });

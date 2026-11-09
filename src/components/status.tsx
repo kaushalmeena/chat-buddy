@@ -11,6 +11,9 @@ import { openSettings } from "@/stores/ui.ts";
 function EngineBadge() {
   const provider = useChat((state) => state.activeProvider);
   const progress = useChat((state) => state.downloadProgress);
+  // A local model's weights are fetched by the download manager beforehand, so
+  // its progress here is always loading onto the GPU, never a download.
+  const isLoading = useChat((state) => state.preparingId === "web-llm");
 
   const percent =
     progress?.ratio === undefined ? undefined : Math.round(progress.ratio * 100);
@@ -38,7 +41,9 @@ function EngineBadge() {
             aria-hidden
           />
           <span className="max-w-36 truncate">
-            {percent === undefined ? "Loading model…" : `Downloading ${percent}%`}
+            {percent === undefined
+              ? "Loading model…"
+              : `${isLoading ? "Loading" : "Downloading"} ${percent}%`}
           </span>
         </>
       ) : (
